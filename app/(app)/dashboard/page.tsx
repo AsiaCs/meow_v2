@@ -53,7 +53,7 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/auth/signin")
 
-  const [{ data: events }, { data: internships }, { data: people }] = await Promise.all([
+  const [{ data: eventsRaw }, { data: internshipsRaw }, { data: peopleRaw }] = await Promise.all([
     supabase
       .from("events")
       .select("id, title, description, startDate, endDate, location, isVirtual, registrationUrl, imageUrl, tags, isFree, source")
@@ -73,6 +73,10 @@ export default async function DashboardPage() {
       .order("createdAt", { ascending: false })
       .limit(4),
   ])
+
+  const events = eventsRaw ?? []
+  const internships = internshipsRaw ?? []
+  const people = peopleRaw ?? []
 
   const firstName = (user.user_metadata?.full_name as string | undefined)?.split(" ")[0] ?? "there"
 
