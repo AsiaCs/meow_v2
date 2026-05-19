@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  name        String?
+  image       String?
+  isPremium   Boolean  @default(false)
+  onboarded   Boolean  @default(false)
+  interests   String[]
+  location    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  experiences      Experience[]
+  savedEvents      SavedEvent[]
+  savedInternships SavedInternship[]
+}
+
+enum ExperienceType {
+  WORK
+  EDUCATION
+  PROJECT
+  CERTIFICATION
+  EXTRACURRICULAR
+}
+
+model Experience {
+  id           String         @id @default(uuid())
+  userId       String
+  type         ExperienceType
+  title        String
+  organization String
+  description  String?
+  startDate    DateTime?
+  endDate      DateTime?
+  current      Boolean        @default(false)
+  skills       String[]
+  createdAt    DateTime       @default(now())
+
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum EventStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Event {
+  id              String      @id @default(uuid())
+  title           String
+  description     String
+  startDate       DateTime
+  endDate         DateTime?
+  location        String?
+  isVirtual       Boolean     @default(false)
+  virtualLink     String?
+  registrationUrl String?
+  imageUrl        String?
+  tags            String[]
+  source          String      @default("user")
+  sourceUrl       String?
+  isFree          Boolean     @default(true)
+  status          EventStatus @default(PENDING)
+  submittedBy     String?
+  createdAt       DateTime    @default(now())
+
+  savedBy         SavedEvent[]
+}
+
+model SavedEvent {
+  id      String   @id @default(uuid())
+  userId  String
+  eventId String
+  savedAt DateTime @default(now())
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event   Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+}
+
+model Internship {
+  id             String    @id @default(uuid())
+  title          String
+  company        String
+  location       String?
+  isRemote       Boolean   @default(false)
+  description    String
+  applicationUrl String
+  deadline       DateTime?
+  isPaid         Boolean   @default(true)
+  salary         String?
+  tags           String[]
+  source         String    @default("LinkedIn")
+  sourceUrl      String?
+  createdAt      DateTime  @default(now())
+
+  savedBy        SavedInternship[]
+}
+
+model SavedInternship {
+  id           String     @id @default(uuid())
+  userId       String
+  internshipId String
+  savedAt      DateTime   @default(now())
+
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  internship   Internship @relation(fields: [internshipId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, internshipId])
+}
