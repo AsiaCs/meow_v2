@@ -1,6 +1,9 @@
 "use client"
 
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
+import { Eye, EyeOff, Loader2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
 function GoogleIcon() {
@@ -14,15 +17,61 @@ function GoogleIcon() {
   )
 }
 
+type Mode = "signin" | "signup"
+
 export default function SignInPage() {
+  const router = useRouter()
+  const [mode, setMode] = useState<Mode>("signin")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
+
   const handleGoogleSignIn = async () => {
     const supabase = createClient()
     await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/api/auth/callback`,
-      },
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/api/auth/callback` },
     })
+  }
+
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setSuccessMsg(null)
+    setLoading(true)
+
+    const supabase = createClient()
+
+    if (mode === "signin") {
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) {
+        setError(error.message)
+      } else {
+        router.push("/dashboard")
+        router.refresh()
+      }
+    } else {
+      const { data, error } = await supabase.auth.signUp({ email, password })
+      if (error) {
+        setError(error.message)
+      } else if (data.session) {
+        router.push("/onboarding")
+        router.refresh()
+      } else {
+        setSuccessMsg("Check your email for a confirmation link to complete sign-up.")
+      }
+    }
+
+    setLoading(false)
+  }
+
+  const switchMode = (next: Mode) => {
+    setMode(next)
+    setError(null)
+    setSuccessMsg(null)
   }
 
   return (
@@ -35,18 +84,25 @@ export default function SignInPage() {
       >
         <div className="rounded-3xl border border-white/[0.06] p-2 bg-white/[0.02]">
           <div className="bg-bg-card rounded-[calc(1.5rem-0.375rem)] p-8">
+            {/* Logo */}
             <div className="text-center mb-8">
-              <div className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center"
-                style={{ background: "linear-gradient(135deg, #7c3aed, #ec4899)" }}>
-                <span className="text-white font-bold text-lg" style={{ fontFamily: "var(--font-display)" }}>m</span>
+              <div
+                className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center"
+                style={{ background: "linear-gradient(135deg, #7c3aed, #ec4899)" }}
+              >
+                <span className="text-white font-bold text-lg font-display">m</span>
               </div>
-              <h1 className="text-2xl font-bold text-text-primary mb-2" style={{ fontFamily: "var(--font-display)" }}>
+              <h1 className="text-2xl font-bold text-text-primary mb-2 font-display">
                 Welcome to Meow
               </h1>
               <p className="text-text-secondary text-sm">
-                Sign in to discover opportunities tailored to you
+                {mode === "signin"
+                  ? "Sign in to discover opportunities tailored to you"
+                  : "Create your account and get started"}
               </p>
             </div>
+
+            {/* Google */}
             <button
               onClick={handleGoogleSignIn}
               className="w-full flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl border border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] transition-all duration-200 text-text-primary font-medium cursor-pointer"
@@ -54,8 +110,81 @@ export default function SignInPage() {
               <GoogleIcon />
               Continue with Google
             </button>
-            <p className="text-center text-xs text-text-muted mt-6">
-              By signing in, you agree to our{" "}
+
+            {/* Divider */}
+            <div className="flex items-center gap-3 my-5">
+              <div className="flex-1 h-px bg-border" />
+              <span className="text-xs text-text-muted">or</span>
+              <div className="flex-1 h-px bg-border" />
+            </div>
+
+            {/* Email/password form */}
+            <form onSubmit={handleEmailAuth} className="space-y-3">
+              <input
+                type="email"
+                placeholder="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full bg-bg-base border border-border rounded-xl px-4 py-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple/20 transition-all"
+              />
+
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="w-full bg-bg-base border border-border rounded-xl px-4 py-3 pr-11 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple/20 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary transition-colors"
+                >
+                  {showPassword
+                    ? <EyeOff size={16} strokeWidth={1.5} />
+                    : <Eye size={16} strokeWidth={1.5} />}
+                </button>
+              </div>
+
+              {error && (
+                <p className="text-xs text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg px-3 py-2.5">
+                  {error}
+                </p>
+              )}
+              {successMsg && (
+                <p className="text-xs text-green-400 bg-green-400/10 border border-green-400/20 rounded-lg px-3 py-2.5">
+                  {successMsg}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-white font-medium transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+                style={{ background: "linear-gradient(135deg, #7c3aed, #ec4899)" }}
+              >
+                {loading && <Loader2 size={16} className="animate-spin" />}
+                {mode === "signin" ? "Sign in" : "Create account"}
+              </button>
+            </form>
+
+            {/* Mode toggle */}
+            <p className="text-center text-sm text-text-muted mt-5">
+              {mode === "signin" ? "Don't have an account? " : "Already have an account? "}
+              <button
+                onClick={() => switchMode(mode === "signin" ? "signup" : "signin")}
+                className="text-text-secondary hover:text-text-primary transition-colors font-medium"
+              >
+                {mode === "signin" ? "Sign up" : "Sign in"}
+              </button>
+            </p>
+
+            <p className="text-center text-xs text-text-muted mt-4">
+              By continuing, you agree to our{" "}
               <a href="#" className="text-text-secondary hover:text-text-primary transition-colors">Terms</a>
               {" "}and{" "}
               <a href="#" className="text-text-secondary hover:text-text-primary transition-colors">Privacy Policy</a>

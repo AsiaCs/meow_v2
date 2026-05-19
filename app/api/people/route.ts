@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     const supabase = await createClient()
     let query = supabase
       .from("users")
-      .select(`id, name, image, location, interests, experiences!experiences_userId_fkey(id, type)`)
+      .select(`id, name, image, location, interests, "linkedinUrl", experiences!experiences_userId_fkey(id, type)`)
       .eq("onboarded", true)
       .order("createdAt", { ascending: false })
 
@@ -44,6 +44,7 @@ export async function GET(request: Request) {
         image: user.image,
         location: user.location,
         interests: user.interests,
+        linkedinUrl: user.linkedinUrl ?? null,
         experienceSummary,
         experienceCount: experiences.length,
       }

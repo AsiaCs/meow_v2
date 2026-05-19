@@ -1,5 +1,6 @@
 ﻿"use client"
 
+import Link from "next/link"
 import { motion } from "framer-motion"
 import { MapPin, Star, User } from "lucide-react"
 
@@ -46,6 +47,7 @@ function GradientAvatar({ name }: { name: string }) {
 }
 
 export function PersonCard({
+  id,
   name,
   image,
   role,
@@ -134,24 +136,23 @@ export function PersonCard({
         <div className="flex-1" />
 
         {/* CTA */}
-        <div className="pt-3 border-t border-white/[0.06]">
-          {linkedinUrl ? (
-            <a
-              href={linkedinUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block"
-            >
-              <Button variant="outline" size="sm" className="w-full gap-1.5">
-                <LinkedInIcon size={13} />
-                Connect on LinkedIn
-              </Button>
-            </a>
-          ) : (
+        <div className="pt-3 border-t border-white/[0.06] flex gap-2">
+          <Link href={`/people/${id}`} className={linkedinUrl ? "flex-1" : "w-full"}>
             <Button variant="ghost" size="sm" className="w-full gap-1.5">
               <User size={13} strokeWidth={1.5} />
               View Profile
             </Button>
+          </Link>
+          {linkedinUrl && (
+            <a
+              href={linkedinUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button variant="outline" size="sm" className="gap-1.5 px-3">
+                <LinkedInIcon size={13} />
+              </Button>
+            </a>
           )}
         </div>
       </div>
