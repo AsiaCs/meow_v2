@@ -56,29 +56,20 @@ export default async function DashboardPage() {
 
   const [events, internships, people] = await Promise.all([
     prisma.event.findMany({
-      where: {
-        status: "APPROVED",
-        startDate: { gte: new Date() },
-      },
+      where: { status: "APPROVED", startDate: { gte: new Date() } },
       orderBy: { startDate: "asc" },
       take: 6,
-    }),
+    }).catch(() => []),
     prisma.internship.findMany({
       orderBy: { createdAt: "desc" },
       take: 6,
-    }),
+    }).catch(() => []),
     prisma.user.findMany({
       where: { onboarded: true },
       orderBy: { createdAt: "desc" },
       take: 4,
-      select: {
-        id: true,
-        name: true,
-        image: true,
-        location: true,
-        interests: true,
-      },
-    }),
+      select: { id: true, name: true, image: true, location: true, interests: true },
+    }).catch(() => []),
   ])
 
   const firstName = (user.user_metadata?.full_name as string | undefined)?.split(" ")[0] ?? "there"
