@@ -1,54 +1,29 @@
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/db"
+import { createClient } from "@/lib/supabase/server"
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-
     const tagsParam = searchParams.get("tags")
     const remoteParam = searchParams.get("remote")
     const paidParam = searchParams.get("paid")
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const where: any = {}
+    const supabase = await createClient()
+    let query = supabase
+      .from("internships")
+      .select("id, title, company, location, isRemote, description, applicationUrl, deadline, isPaid, salary, tags, source, sourceUrl, createdAt")
+      .order("createdAt", { ascending: false })
 
     if (tagsParam) {
       const tags = tagsParam.split(",").map((t) => t.trim()).filter(Boolean)
-      if (tags.length > 0) {
-        where.tags = { hasSome: tags }
-      }
+      if (tags.length > 0) query = query.overlaps("tags", tags)
     }
+    if (remoteParam === "true") query = query.eq("isRemote", true)
+    if (paidParam === "true") query = query.eq("isPaid", true)
 
-    if (remoteParam === "true") {
-      where.isRemote = true
-    }
-
-    if (paidParam === "true") {
-      where.isPaid = true
-    }
-
-    const internships = await prisma.internship.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        title: true,
-        company: true,
-        location: true,
-        isRemote: true,
-        description: true,
-        applicationUrl: true,
-        deadline: true,
-        isPaid: true,
-        salary: true,
-        tags: true,
-        source: true,
-        sourceUrl: true,
-        createdAt: true,
-      },
-    })
-
-    return NextResponse.json(internships)
+    const { data, error } = await query
+    if (error) throw error
+    return NextResponse.json(data ?? [])
   } catch (error) {
     console.error("[internships/GET]", error)
     return NextResponse.json({ error: "Failed to fetch internships" }, { status: 500 })

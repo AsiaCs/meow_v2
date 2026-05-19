@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
-import { prisma } from "@/lib/db"
 import Link from "next/link"
 import { ArrowRight, Sparkles, CalendarDays, Briefcase, Users } from "lucide-react"
 import { EventCard } from "@/components/events/event-card"
@@ -54,22 +53,25 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/auth/signin")
 
-  const [events, internships, people] = await Promise.all([
-    prisma.event.findMany({
-      where: { status: "APPROVED", startDate: { gte: new Date() } },
-      orderBy: { startDate: "asc" },
-      take: 6,
-    }).catch(() => []),
-    prisma.internship.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 6,
-    }).catch(() => []),
-    prisma.user.findMany({
-      where: { onboarded: true },
-      orderBy: { createdAt: "desc" },
-      take: 4,
-      select: { id: true, name: true, image: true, location: true, interests: true },
-    }).catch(() => []),
+  const [{ data: events }, { data: internships }, { data: people }] = await Promise.all([
+    supabase
+      .from("events")
+      .select("id, title, description, startDate, endDate, location, isVirtual, registrationUrl, imageUrl, tags, isFree, source")
+      .eq("status", "APPROVED")
+      .gte("startDate", new Date().toISOString())
+      .order("startDate")
+      .limit(6),
+    supabase
+      .from("internships")
+      .select("id, title, company, location, isRemote, deadline, isPaid, salary, tags, applicationUrl")
+      .order("createdAt", { ascending: false })
+      .limit(6),
+    supabase
+      .from("users")
+      .select("id, name, image, location, interests")
+      .eq("onboarded", true)
+      .order("createdAt", { ascending: false })
+      .limit(4),
   ])
 
   const firstName = (user.user_metadata?.full_name as string | undefined)?.split(" ")[0] ?? "there"

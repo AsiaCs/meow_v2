@@ -1,63 +1,43 @@
 import { NextResponse } from "next/server"
-import { prisma } from "@/lib/db"
+import { createClient } from "@/lib/supabase/server"
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-
     const interestsParam = searchParams.get("interests")
     const mentorParam = searchParams.get("mentor")
     const searchParam = searchParams.get("search")
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const where: any = { onboarded: true }
+    const supabase = await createClient()
+    let query = supabase
+      .from("users")
+      .select("id, name, image, location, interests, experiences(id, type)")
+      .eq("onboarded", true)
+      .order("createdAt", { ascending: false })
 
     if (interestsParam) {
       const interests = interestsParam.split(",").map((i) => i.trim()).filter(Boolean)
-      if (interests.length > 0) {
-        where.interests = { hasSome: interests }
-      }
+      if (interests.length > 0) query = query.overlaps("interests", interests)
     }
+    if (searchParam?.trim()) query = query.ilike("name", `%${searchParam.trim()}%`)
+
+    const { data, error } = await query
+    if (error) throw error
+
+    let users = data ?? []
 
     if (mentorParam === "true") {
-      // Mentors are users who have at least one WORK experience entry
-      where.experiences = {
-        some: { type: "WORK" },
-      }
-    }
-
-    if (searchParam && searchParam.trim()) {
-      where.name = { contains: searchParam.trim(), mode: "insensitive" }
-    }
-
-    const users = await prisma.user.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        name: true,
-        image: true,
-        location: true,
-        interests: true,
-        experiences: {
-          select: {
-            id: true,
-            type: true,
-          },
-        },
-      },
-    })
-
-    // Shape experience into a summary count by type
-    const shaped = users.map((user) => {
-      const experienceSummary = user.experiences.reduce(
-        (acc, exp) => {
-          acc[exp.type] = (acc[exp.type] ?? 0) + 1
-          return acc
-        },
-        {} as Record<string, number>
+      users = users.filter((u: any) =>
+        Array.isArray(u.experiences) && u.experiences.some((e: any) => e.type === "WORK")
       )
+    }
 
+    const shaped = users.map((user: any) => {
+      const experiences = Array.isArray(user.experiences) ? user.experiences : []
+      const experienceSummary = experiences.reduce((acc: Record<string, number>, exp: any) => {
+        acc[exp.type] = (acc[exp.type] ?? 0) + 1
+        return acc
+      }, {})
       return {
         id: user.id,
         name: user.name,
@@ -65,7 +45,7 @@ export async function GET(request: Request) {
         location: user.location,
         interests: user.interests,
         experienceSummary,
-        experienceCount: user.experiences.length,
+        experienceCount: experiences.length,
       }
     })
 

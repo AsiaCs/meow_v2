@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server"
 import * as z from "zod"
-import { prisma } from "@/lib/db"
 import { createClient } from "@/lib/supabase/server"
 
 const submitEventSchema = z.object({
@@ -21,47 +20,42 @@ export async function POST(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
     let body: unknown
-    try {
-      body = await request.json()
-    } catch {
+    try { body = await request.json() } catch {
       return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
     }
 
     const result = submitEventSchema.safeParse(body)
     if (!result.success) {
-      return NextResponse.json(
-        { error: "Validation failed", issues: result.error.issues },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "Validation failed", issues: result.error.issues }, { status: 400 })
     }
 
-    const data = result.data
-
-    const event = await prisma.event.create({
-      data: {
-        title: data.title,
-        description: data.description ?? "",
-        startDate: new Date(data.startDate),
-        endDate: data.endDate ? new Date(data.endDate) : undefined,
-        isVirtual: data.isVirtual,
-        location: data.location,
-        virtualLink: data.virtualLink,
-        registrationUrl: data.registrationUrl,
-        tags: data.tags,
-        isFree: data.isFree,
-        imageUrl: data.imageUrl,
+    const d = result.data
+    const { data, error } = await supabase
+      .from("events")
+      .insert({
+        title: d.title,
+        description: d.description ?? "",
+        startDate: d.startDate,
+        endDate: d.endDate ?? null,
+        isVirtual: d.isVirtual,
+        location: d.location ?? null,
+        virtualLink: d.virtualLink ?? null,
+        registrationUrl: d.registrationUrl,
+        tags: d.tags,
+        isFree: d.isFree,
+        imageUrl: d.imageUrl ?? null,
         source: "user",
         status: "PENDING",
         submittedBy: user.id,
-      },
-    })
+      })
+      .select()
+      .single()
 
-    return NextResponse.json(event, { status: 201 })
+    if (error) throw error
+    return NextResponse.json(data, { status: 201 })
   } catch (error) {
     console.error("[submit/POST]", error)
     return NextResponse.json({ error: "Failed to submit event" }, { status: 500 })
