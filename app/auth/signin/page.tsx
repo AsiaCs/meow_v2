@@ -15,9 +15,8 @@ function GoogleIcon() {
 }
 
 export default function SignInPage() {
-  const supabase = createClient()
-
   const handleGoogleSignIn = async () => {
+    const supabase = createClient()
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
