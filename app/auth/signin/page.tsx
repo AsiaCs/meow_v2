@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
@@ -20,7 +19,6 @@ function GoogleIcon() {
 type Mode = "signin" | "signup"
 
 export default function SignInPage() {
-  const router = useRouter()
   const [mode, setMode] = useState<Mode>("signin")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -49,23 +47,22 @@ export default function SignInPage() {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) {
         setError(error.message)
+        setLoading(false)
       } else {
-        router.push("/dashboard")
-        router.refresh()
+        window.location.href = "/dashboard"
       }
     } else {
       const { data, error } = await supabase.auth.signUp({ email, password })
       if (error) {
         setError(error.message)
+        setLoading(false)
       } else if (data.session) {
-        router.push("/onboarding")
-        router.refresh()
+        window.location.href = "/onboarding"
       } else {
         setSuccessMsg("Check your email for a confirmation link to complete sign-up.")
+        setLoading(false)
       }
     }
-
-    setLoading(false)
   }
 
   const switchMode = (next: Mode) => {
