@@ -1,21 +1,22 @@
 import { scrapeCerebralValley, type ScrapedEvent } from "./cerebralvalley"
 import { scrapeLuma } from "./luma"
 import { scrapeInternships, type ScrapedInternship } from "./internships"
-import { prisma } from "@/lib/db"
+import { createClient } from "@/lib/supabase/server"
 
 async function saveEvents(events: ScrapedEvent[]): Promise<number> {
+  const supabase = await createClient()
   let saved = 0
   for (const ev of events) {
     try {
-      // Use findFirst + upsert-by-id pattern since sourceUrl has no @unique constraint
-      const existing = ev.sourceUrl
-        ? await prisma.event.findFirst({ where: { sourceUrl: ev.sourceUrl }, select: { id: true } })
-        : null
+      if (ev.sourceUrl) {
+        const { data: existing } = await supabase
+          .from("events")
+          .select("id")
+          .eq("sourceUrl", ev.sourceUrl)
+          .maybeSingle()
 
-      if (existing) {
-        await prisma.event.update({
-          where: { id: existing.id },
-          data: {
+        if (existing) {
+          await supabase.from("events").update({
             title: ev.title,
             description: ev.description ?? "",
             startDate: ev.startDate,
@@ -27,11 +28,9 @@ async function saveEvents(events: ScrapedEvent[]): Promise<number> {
             tags: ev.tags,
             source: ev.source,
             isFree: ev.isFree,
-          },
-        })
-      } else {
-        await prisma.event.create({
-          data: {
+          }).eq("id", existing.id)
+        } else {
+          await supabase.from("events").insert({
             title: ev.title,
             description: ev.description ?? "",
             startDate: ev.startDate,
@@ -44,33 +43,47 @@ async function saveEvents(events: ScrapedEvent[]): Promise<number> {
             source: ev.source,
             sourceUrl: ev.sourceUrl,
             isFree: ev.isFree,
-            status: "APPROVED", // Scraped events are auto-approved
-          },
+            status: "APPROVED",
+          })
+        }
+      } else {
+        await supabase.from("events").insert({
+          title: ev.title,
+          description: ev.description ?? "",
+          startDate: ev.startDate,
+          endDate: ev.endDate,
+          location: ev.location,
+          isVirtual: ev.isVirtual,
+          registrationUrl: ev.registrationUrl,
+          imageUrl: ev.imageUrl,
+          tags: ev.tags,
+          source: ev.source,
+          isFree: ev.isFree,
+          status: "APPROVED",
         })
       }
       saved++
     } catch {
-      // Skip individual failures — don't abort the whole batch
+      // Skip individual failures
     }
   }
   return saved
 }
 
 async function saveInternships(internships: ScrapedInternship[]): Promise<number> {
+  const supabase = await createClient()
   let saved = 0
   for (const intern of internships) {
     try {
-      const existing = intern.applicationUrl
-        ? await prisma.internship.findFirst({
-            where: { applicationUrl: intern.applicationUrl },
-            select: { id: true },
-          })
-        : null
+      if (intern.applicationUrl) {
+        const { data: existing } = await supabase
+          .from("internships")
+          .select("id")
+          .eq("applicationUrl", intern.applicationUrl)
+          .maybeSingle()
 
-      if (existing) {
-        await prisma.internship.update({
-          where: { id: existing.id },
-          data: {
+        if (existing) {
+          await supabase.from("internships").update({
             title: intern.title,
             company: intern.company,
             location: intern.location,
@@ -80,22 +93,33 @@ async function saveInternships(internships: ScrapedInternship[]): Promise<number
             tags: intern.tags,
             source: intern.source,
             sourceUrl: intern.sourceUrl,
-          },
-        })
+          }).eq("id", existing.id)
+        } else {
+          await supabase.from("internships").insert({
+            title: intern.title,
+            company: intern.company,
+            location: intern.location,
+            isRemote: intern.isRemote,
+            description: intern.description ?? "",
+            applicationUrl: intern.applicationUrl,
+            isPaid: intern.isPaid,
+            tags: intern.tags,
+            source: intern.source,
+            sourceUrl: intern.sourceUrl,
+          })
+        }
       } else {
-        await prisma.internship.create({
-          data: {
-            title: intern.title,
-            company: intern.company,
-            location: intern.location,
-            isRemote: intern.isRemote,
-            description: intern.description ?? "",
-            applicationUrl: intern.applicationUrl ?? "",
-            isPaid: intern.isPaid,
-            tags: intern.tags,
-            source: intern.source,
-            sourceUrl: intern.sourceUrl,
-          },
+        await supabase.from("internships").insert({
+          title: intern.title,
+          company: intern.company,
+          location: intern.location,
+          isRemote: intern.isRemote,
+          description: intern.description ?? "",
+          applicationUrl: intern.applicationUrl ?? "",
+          isPaid: intern.isPaid,
+          tags: intern.tags,
+          source: intern.source,
+          sourceUrl: intern.sourceUrl,
         })
       }
       saved++
