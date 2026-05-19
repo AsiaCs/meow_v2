@@ -40,7 +40,7 @@ export default async function PersonProfilePage({
 
   const { data: person, error } = await supabase
     .from("users")
-    .select(`id, name, image, location, interests, "linkedinUrl", experiences!experiences_userId_fkey(id, type, title, organization, description, skills, current, startDate, endDate)`)
+    .select(`id, name, image, location, interests, linkedinUrl, experiences!experiences_userId_fkey(id, type, title, organization, description, skills, current, startDate, endDate)`)
     .eq("id", id)
     .eq("onboarded", true)
     .single()

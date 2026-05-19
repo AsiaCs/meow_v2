@@ -1,13 +1,23 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function proxy(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
+const PROTECTED_PATHS = ['/dashboard', '/events', '/internships', '/people', '/profile', '/onboarding', '/submit', '/saved']
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
+export async function proxy(request: NextRequest) {
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+    // If env vars are missing, allow public routes through and block protected ones
+    if (!supabaseUrl || !supabaseKey) {
+      const isProtected = PROTECTED_PATHS.some(p => request.nextUrl.pathname.startsWith(p))
+      if (isProtected) return NextResponse.redirect(new URL('/auth/signin', request.url))
+      return NextResponse.next({ request })
+    }
+
+    let supabaseResponse = NextResponse.next({ request })
+
+    const supabase = createServerClient(supabaseUrl, supabaseKey, {
       cookies: {
         getAll() { return request.cookies.getAll() },
         setAll(cookiesToSet) {
@@ -18,25 +28,28 @@ export async function proxy(request: NextRequest) {
           )
         },
       },
+    })
+
+    let user = null
+    try {
+      const { data } = await supabase.auth.getUser()
+      user = data.user
+    } catch {
+      // treat as unauthenticated
     }
-  )
 
-  let user = null
-  try {
-    const { data } = await supabase.auth.getUser()
-    user = data.user
+    const isProtected = PROTECTED_PATHS.some(p => request.nextUrl.pathname.startsWith(p))
+    if (isProtected && !user) {
+      return NextResponse.redirect(new URL('/auth/signin', request.url))
+    }
+
+    return supabaseResponse
   } catch {
-    // auth failure — treat as unauthenticated
+    // Middleware must never hard-crash — fail open for public routes
+    const isProtected = PROTECTED_PATHS.some(p => request.nextUrl.pathname.startsWith(p))
+    if (isProtected) return NextResponse.redirect(new URL('/auth/signin', request.url))
+    return NextResponse.next({ request })
   }
-
-  const protectedPaths = ['/dashboard', '/events', '/internships', '/people', '/profile', '/onboarding', '/submit', '/saved']
-  const isProtected = protectedPaths.some(p => request.nextUrl.pathname.startsWith(p))
-
-  if (isProtected && !user) {
-    return NextResponse.redirect(new URL('/auth/signin', request.url))
-  }
-
-  return supabaseResponse
 }
 
 export const config = {
