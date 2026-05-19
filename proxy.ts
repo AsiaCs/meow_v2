@@ -21,7 +21,13 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
+  let user = null
+  try {
+    const { data } = await supabase.auth.getUser()
+    user = data.user
+  } catch {
+    // auth failure — treat as unauthenticated
+  }
 
   const protectedPaths = ['/dashboard', '/events', '/internships', '/people', '/profile', '/onboarding', '/submit', '/saved']
   const isProtected = protectedPaths.some(p => request.nextUrl.pathname.startsWith(p))
