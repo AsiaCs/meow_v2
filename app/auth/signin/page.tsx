@@ -41,28 +41,33 @@ export default function SignInPage() {
     setSuccessMsg(null)
     setLoading(true)
 
-    const supabase = createClient()
+    try {
+      const supabase = createClient()
 
-    if (mode === "signin") {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) {
-        setError(error.message)
-        setLoading(false)
+      if (mode === "signin") {
+        const { error } = await supabase.auth.signInWithPassword({ email, password })
+        if (error) {
+          setError(error.message)
+        } else {
+          window.location.href = "/dashboard"
+          return
+        }
       } else {
-        window.location.href = "/dashboard"
+        const { data, error } = await supabase.auth.signUp({ email, password })
+        if (error) {
+          setError(error.message)
+        } else if (data.session) {
+          window.location.href = "/onboarding"
+          return
+        } else {
+          setSuccessMsg("Check your email for a confirmation link to complete sign-up.")
+        }
       }
-    } else {
-      const { data, error } = await supabase.auth.signUp({ email, password })
-      if (error) {
-        setError(error.message)
-        setLoading(false)
-      } else if (data.session) {
-        window.location.href = "/onboarding"
-      } else {
-        setSuccessMsg("Check your email for a confirmation link to complete sign-up.")
-        setLoading(false)
-      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
     }
+
+    setLoading(false)
   }
 
   const switchMode = (next: Mode) => {
