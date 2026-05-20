@@ -2,21 +2,30 @@ import { NextResponse } from "next/server"
 import { createServerClient, serializeCookieHeader } from "@supabase/ssr"
 
 export async function POST(request: Request) {
-  let body: { email: string; password: string; mode: "signin" | "signup" }
   try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 })
-  }
+    let body: { email?: string; password?: string; mode?: string }
+    try {
+      body = await request.json()
+    } catch {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
+    }
 
-  const { email, password, mode } = body
+    const { email, password, mode } = body
 
-  const response = NextResponse.json({ ok: true })
+    if (!email || !password || !mode) {
+      return NextResponse.json({ error: "Missing email, password, or mode" }, { status: 400 })
+    }
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+    if (!supabaseUrl || !supabaseKey) {
+      return NextResponse.json({ error: "Server configuration error" }, { status: 500 })
+    }
+
+    const response = NextResponse.json({ ok: true })
+
+    const supabase = createServerClient(supabaseUrl, supabaseKey, {
       cookies: {
         getAll() { return [] },
         setAll(cookiesToSet) {
@@ -28,17 +37,20 @@ export async function POST(request: Request) {
           })
         },
       },
+    })
+
+    if (mode === "signup") {
+      const { data, error } = await supabase.auth.signUp({ email, password })
+      if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+      if (!data.session) return NextResponse.json({ confirm: true })
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
+      if (error) return NextResponse.json({ error: error.message }, { status: 401 })
     }
-  )
 
-  if (mode === "signup") {
-    const { data, error } = await supabase.auth.signUp({ email, password })
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
-    if (!data.session) return NextResponse.json({ confirm: true })
-  } else {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) return NextResponse.json({ error: error.message }, { status: 401 })
+    return response
+  } catch (err) {
+    console.error("[auth/email]", err)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
-
-  return response
 }

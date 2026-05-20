@@ -48,10 +48,17 @@ export default function SignInPage() {
         body: JSON.stringify({ email, password, mode }),
       })
 
-      const json = await res.json()
+      let json: Record<string, unknown> = {}
+      try {
+        json = await res.json()
+      } catch {
+        setError("Server error — please try again.")
+        setLoading(false)
+        return
+      }
 
       if (!res.ok) {
-        setError(json.error ?? "Something went wrong. Please try again.")
+        setError((json.error as string) ?? "Something went wrong. Please try again.")
         setLoading(false)
         return
       }
