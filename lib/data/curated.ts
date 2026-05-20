@@ -38,7 +38,7 @@ export const CURATED_INTERNSHIPS: CuratedInternship[] = [
     id: "c-i-2", title: "Software Engineering Intern", company: "Anthropic",
     location: "San Francisco, CA", isRemote: false, deadline: null, isPaid: true, salary: null,
     tags: ["Machine Learning / AI", "Software Engineering"],
-    applicationUrl: "https://boards.greenhouse.io/anthropic",
+    applicationUrl: "https://boards.greenhouse.io/anthropic#internships",
   },
   {
     id: "c-i-3", title: "Investment Banking Summer Analyst", company: "Goldman Sachs",
@@ -56,7 +56,7 @@ export const CURATED_INTERNSHIPS: CuratedInternship[] = [
     id: "c-i-5", title: "Product Management Intern", company: "OpenAI",
     location: "San Francisco, CA", isRemote: false, deadline: null, isPaid: true, salary: null,
     tags: ["Product Management", "Machine Learning / AI"],
-    applicationUrl: "https://openai.com/careers",
+    applicationUrl: "https://jobs.ashbyhq.com/openai?department=Internship",
   },
   {
     id: "c-i-6", title: "ML Research Intern", company: "Cohere",
@@ -68,19 +68,19 @@ export const CURATED_INTERNSHIPS: CuratedInternship[] = [
     id: "c-i-7", title: "Growth Marketing Intern", company: "Notion",
     location: "San Francisco, CA", isRemote: false, deadline: null, isPaid: true, salary: null,
     tags: ["Marketing", "Entrepreneurship"],
-    applicationUrl: "https://boards.greenhouse.io/notion",
+    applicationUrl: "https://boards.greenhouse.io/notion#internships",
   },
   {
     id: "c-i-8", title: "Venture Capital Fellow", company: "a16z",
     location: "Menlo Park, CA", isRemote: false, deadline: null, isPaid: true, salary: null,
     tags: ["Investing", "Finance", "Entrepreneurship"],
-    applicationUrl: "https://a16z.com/jobs/",
+    applicationUrl: "https://jobs.a16z.com/jobs?categories=Internship",
   },
   {
     id: "c-i-9", title: "Software Engineering Intern", company: "Vercel",
     location: "Remote", isRemote: true, deadline: null, isPaid: true, salary: null,
     tags: ["Software Engineering"],
-    applicationUrl: "https://vercel.com/careers",
+    applicationUrl: "https://vercel.com/careers#jobs",
   },
   {
     id: "c-i-10", title: "Finance & Strategy Intern", company: "Ramp",
@@ -92,7 +92,7 @@ export const CURATED_INTERNSHIPS: CuratedInternship[] = [
     id: "c-i-11", title: "Product Design Intern", company: "Figma",
     location: "San Francisco, CA", isRemote: false, deadline: null, isPaid: true, salary: null,
     tags: ["Design", "Product Management"],
-    applicationUrl: "https://www.figma.com/careers/jobs/",
+    applicationUrl: "https://jobs.ashbyhq.com/figma?department=Internships",
   },
   {
     id: "c-i-12", title: "Software Engineering Intern", company: "Linear",

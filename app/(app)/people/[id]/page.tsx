@@ -30,6 +30,15 @@ const EXP_ICONS: Record<string, React.ComponentType<{ size?: number; strokeWidth
 
 const TAG_VARIANTS: Array<"purple" | "pink" | "green" | "gray"> = ["purple", "pink", "green", "gray"]
 
+function isRealLinkedIn(url: string | null | undefined): boolean {
+  if (!url) return false
+  try {
+    const { hostname, pathname } = new URL(url)
+    return (hostname === "linkedin.com" || hostname === "www.linkedin.com") &&
+      pathname.startsWith("/in/") && pathname.length > 5
+  } catch { return false }
+}
+
 export default async function PersonProfilePage({
   params,
 }: {
@@ -51,6 +60,7 @@ export default async function PersonProfilePage({
     ? (person as any).experiences
     : []
   const isMentor = experiences.some((e: any) => e.type === "WORK")
+  const linkedinUrl = isRealLinkedIn((person as any).linkedinUrl) ? (person as any).linkedinUrl : null
 
   return (
     <div className="min-h-dvh bg-bg-base">
@@ -99,9 +109,9 @@ export default async function PersonProfilePage({
                   </div>
                 )}
 
-                {(person as any).linkedinUrl && (
+                {linkedinUrl && (
                   <a
-                    href={(person as any).linkedinUrl}
+                    href={linkedinUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-xl text-sm font-medium border border-[#0077B5]/40 text-[#0077B5] hover:bg-[#0077B5]/10 transition-colors"
