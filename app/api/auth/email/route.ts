@@ -28,7 +28,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true })
   } catch (err) {
-    console.error("[auth/email]", err)
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+    const msg = err instanceof Error ? err.message : String(err)
+    console.error("[auth/email]", msg)
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }

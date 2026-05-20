@@ -35,11 +35,15 @@ export async function GET(request: NextRequest) {
       if (!error) {
         return redirectResponse
       }
+      const msg = encodeURIComponent(error.message)
       console.error('[auth/callback] Supabase error:', error.message)
+      return NextResponse.redirect(`${origin}/auth/error?reason=supabase&msg=${msg}`)
     } catch (err) {
-      console.error('[auth/callback] Exception:', err instanceof Error ? err.message : err)
+      const msg = encodeURIComponent(err instanceof Error ? err.message : String(err))
+      console.error('[auth/callback] Exception:', decodeURIComponent(msg))
+      return NextResponse.redirect(`${origin}/auth/error?reason=exception&msg=${msg}`)
     }
   }
 
-  return NextResponse.redirect(`${origin}/auth/error`)
+  return NextResponse.redirect(`${origin}/auth/error?reason=no_code`)
 }
