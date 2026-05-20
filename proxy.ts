@@ -1,23 +1,14 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase/config'
 
 const PROTECTED_PATHS = ['/dashboard', '/events', '/internships', '/people', '/profile', '/onboarding', '/submit', '/saved']
 
 export async function proxy(request: NextRequest) {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-    // If env vars are missing, allow public routes through and block protected ones
-    if (!supabaseUrl || !supabaseKey) {
-      const isProtected = PROTECTED_PATHS.some(p => request.nextUrl.pathname.startsWith(p))
-      if (isProtected) return NextResponse.redirect(new URL('/auth/signin', request.url))
-      return NextResponse.next({ request })
-    }
-
     let supabaseResponse = NextResponse.next({ request })
 
-    const supabase = createServerClient(supabaseUrl, supabaseKey, {
+    const supabase = createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       cookies: {
         getAll() { return request.cookies.getAll() },
         setAll(cookiesToSet) {
@@ -45,7 +36,6 @@ export async function proxy(request: NextRequest) {
 
     return supabaseResponse
   } catch {
-    // Middleware must never hard-crash — fail open for public routes
     const isProtected = PROTECTED_PATHS.some(p => request.nextUrl.pathname.startsWith(p))
     if (isProtected) return NextResponse.redirect(new URL('/auth/signin', request.url))
     return NextResponse.next({ request })
