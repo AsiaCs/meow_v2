@@ -43,13 +43,19 @@ export default function EventsPage() {
   const [selectedCity, setSelectedCity] = useState<string>("all")
 
   useEffect(() => {
-    fetch("/api/events")
-      .then((r) => r.json())
-      .then((data) => {
-        setEvents(Array.isArray(data) ? data : data.events ?? [])
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
+    // Load events and user location in parallel
+    Promise.all([
+      fetch("/api/events").then((r) => r.json()),
+      fetch("/api/me").then((r) => r.json()),
+    ]).then(([eventsData, meData]) => {
+      setEvents(Array.isArray(eventsData) ? eventsData : eventsData.events ?? [])
+      // Auto-select user's city if they have a saved location
+      if (meData?.location) {
+        const city = (meData.location as string).split(",")[0].trim()
+        setSelectedCity(city)
+      }
+      setLoading(false)
+    }).catch(() => setLoading(false))
   }, [])
 
   // Build city list from in-person events

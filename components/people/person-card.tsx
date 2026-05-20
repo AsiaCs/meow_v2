@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { MapPin, Star, ExternalLink } from "lucide-react"
+import { MapPin, Star, ArrowRight } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
 interface PersonCardProps {
@@ -40,22 +40,8 @@ export function PersonCard({
   name,
   location,
   interests,
-  linkedinUrl,
-  bio,
   isMentor,
 }: PersonCardProps) {
-  const Wrapper = linkedinUrl
-    ? ({ children }: { children: React.ReactNode }) => (
-        <a href={linkedinUrl} target="_blank" rel="noopener noreferrer" className="block h-full">
-          {children}
-        </a>
-      )
-    : ({ children }: { children: React.ReactNode }) => (
-        <Link href={`/people/${id}`} className="block h-full">
-          {children}
-        </Link>
-      )
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -64,7 +50,7 @@ export function PersonCard({
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
       className="border border-white/[0.06] rounded-3xl p-1.5 bg-white/[0.02] h-full cursor-pointer"
     >
-      <Wrapper>
+      <Link href={`/people/${id}`} className="block h-full">
         <div className="bg-bg-card rounded-[calc(1.5rem-0.375rem)] overflow-hidden flex flex-col h-full p-5 gap-4">
           {/* Header */}
           <div className="flex items-start gap-3">
@@ -96,11 +82,6 @@ export function PersonCard({
             )}
           </div>
 
-          {/* Bio */}
-          {bio && (
-            <p className="text-xs text-text-secondary leading-relaxed line-clamp-2">{bio}</p>
-          )}
-
           {/* Interests */}
           {interests.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
@@ -120,12 +101,12 @@ export function PersonCard({
           {/* CTA */}
           <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between">
             <span className="text-xs font-medium text-purple-light">
-              {linkedinUrl ? "Connect on LinkedIn →" : "View Profile →"}
+              View Profile
             </span>
-            <ExternalLink size={12} strokeWidth={1.5} className="text-text-muted" />
+            <ArrowRight size={12} strokeWidth={1.5} className="text-text-muted" />
           </div>
         </div>
-      </Wrapper>
+      </Link>
     </motion.div>
   )
 }
