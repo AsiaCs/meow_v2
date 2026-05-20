@@ -5,6 +5,7 @@ import { ArrowRight, Sparkles, CalendarDays, Briefcase, Users } from "lucide-rea
 import { EventCard } from "@/components/events/event-card"
 import { InternshipCard } from "@/components/internships/internship-card"
 import { PersonCard } from "@/components/people/person-card"
+import { CURATED_INTERNSHIPS, getCuratedEvents, hasGoodUrl } from "@/lib/data/curated"
 
 function getGreeting(): string {
   const hour = new Date().getHours()
@@ -83,8 +84,13 @@ export default async function DashboardPage() {
   const userLocation = (profileRaw as any)?.location as string | null ?? null
   const userCity = userLocation?.split(",")[0]?.trim().toLowerCase() ?? null
 
-  // Prioritise events near the user, then virtual, then everything else
-  const allEvents = eventsRaw ?? []
+  // Merge DB events with curated fallback, filter bad URLs and past events
+  const dbEvents = (eventsRaw ?? []).filter((e: any) => hasGoodUrl(e.registrationUrl))
+  const curatedEvents = getCuratedEvents()
+  const seenEventTitles = new Set(dbEvents.map((e: any) => e.title.toLowerCase()))
+  const fallbackEvents = curatedEvents.filter(e => !seenEventTitles.has(e.title.toLowerCase()))
+  const allEvents = [...dbEvents, ...fallbackEvents]
+
   const nearbyEvents = userCity
     ? allEvents.filter(e => e.location?.toLowerCase().includes(userCity))
     : []
@@ -92,7 +98,14 @@ export default async function DashboardPage() {
   const otherEvents = allEvents.filter(e => !nearbyEvents.includes(e) && !virtualEvents.includes(e))
   const events = [...nearbyEvents, ...virtualEvents, ...otherEvents].slice(0, 6)
 
-  const internships = internshipsRaw ?? []
+  // Merge DB internships (filter bad URLs) with curated fallback
+  const dbInternships = (internshipsRaw ?? []).filter((i: any) => hasGoodUrl(i.applicationUrl))
+  const seenInternships = new Set(dbInternships.map((i: any) => `${i.company}|${i.title}`))
+  const fallbackInternships = CURATED_INTERNSHIPS.filter(
+    i => !seenInternships.has(`${i.company}|${i.title}`)
+  )
+  const internships = [...dbInternships, ...fallbackInternships].slice(0, 6)
+
   const people = peopleRaw ?? []
 
   const firstName = (user.user_metadata?.full_name as string | undefined)?.split(" ")[0] ?? "there"
