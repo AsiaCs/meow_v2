@@ -69,11 +69,11 @@ function getFallbackInternships(interests: string[]): ScrapedInternship[] {
       isRemote: false,
       description:
         "Join Stripe's engineering team to build reliable, scalable infrastructure powering global payments. Work alongside world-class engineers on real production systems.",
-      applicationUrl: "https://stripe.com/jobs",
+      applicationUrl: "https://stripe.com/jobs/search?teams[0]=university-recruiting",
       isPaid: true,
       tags: ["Software Engineering"],
       source: SOURCE,
-      sourceUrl: "https://stripe.com/jobs",
+      sourceUrl: "https://stripe.com/jobs/search?teams[0]=university-recruiting",
     },
     {
       title: "Product Management Intern",
@@ -82,11 +82,11 @@ function getFallbackInternships(interests: string[]): ScrapedInternship[] {
       isRemote: false,
       description:
         "Help define the future of design tooling at Figma. Work cross-functionally with engineering and design to ship features used by millions of creators worldwide.",
-      applicationUrl: "https://www.figma.com/careers",
+      applicationUrl: "https://boards.greenhouse.io/figma",
       isPaid: true,
       tags: ["Product Management", "Design"],
       source: SOURCE,
-      sourceUrl: "https://www.figma.com/careers",
+      sourceUrl: "https://boards.greenhouse.io/figma",
     },
     {
       title: "Data Science Intern",
@@ -95,11 +95,11 @@ function getFallbackInternships(interests: string[]): ScrapedInternship[] {
       isRemote: true,
       description:
         "Work with large-scale datasets and ML models to surface insights that drive product and business decisions at Databricks.",
-      applicationUrl: "https://www.databricks.com/company/careers",
+      applicationUrl: "https://www.databricks.com/company/careers/university-recruiting",
       isPaid: true,
       tags: ["Data Science", "Machine Learning / AI"],
       source: SOURCE,
-      sourceUrl: "https://www.databricks.com/company/careers",
+      sourceUrl: "https://www.databricks.com/company/careers/university-recruiting",
     },
     {
       title: "Investment Banking Summer Analyst",
@@ -108,11 +108,11 @@ function getFallbackInternships(interests: string[]): ScrapedInternship[] {
       isRemote: false,
       description:
         "Join Goldman Sachs' Investment Banking Division for an intensive summer program. Gain exposure to M&A, equity, and debt financing transactions.",
-      applicationUrl: "https://www.goldmansachs.com/careers",
+      applicationUrl: "https://www.goldmansachs.com/careers/students/programs/americas/summer-analyst-program.html",
       isPaid: true,
       tags: ["Finance", "Investing"],
       source: SOURCE,
-      sourceUrl: "https://www.goldmansachs.com/careers",
+      sourceUrl: "https://www.goldmansachs.com/careers/students/programs/americas/summer-analyst-program.html",
     },
     {
       title: "Machine Learning Intern",
@@ -121,11 +121,11 @@ function getFallbackInternships(interests: string[]): ScrapedInternship[] {
       isRemote: true,
       description:
         "Research and engineer LLM capabilities at Cohere. Contribute to cutting-edge NLP research and productionize ML models at scale.",
-      applicationUrl: "https://cohere.com/careers",
+      applicationUrl: "https://jobs.lever.co/cohere",
       isPaid: true,
       tags: ["Machine Learning / AI", "Software Engineering"],
       source: SOURCE,
-      sourceUrl: "https://cohere.com/careers",
+      sourceUrl: "https://jobs.lever.co/cohere",
     },
     {
       title: "UX Design Intern",
@@ -134,11 +134,11 @@ function getFallbackInternships(interests: string[]): ScrapedInternship[] {
       isRemote: true,
       description:
         "Shape the design language of one of the most beloved developer tools. Own design end-to-end from research to final polish.",
-      applicationUrl: "https://linear.app/careers",
+      applicationUrl: "https://jobs.lever.co/linear",
       isPaid: true,
       tags: ["Design", "Product Management"],
       source: SOURCE,
-      sourceUrl: "https://linear.app/careers",
+      sourceUrl: "https://jobs.lever.co/linear",
     },
     {
       title: "Growth Marketing Intern",
@@ -147,11 +147,11 @@ function getFallbackInternships(interests: string[]): ScrapedInternship[] {
       isRemote: false,
       description:
         "Drive user acquisition and activation for Notion's expanding product suite. Run experiments, analyze funnels, and collaborate with the brand team.",
-      applicationUrl: "https://www.notion.so/careers",
+      applicationUrl: "https://boards.greenhouse.io/notion",
       isPaid: true,
       tags: ["Marketing", "Entrepreneurship"],
       source: SOURCE,
-      sourceUrl: "https://www.notion.so/careers",
+      sourceUrl: "https://boards.greenhouse.io/notion",
     },
     {
       title: "Venture Capital Intern",
@@ -160,24 +160,24 @@ function getFallbackInternships(interests: string[]): ScrapedInternship[] {
       isRemote: false,
       description:
         "Support deal sourcing, due diligence, and portfolio support at one of the world's leading VC firms. Ideal for those passionate about startups and technology.",
-      applicationUrl: "https://a16z.com/about/jobs",
+      applicationUrl: "https://jobs.a16z.com",
       isPaid: true,
       tags: ["Investing", "Finance", "Entrepreneurship"],
       source: SOURCE,
-      sourceUrl: "https://a16z.com/about/jobs",
+      sourceUrl: "https://jobs.a16z.com",
     },
     {
-      title: "Backend Engineering Intern",
-      company: "PlanetScale",
+      title: "Software Engineering Intern",
+      company: "Vercel",
       location: "Remote",
       isRemote: true,
       description:
-        "Work on distributed database infrastructure powering thousands of production applications. Deep-dive into MySQL internals and scalable system design.",
-      applicationUrl: "https://planetscale.com/careers",
+        "Build the infrastructure that powers the modern web. Work on the deployment platform used by millions of developers worldwide.",
+      applicationUrl: "https://vercel.com/careers",
       isPaid: true,
       tags: ["Software Engineering"],
       source: SOURCE,
-      sourceUrl: "https://planetscale.com/careers",
+      sourceUrl: "https://vercel.com/careers",
     },
     {
       title: "Operations & Strategy Intern",
@@ -186,11 +186,11 @@ function getFallbackInternships(interests: string[]): ScrapedInternship[] {
       isRemote: false,
       description:
         "Drive operational efficiency initiatives and contribute to strategic planning at Ramp, the fastest-growing corporate card and expense management platform.",
-      applicationUrl: "https://ramp.com/careers",
+      applicationUrl: "https://jobs.lever.co/ramp",
       isPaid: true,
       tags: ["Operations", "Finance"],
       source: SOURCE,
-      sourceUrl: "https://ramp.com/careers",
+      sourceUrl: "https://jobs.lever.co/ramp",
     },
   ]
 

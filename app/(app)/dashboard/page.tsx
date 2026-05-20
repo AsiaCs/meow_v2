@@ -53,14 +53,14 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/auth/signin")
 
-  const [{ data: eventsRaw }, { data: internshipsRaw }, { data: peopleRaw }] = await Promise.all([
+  const [{ data: eventsRaw }, { data: internshipsRaw }, { data: peopleRaw }, { data: profileRaw }] = await Promise.all([
     supabase
       .from("events")
       .select("id, title, description, startDate, endDate, location, isVirtual, registrationUrl, imageUrl, tags, isFree, source")
       .eq("status", "APPROVED")
       .gte("startDate", new Date().toISOString())
       .order("startDate")
-      .limit(6),
+      .limit(20),
     supabase
       .from("internships")
       .select("id, title, company, location, isRemote, deadline, isPaid, salary, tags, applicationUrl")
@@ -68,13 +68,30 @@ export default async function DashboardPage() {
       .limit(6),
     supabase
       .from("users")
-      .select("id, name, image, location, interests")
+      .select("id, name, location, interests")
       .eq("onboarded", true)
+      .neq("id", user.id)
       .order("createdAt", { ascending: false })
       .limit(4),
+    supabase
+      .from("users")
+      .select("location, interests")
+      .eq("id", user.id)
+      .single(),
   ])
 
-  const events = eventsRaw ?? []
+  const userLocation = (profileRaw as any)?.location as string | null ?? null
+  const userCity = userLocation?.split(",")[0]?.trim().toLowerCase() ?? null
+
+  // Prioritise events near the user, then virtual, then everything else
+  const allEvents = eventsRaw ?? []
+  const nearbyEvents = userCity
+    ? allEvents.filter(e => e.location?.toLowerCase().includes(userCity))
+    : []
+  const virtualEvents = allEvents.filter(e => e.isVirtual && !nearbyEvents.includes(e))
+  const otherEvents = allEvents.filter(e => !nearbyEvents.includes(e) && !virtualEvents.includes(e))
+  const events = [...nearbyEvents, ...virtualEvents, ...otherEvents].slice(0, 6)
+
   const internships = internshipsRaw ?? []
   const people = peopleRaw ?? []
 
@@ -160,7 +177,6 @@ export default async function DashboardPage() {
                   key={person.id}
                   id={person.id}
                   name={person.name ?? "Anonymous"}
-                  image={person.image ?? undefined}
                   location={person.location ?? undefined}
                   interests={person.interests}
                 />
