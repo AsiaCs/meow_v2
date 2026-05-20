@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
 
 function GoogleIcon() {
   return (
@@ -42,32 +41,31 @@ export default function SignInPage() {
     setLoading(true)
 
     try {
-      const supabase = createClient()
+      const res = await fetch("/api/auth/email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, mode }),
+      })
 
-      if (mode === "signin") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) {
-          setError(error.message)
-        } else {
-          window.location.href = "/dashboard"
-          return
-        }
-      } else {
-        const { data, error } = await supabase.auth.signUp({ email, password })
-        if (error) {
-          setError(error.message)
-        } else if (data.session) {
-          window.location.href = "/onboarding"
-          return
-        } else {
-          setSuccessMsg("Check your email for a confirmation link to complete sign-up.")
-        }
+      const json = await res.json()
+
+      if (!res.ok) {
+        setError(json.error ?? "Something went wrong. Please try again.")
+        setLoading(false)
+        return
       }
+
+      if (json.confirm) {
+        setSuccessMsg("Check your email for a confirmation link to complete sign-up.")
+        setLoading(false)
+        return
+      }
+
+      window.location.href = mode === "signup" ? "/onboarding" : "/dashboard"
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
   const switchMode = (next: Mode) => {
