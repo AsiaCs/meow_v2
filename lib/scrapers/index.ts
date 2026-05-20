@@ -2,6 +2,7 @@ import { scrapeCerebralValley, type ScrapedEvent } from "./cerebralvalley"
 import { scrapeLuma } from "./luma"
 import { scrapeInternships, type ScrapedInternship } from "./internships"
 import { createClient } from "@/lib/supabase/server"
+import { filterReachable } from "@/lib/validators/links"
 
 async function saveEvents(events: ScrapedEvent[]): Promise<number> {
   const supabase = await createClient()
@@ -130,10 +131,10 @@ async function saveInternships(internships: ScrapedInternship[]): Promise<number
   return saved
 }
 
-export async function runAllScrapers(interests: string[] = []) {
+export async function runAllScrapers(interests: string[] = [], city?: string) {
   const [cvResult, lumaResult, internshipsResult] = await Promise.allSettled([
     scrapeCerebralValley(),
-    scrapeLuma("networking tech"),
+    scrapeLuma("networking tech startup", city),
     scrapeInternships(interests),
   ])
 
@@ -141,14 +142,24 @@ export async function runAllScrapers(interests: string[] = []) {
     cvResult.status === "fulfilled" ? cvResult.value : []
   const lumaEvents: ScrapedEvent[] =
     lumaResult.status === "fulfilled" ? lumaResult.value : []
-  const internships: ScrapedInternship[] =
+  const rawInternships: ScrapedInternship[] =
     internshipsResult.status === "fulfilled" ? internshipsResult.value : []
 
-  const allEvents = [...cvEvents, ...lumaEvents]
+  // Validate links before saving — filter out dead/unreachable URLs
+  const [validEvents, validInternships] = await Promise.all([
+    filterReachable(
+      [...cvEvents, ...lumaEvents],
+      (e) => e.registrationUrl,
+    ),
+    filterReachable(
+      rawInternships,
+      (i) => i.applicationUrl,
+    ),
+  ])
 
   const [eventsSaved, internshipsSaved] = await Promise.all([
-    saveEvents(allEvents),
-    saveInternships(internships),
+    saveEvents(validEvents),
+    saveInternships(validInternships),
   ])
 
   return {
@@ -156,7 +167,9 @@ export async function runAllScrapers(interests: string[] = []) {
     stats: {
       cerebralValley: cvEvents.length,
       luma: lumaEvents.length,
-      internships: internships.length,
+      internships: rawInternships.length,
+      validEvents: validEvents.length,
+      validInternships: validInternships.length,
       eventsSaved,
       internshipsSaved,
     },

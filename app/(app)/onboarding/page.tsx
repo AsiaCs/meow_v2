@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { MapPin, CheckCircle, ArrowRight, Wifi } from "lucide-react"
+import { MapPin, CheckCircle, ArrowRight, Wifi, Link2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { INTEREST_AREAS, cn } from "@/lib/utils"
@@ -56,6 +56,7 @@ export default function OnboardingPage() {
   // Step 2
   const [location, setLocation] = useState("")
   const [remoteFirst, setRemoteFirst] = useState(false)
+  const [linkedinUrl, setLinkedinUrl] = useState("")
 
   // Step 3
   const [lookingFor, setLookingFor] = useState<LookingFor[]>([])
@@ -97,6 +98,7 @@ export default function OnboardingPage() {
           interests: selectedInterests,
           location: remoteFirst ? "Remote" : location,
           lookingFor,
+          linkedinUrl: linkedinUrl.trim() || undefined,
         }),
       })
       if (!res.ok) {
@@ -273,6 +275,27 @@ export default function OnboardingPage() {
                   </p>
                 </div>
               </button>
+
+              <div>
+                <p className="text-sm font-medium text-text-primary mb-2">LinkedIn profile</p>
+                <div className="relative">
+                  <Link2
+                    size={16}
+                    strokeWidth={1.5}
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none"
+                  />
+                  <input
+                    type="url"
+                    placeholder="https://linkedin.com/in/yourname"
+                    value={linkedinUrl}
+                    onChange={(e) => setLinkedinUrl(e.target.value)}
+                    className="w-full bg-bg-surface border border-border rounded-xl pl-9 pr-4 py-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple/20 transition-all"
+                  />
+                </div>
+                <p className="text-xs text-text-muted mt-1.5">
+                  Optional — lets others connect with you directly
+                </p>
+              </div>
             </motion.div>
           )}
 

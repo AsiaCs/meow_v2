@@ -229,17 +229,113 @@ async function scrapeLumaWeb(query: string): Promise<ScrapedEvent[]> {
   return events.slice(0, 20)
 }
 
-export async function scrapeLuma(query: string = "networking"): Promise<ScrapedEvent[]> {
+// Maps common city names to Luma city slugs
+const CITY_SLUGS: Record<string, string> = {
+  "san francisco": "sf",
+  "sf": "sf",
+  "new york": "nyc",
+  "nyc": "nyc",
+  "new york city": "nyc",
+  "los angeles": "la",
+  "la": "la",
+  "london": "london",
+  "toronto": "toronto",
+  "boston": "boston",
+  "chicago": "chicago",
+  "seattle": "seattle",
+  "miami": "miami",
+  "austin": "austin",
+  "denver": "denver",
+  "atlanta": "atlanta",
+  "washington": "dc",
+  "dc": "dc",
+  "berlin": "berlin",
+  "singapore": "singapore",
+}
+
+function getCitySlug(city: string): string | null {
+  const lower = city.toLowerCase().trim()
+  for (const [key, slug] of Object.entries(CITY_SLUGS)) {
+    if (lower.includes(key)) return slug
+  }
+  return null
+}
+
+async function scrapeLumaCity(citySlug: string): Promise<ScrapedEvent[]> {
+  const url = `${BASE_URL}/c/${citySlug}`
   try {
-    // Try the public API first
-    const apiResults = await fetchLumaApi(query)
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; Meow/1.0; +https://meow.app)",
+        Accept: "text/html,application/xhtml+xml",
+      },
+      next: { revalidate: 3600 },
+    })
+    if (!res.ok) return []
+    const html = await res.text()
+    const $ = cheerio.load(html)
+    const events: ScrapedEvent[] = []
+
+    $("a[href*='/event/'], a[href*='lu.ma/']").each((_, el) => {
+      try {
+        const $el = $(el)
+        const href = $el.attr("href") ?? ""
+        if (!href || href === "/") return
+        const fullUrl = href.startsWith("http") ? href : `${BASE_URL}${href}`
+        const title =
+          $el.find("h1,h2,h3,h4,[class*='title']").first().text().trim() ||
+          $el.text().trim().slice(0, 100)
+        if (!title || title.length < 4) return
+
+        const timeEl = $el.find("time").first()
+        const dateText = timeEl.attr("datetime") ?? timeEl.text().trim()
+        const startDate = dateText ? new Date(dateText) : new Date(Date.now() + 7 * 86400000)
+        if (isNaN(startDate.getTime())) return
+
+        const locationText = $el.find("[class*='location'],address").first().text().trim()
+        const isVirtual = /virtual|online|zoom/i.test(locationText)
+
+        events.push({
+          title,
+          startDate,
+          location: isVirtual ? undefined : (locationText || citySlug),
+          isVirtual,
+          registrationUrl: fullUrl,
+          tags: guessTags(title, ""),
+          source: SOURCE,
+          sourceUrl: fullUrl,
+          isFree: true,
+        })
+      } catch { /* skip */ }
+    })
+    return events.slice(0, 20)
+  } catch {
+    return []
+  }
+}
+
+export async function scrapeLuma(query: string = "networking", city?: string): Promise<ScrapedEvent[]> {
+  // If we have a city, try city-specific page first
+  if (city) {
+    const slug = getCitySlug(city)
+    if (slug) {
+      const cityEvents = await scrapeLumaCity(slug)
+      if (cityEvents.length > 0) return cityEvents
+    }
+  }
+
+  // Build query incorporating city for relevance
+  const searchQuery = city ? `${query} ${city}` : query
+
+  try {
+    const apiResults = await fetchLumaApi(searchQuery)
     if (apiResults.length > 0) return apiResults
   } catch {
     // Fall through to web scraping
   }
 
   try {
-    return await scrapeLumaWeb(query)
+    return await scrapeLumaWeb(searchQuery)
   } catch {
     return []
   }
