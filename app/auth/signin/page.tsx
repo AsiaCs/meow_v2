@@ -28,11 +28,17 @@ export default function SignInPage() {
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
   const handleGoogleSignIn = async () => {
-    const supabase = createClient()
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/api/auth/callback` },
-    })
+    try {
+      setError(null)
+      const supabase = createClient()
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: `${window.location.origin}/api/auth/callback` },
+      })
+      if (error) setError(error.message)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to sign in with Google")
+    }
   }
 
   const handleEmailAuth = async (e: React.FormEvent) => {
