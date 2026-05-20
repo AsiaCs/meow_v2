@@ -1,11 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
-import { Search, PlusCircle } from "lucide-react"
+import { Search, PlusCircle, MapPin, Globe } from "lucide-react"
 import { EventCard } from "@/components/events/event-card"
 import { CalendarSidebar } from "@/components/events/calendar-sidebar"
-import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 
 interface Event {
@@ -31,12 +30,17 @@ const TABS: { label: string; value: FilterTab }[] = [
   { label: "Free", value: "free" },
 ]
 
+function extractCity(location: string): string {
+  return location.split(",")[0].trim()
+}
+
 export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<FilterTab>("all")
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [search, setSearch] = useState("")
+  const [selectedCity, setSelectedCity] = useState<string>("all")
 
   useEffect(() => {
     fetch("/api/events")
@@ -48,10 +52,28 @@ export default function EventsPage() {
       .catch(() => setLoading(false))
   }, [])
 
+  // Build city list from in-person events
+  const cities = useMemo(() => {
+    const citySet = new Set<string>()
+    events.forEach((e) => {
+      if (!e.isVirtual && e.location) citySet.add(extractCity(e.location))
+    })
+    return Array.from(citySet).sort()
+  }, [events])
+
   const filtered = events.filter((e) => {
     if (tab === "in-person" && e.isVirtual) return false
     if (tab === "virtual" && !e.isVirtual) return false
     if (tab === "free" && !e.isFree) return false
+
+    if (selectedCity !== "all") {
+      if (selectedCity === "virtual") {
+        if (!e.isVirtual) return false
+      } else {
+        if (e.isVirtual || !e.location?.toLowerCase().includes(selectedCity.toLowerCase()))
+          return false
+      }
+    }
 
     if (selectedDate) {
       const eDate = new Date(e.startDate)
@@ -132,6 +154,50 @@ export default function EventsPage() {
                 </button>
               ))}
             </div>
+
+            {/* Location filter */}
+            {cities.length > 0 && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <MapPin size={13} strokeWidth={1.5} className="text-text-muted flex-shrink-0" />
+                <button
+                  onClick={() => setSelectedCity("all")}
+                  className={cn(
+                    "flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150",
+                    selectedCity === "all"
+                      ? "border-purple bg-purple/15 text-purple-light"
+                      : "border-border text-text-muted hover:border-border-strong hover:text-text-secondary"
+                  )}
+                >
+                  <Globe size={11} strokeWidth={1.5} />
+                  Everywhere
+                </button>
+                <button
+                  onClick={() => setSelectedCity("virtual")}
+                  className={cn(
+                    "px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150",
+                    selectedCity === "virtual"
+                      ? "border-purple bg-purple/15 text-purple-light"
+                      : "border-border text-text-muted hover:border-border-strong hover:text-text-secondary"
+                  )}
+                >
+                  Online
+                </button>
+                {cities.map((city) => (
+                  <button
+                    key={city}
+                    onClick={() => setSelectedCity(city)}
+                    className={cn(
+                      "px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150",
+                      selectedCity === city
+                        ? "border-purple bg-purple/15 text-purple-light"
+                        : "border-border text-text-muted hover:border-border-strong hover:text-text-secondary"
+                    )}
+                  >
+                    {city}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

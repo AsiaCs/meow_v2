@@ -1,10 +1,10 @@
 ﻿"use client"
 
+import Link from "next/link"
 import { motion } from "framer-motion"
-import { MapPin, Monitor, ExternalLink, CalendarDays, Tag } from "lucide-react"
+import { MapPin, Monitor, CalendarDays, Tag, ArrowRight } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { cn, formatDateShort } from "@/lib/utils"
+import { formatDateShort } from "@/lib/utils"
 
 interface EventCardProps {
   id: string
@@ -44,12 +44,12 @@ function tagVariant(index: number): "purple" | "pink" | "green" | "gray" {
 }
 
 export function EventCard({
+  id,
   title,
   description,
   startDate,
   location,
   isVirtual,
-  registrationUrl,
   imageUrl,
   tags,
   isFree,
@@ -61,106 +61,98 @@ export function EventCard({
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -4 }}
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
-      className="border border-white/[0.06] rounded-3xl p-1.5 bg-white/[0.02] h-full"
+      className="border border-white/[0.06] rounded-3xl p-1.5 bg-white/[0.02] h-full cursor-pointer"
     >
-      <div className="bg-bg-card rounded-[calc(1.5rem-0.375rem)] overflow-hidden flex flex-col h-full">
-        {/* Image or gradient header */}
-        {imageUrl ? (
-          <div className="h-36 overflow-hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={imageUrl}
-              alt={title}
-              className="w-full h-full object-cover"
+      <Link href={`/events/${id}`} className="block h-full">
+        <div className="bg-bg-card rounded-[calc(1.5rem-0.375rem)] overflow-hidden flex flex-col h-full">
+          {/* Image or gradient header */}
+          {imageUrl ? (
+            <div className="h-36 overflow-hidden">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={imageUrl}
+                alt={title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ) : (
+            <div
+              className="h-28 opacity-60"
+              style={{
+                background:
+                  "linear-gradient(135deg, rgba(124,58,237,0.3) 0%, rgba(236,72,153,0.2) 100%)",
+              }}
             />
-          </div>
-        ) : (
-          <div
-            className="h-28 opacity-60"
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(124,58,237,0.3) 0%, rgba(236,72,153,0.2) 100%)",
-            }}
-          />
-        )}
-
-        <div className="flex flex-col flex-1 p-5 gap-3">
-          {/* Tags row */}
-          {tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {tags.slice(0, 3).map((tag, i) => (
-                <Badge key={tag} variant={tagVariant(i)}>
-                  <Tag size={10} className="mr-1 opacity-70" />
-                  {tag}
-                </Badge>
-              ))}
-              {tags.length > 3 && (
-                <Badge variant="gray">+{tags.length - 3}</Badge>
-              )}
-            </div>
           )}
 
-          {/* Date chip */}
-          <div className="flex items-center gap-1.5 text-xs text-text-secondary">
-            <CalendarDays size={13} strokeWidth={1.5} />
-            <span className="font-medium">{formatDateShort(startDate)}</span>
-          </div>
-
-          {/* Title */}
-          <h3 className="text-text-primary font-semibold text-base leading-snug line-clamp-2">
-            {title}
-          </h3>
-
-          {/* Description */}
-          {description && (
-            <p className="text-text-secondary text-sm leading-relaxed line-clamp-2">
-              {description}
-            </p>
-          )}
-
-          {/* Location */}
-          <div className="flex items-center gap-1.5">
-            {isVirtual ? (
-              <Badge variant="purple">
-                <Monitor size={11} className="mr-1" />
-                Virtual
-              </Badge>
-            ) : location ? (
-              <div className="flex items-center gap-1 text-xs text-text-muted">
-                <MapPin size={12} strokeWidth={1.5} />
-                <span>{location}</span>
+          <div className="flex flex-col flex-1 p-5 gap-3">
+            {/* Tags row */}
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {tags.slice(0, 3).map((tag, i) => (
+                  <Badge key={tag} variant={tagVariant(i)}>
+                    <Tag size={10} className="mr-1 opacity-70" />
+                    {tag}
+                  </Badge>
+                ))}
+                {tags.length > 3 && (
+                  <Badge variant="gray">+{tags.length - 3}</Badge>
+                )}
               </div>
-            ) : null}
-          </div>
+            )}
 
-          {/* Spacer */}
-          <div className="flex-1" />
-
-          {/* Footer */}
-          <div className="flex items-center justify-between pt-2 border-t border-white/[0.06]">
-            <div className="flex items-center gap-2">
-              <Badge variant={isFree ? "green" : "gray"}>
-                {isFree ? "Free" : "Paid"}
-              </Badge>
-              <Badge variant="outline">{getSourceLabel(source)}</Badge>
+            {/* Date chip */}
+            <div className="flex items-center gap-1.5 text-xs text-text-secondary">
+              <CalendarDays size={13} strokeWidth={1.5} />
+              <span className="font-medium">{formatDateShort(startDate)}</span>
             </div>
-            <a
-              href={registrationUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <Button
-                variant="primary"
-                size="sm"
-                className="gap-1"
-              >
-                RSVP
-                <ExternalLink size={12} strokeWidth={1.5} />
-              </Button>
-            </a>
+
+            {/* Title */}
+            <h3 className="text-text-primary font-semibold text-base leading-snug line-clamp-2">
+              {title}
+            </h3>
+
+            {/* Description */}
+            {description && (
+              <p className="text-text-secondary text-sm leading-relaxed line-clamp-2">
+                {description}
+              </p>
+            )}
+
+            {/* Location */}
+            <div className="flex items-center gap-1.5">
+              {isVirtual ? (
+                <Badge variant="purple">
+                  <Monitor size={11} className="mr-1" />
+                  Virtual
+                </Badge>
+              ) : location ? (
+                <div className="flex items-center gap-1 text-xs text-text-muted">
+                  <MapPin size={12} strokeWidth={1.5} />
+                  <span>{location}</span>
+                </div>
+              ) : null}
+            </div>
+
+            {/* Spacer */}
+            <div className="flex-1" />
+
+            {/* Footer */}
+            <div className="flex items-center justify-between pt-2 border-t border-white/[0.06]">
+              <div className="flex items-center gap-2">
+                <Badge variant={isFree ? "green" : "gray"}>
+                  {isFree ? "Free" : "Paid"}
+                </Badge>
+                <Badge variant="outline">{getSourceLabel(source)}</Badge>
+              </div>
+              <span className="flex items-center gap-1 text-xs font-medium text-purple-light">
+                View details
+                <ArrowRight size={12} strokeWidth={1.5} />
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      </Link>
     </motion.div>
   )
 }
