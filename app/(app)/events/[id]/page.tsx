@@ -2,8 +2,27 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { getCuratedEvents } from "@/lib/data/curated"
-import { ArrowLeft, MapPin, Monitor, CalendarDays, ExternalLink, Clock, Tag } from "lucide-react"
+import { ArrowLeft, MapPin, Monitor, CalendarDays, ExternalLink, Clock, Tag, Search } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+
+function isDiscoveryUrl(url: string): boolean {
+  try {
+    const { hostname, pathname } = new URL(url)
+    if (hostname.endsWith("lu.ma")) {
+      const cityPaths = new Set([
+        "/discover", "/sf", "/nyc", "/la", "/boston", "/chicago",
+        "/austin", "/seattle", "/dc", "/miami", "/london", "/toronto",
+      ])
+      return cityPaths.has(pathname.replace(/\/$/, ""))
+    }
+    if (hostname.endsWith("cerebralvalley.ai")) {
+      return pathname === "/events" || pathname === "/" || pathname === ""
+    }
+    return false
+  } catch {
+    return false
+  }
+}
 
 const TAG_VARIANTS: Array<"purple" | "pink" | "green" | "gray"> = ["purple", "pink", "green", "gray"]
 
@@ -170,18 +189,32 @@ export default async function EventDetailPage({
         )}
 
         {/* CTA */}
-        {event.registrationUrl && (
-          <a
-            href={event.registrationUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl text-white font-semibold text-base transition-opacity hover:opacity-90 active:scale-[0.98] transition-transform"
-            style={{ background: "var(--gradient-brand)" }}
-          >
-            RSVP / Register
-            <ExternalLink size={16} strokeWidth={1.5} />
-          </a>
-        )}
+        {event.registrationUrl && (() => {
+          const isDiscovery = isDiscoveryUrl(event.registrationUrl)
+          const label = isDiscovery
+            ? (event.isVirtual ? "Browse on Luma" : "Find events in this city")
+            : "RSVP / Register"
+          const Icon = isDiscovery ? Search : ExternalLink
+          return (
+            <>
+              <a
+                href={event.registrationUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl text-white font-semibold text-base hover:opacity-90 active:scale-[0.98] transition-all"
+                style={{ background: "var(--gradient-brand)" }}
+              >
+                {label}
+                <Icon size={16} strokeWidth={1.5} />
+              </a>
+              {isDiscovery && (
+                <p className="text-xs text-text-muted text-center mt-3">
+                  This is a community page — browse upcoming events and pick one to RSVP.
+                </p>
+              )}
+            </>
+          )
+        })()}
       </div>
     </div>
   )
