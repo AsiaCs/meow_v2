@@ -1,57 +1,93 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
+import { unstable_cache } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
-import { getCuratedEvents } from "@/lib/data/curated"
-import { ArrowLeft, MapPin, Monitor, CalendarDays, ExternalLink, Clock, Tag, Search } from "lucide-react"
+import { scrapeCerebralValley, type ScrapedEvent } from "@/lib/scrapers/cerebralvalley"
+import { scrapeLuma } from "@/lib/scrapers/luma"
+import { filterReachable } from "@/lib/validators/links"
+import { isSpecificEventUrl } from "@/lib/validators/specific-urls"
+import { ArrowLeft, MapPin, Monitor, CalendarDays, ExternalLink, Clock, Tag } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
-function isDiscoveryUrl(url: string): boolean {
-  try {
-    const { hostname, pathname } = new URL(url)
-    if (hostname.endsWith("lu.ma")) {
-      const cityPaths = new Set([
-        "/discover", "/sf", "/nyc", "/la", "/boston", "/chicago",
-        "/austin", "/seattle", "/dc", "/miami", "/london", "/toronto",
-      ])
-      return cityPaths.has(pathname.replace(/\/$/, ""))
-    }
-    if (hostname.endsWith("cerebralvalley.ai")) {
-      return pathname === "/events" || pathname === "/" || pathname === ""
-    }
-    return false
-  } catch {
-    return false
-  }
-}
+export const runtime = "nodejs"
+export const revalidate = 1800
 
 const TAG_VARIANTS: Array<"purple" | "pink" | "green" | "gray"> = ["purple", "pink", "green", "gray"]
 
 const SOURCE_LABELS: Record<string, string> = {
   "cerebral-valley": "Cerebral Valley",
+  "Cerebral Valley": "Cerebral Valley",
   luma: "Luma",
+  Luma: "Luma",
   community: "Community",
   user: "Community",
   scraped: "Curated",
-  "Y Combinator": "Y Combinator",
 }
 
 function getSourceLabel(source: string) {
   return SOURCE_LABELS[source] ?? SOURCE_LABELS[source.toLowerCase()] ?? source
 }
 
-function formatEventDate(dateStr: string) {
-  const d = new Date(dateStr)
-  const date = d.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
+function stableId(s: string): string {
+  let h = 0
+  for (let i = 0; i < s.length; i++) {
+    h = ((h << 5) - h) + s.charCodeAt(i)
+    h |= 0
+  }
+  return `ev-${Math.abs(h).toString(36)}`
+}
+
+function formatEventDate(date: Date) {
+  const dateStr = date.toLocaleDateString("en-US", {
+    weekday: "long", month: "long", day: "numeric", year: "numeric",
   })
-  const time = d.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
+  const timeStr = date.toLocaleTimeString("en-US", {
+    hour: "numeric", minute: "2-digit",
   })
-  return { date, time }
+  return { dateStr, timeStr }
+}
+
+const getCachedScrapedEvents = unstable_cache(
+  async (): Promise<ScrapedEvent[]> => {
+    const [cvResult, lumaResult] = await Promise.allSettled([
+      scrapeCerebralValley(),
+      scrapeLuma("networking tech startup"),
+    ])
+    const cv = cvResult.status === "fulfilled" ? cvResult.value : []
+    const lu = lumaResult.status === "fulfilled" ? lumaResult.value : []
+    const specific = [...cv, ...lu].filter((e) => isSpecificEventUrl(e.registrationUrl))
+    return await filterReachable(specific, (e) => e.registrationUrl)
+  },
+  ["events-detail-source-v2"],
+  { revalidate: 1800, tags: ["events"] },
+)
+
+async function findEvent(id: string): Promise<ScrapedEvent | null> {
+  // Try DB first
+  try {
+    const supabase = await createClient()
+    const { data: dbEvents } = await supabase
+      .from("events")
+      .select("title, description, startDate, endDate, location, isVirtual, registrationUrl, imageUrl, tags, source, isFree")
+      .eq("status", "APPROVED")
+    if (Array.isArray(dbEvents)) {
+      const match = (dbEvents as any[]).find(
+        (e) => stableId(e.registrationUrl) === id && isSpecificEventUrl(e.registrationUrl),
+      )
+      if (match) {
+        return {
+          ...match,
+          startDate: new Date(match.startDate),
+          endDate: match.endDate ? new Date(match.endDate) : undefined,
+          sourceUrl: match.registrationUrl,
+        } as ScrapedEvent
+      }
+    }
+  } catch { /* fall through */ }
+
+  // Otherwise look in the live scraped set
+  const scraped = await getCachedScrapedEvents()
+  return scraped.find((e) => stableId(e.registrationUrl) === id) ?? null
 }
 
 export default async function EventDetailPage({
@@ -60,30 +96,15 @@ export default async function EventDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-
-  let event: any = null
-
-  if (id.startsWith("c-e-")) {
-    const curated = getCuratedEvents()
-    event = curated.find((e) => e.id === id) ?? null
-  } else {
-    const supabase = await createClient()
-    const { data } = await supabase
-      .from("events")
-      .select("id, title, description, startDate, endDate, location, isVirtual, virtualLink, registrationUrl, imageUrl, tags, source, isFree, status")
-      .eq("id", id)
-      .single()
-    event = data
-  }
-
+  const event = await findEvent(id)
   if (!event) notFound()
 
-  const { date, time } = formatEventDate(event.startDate)
+  const start = new Date(event.startDate)
+  const { dateStr, timeStr } = formatEventDate(start)
 
   return (
     <div className="min-h-dvh bg-bg-base">
       <div className="max-w-2xl mx-auto px-6 py-8">
-        {/* Back */}
         <Link
           href="/events"
           className="inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text-secondary transition-colors mb-6"
@@ -92,17 +113,11 @@ export default async function EventDetailPage({
           Back to Events
         </Link>
 
-        {/* Hero card */}
         <div className="border border-white/[0.06] rounded-3xl p-1.5 bg-white/[0.02] mb-6">
-          {/* Image or gradient */}
           {event.imageUrl ? (
             <div className="rounded-[calc(1.5rem-0.375rem)] overflow-hidden h-52">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={event.imageUrl}
-                alt={event.title}
-                className="w-full h-full object-cover"
-              />
+              <img src={event.imageUrl} alt={event.title} className="w-full h-full object-cover" />
             </div>
           ) : (
             <div
@@ -115,7 +130,6 @@ export default async function EventDetailPage({
           )}
 
           <div className="bg-bg-card rounded-[calc(1.5rem-0.375rem)] p-6 mt-1.5">
-            {/* Source + free badge */}
             <div className="flex items-center gap-2 mb-4">
               <Badge variant={event.isFree ? "green" : "gray"}>
                 {event.isFree ? "Free" : "Paid"}
@@ -129,20 +143,18 @@ export default async function EventDetailPage({
               )}
             </div>
 
-            {/* Title */}
             <h1 className="text-2xl font-bold text-text-primary font-display leading-snug mb-4">
               {event.title}
             </h1>
 
-            {/* Date + time */}
             <div className="flex flex-col gap-2 mb-4">
               <div className="flex items-center gap-2 text-sm text-text-secondary">
                 <CalendarDays size={15} strokeWidth={1.5} className="text-purple flex-shrink-0" />
-                {date}
+                {dateStr}
               </div>
               <div className="flex items-center gap-2 text-sm text-text-secondary">
                 <Clock size={15} strokeWidth={1.5} className="text-purple flex-shrink-0" />
-                {time}
+                {timeStr}
               </div>
               {!event.isVirtual && event.location && (
                 <div className="flex items-center gap-2 text-sm text-text-secondary">
@@ -150,15 +162,8 @@ export default async function EventDetailPage({
                   {event.location}
                 </div>
               )}
-              {event.isVirtual && event.virtualLink && (
-                <div className="flex items-center gap-2 text-sm text-text-secondary">
-                  <Monitor size={15} strokeWidth={1.5} className="text-purple flex-shrink-0" />
-                  Online event
-                </div>
-              )}
             </div>
 
-            {/* Tags */}
             {Array.isArray(event.tags) && event.tags.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mb-4">
                 {event.tags.map((tag: string, i: number) => (
@@ -172,7 +177,6 @@ export default async function EventDetailPage({
           </div>
         </div>
 
-        {/* Description */}
         {event.description && (
           <section className="mb-6">
             <h2 className="text-xs font-semibold text-text-muted uppercase tracking-widest mb-3">
@@ -188,33 +192,16 @@ export default async function EventDetailPage({
           </section>
         )}
 
-        {/* CTA */}
-        {event.registrationUrl && (() => {
-          const isDiscovery = isDiscoveryUrl(event.registrationUrl)
-          const label = isDiscovery
-            ? (event.isVirtual ? "Browse on Luma" : "Find events in this city")
-            : "RSVP / Register"
-          const Icon = isDiscovery ? Search : ExternalLink
-          return (
-            <>
-              <a
-                href={event.registrationUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl text-white font-semibold text-base hover:opacity-90 active:scale-[0.98] transition-all"
-                style={{ background: "var(--gradient-brand)" }}
-              >
-                {label}
-                <Icon size={16} strokeWidth={1.5} />
-              </a>
-              {isDiscovery && (
-                <p className="text-xs text-text-muted text-center mt-3">
-                  This is a community page — browse upcoming events and pick one to RSVP.
-                </p>
-              )}
-            </>
-          )
-        })()}
+        <a
+          href={event.registrationUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl text-white font-semibold text-base hover:opacity-90 active:scale-[0.98] transition-all"
+          style={{ background: "var(--gradient-brand)" }}
+        >
+          RSVP / Register
+          <ExternalLink size={16} strokeWidth={1.5} />
+        </a>
       </div>
     </div>
   )

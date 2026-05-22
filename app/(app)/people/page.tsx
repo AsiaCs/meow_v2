@@ -11,7 +11,6 @@ interface Person {
   image?: string | null
   location?: string | null
   interests: string[]
-  linkedinUrl?: string | null
   experienceCount?: number
   experienceSummary?: Record<string, number>
 }
@@ -178,7 +177,6 @@ export default function PeoplePage() {
                 image={person.image ?? undefined}
                 location={person.location ?? undefined}
                 interests={person.interests}
-                linkedinUrl={person.linkedinUrl ?? undefined}
                 isMentor={(person.experienceSummary?.WORK ?? 0) > 0}
               />
             ))}

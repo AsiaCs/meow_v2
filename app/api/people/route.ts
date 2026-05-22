@@ -1,18 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 
-function isRealLinkedIn(url: string | null | undefined): boolean {
-  if (!url) return false
-  try {
-    const { hostname, pathname } = new URL(url)
-    return (hostname === "linkedin.com" || hostname === "www.linkedin.com") &&
-      pathname.startsWith("/in/") &&
-      pathname.length > 5
-  } catch {
-    return false
-  }
-}
-
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -23,7 +11,7 @@ export async function GET(request: Request) {
     const supabase = await createClient()
     let query = supabase
       .from("users")
-      .select(`id, name, image, location, interests, linkedinUrl, experiences!experiences_userId_fkey(id, type)`)
+      .select(`id, name, image, location, interests, experiences!experiences_userId_fkey(id, type)`)
       .eq("onboarded", true)
       .order("createdAt", { ascending: false })
 
@@ -56,7 +44,6 @@ export async function GET(request: Request) {
         image: user.image,
         location: user.location,
         interests: user.interests,
-        linkedinUrl: isRealLinkedIn(user.linkedinUrl) ? user.linkedinUrl : null,
         experienceSummary,
         experienceCount: experiences.length,
       }

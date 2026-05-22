@@ -1,259 +1,156 @@
-import * as cheerio from "cheerio"
 import type { ScrapedEvent } from "./cerebralvalley"
 
 const SOURCE = "Luma"
 const BASE_URL = "https://lu.ma"
 
-interface LumaApiEvent {
+const BROWSER_HEADERS = {
+  "User-Agent":
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+  "Accept-Language": "en-US,en;q=0.9",
+}
+
+interface LumaEventJson {
   api_id?: string
   name?: string
+  url?: string
+  cover_url?: string
   start_at?: string
   end_at?: string
-  cover_url?: string
-  description?: string
-  geo_address_info?: {
-    full_address?: string
-    city?: string
-    country?: string
-  }
   location_type?: string
-  url?: string
-  zoom_meeting_url?: string
-  ticket_info?: {
-    is_free?: boolean
-    price?: number
-    currency?: string
-  }
-  tags?: string[]
+  timezone?: string
+  visibility?: string
+  event_type?: string
 }
 
-interface LumaApiResponse {
-  entries?: Array<{ event?: LumaApiEvent }>
-  events?: LumaApiEvent[]
+const TAG_MAP: Record<string, string> = {
+  ai: "Machine Learning / AI",
+  "machine learning": "Machine Learning / AI",
+  ml: "Machine Learning / AI",
+  fintech: "Finance",
+  finance: "Finance",
+  "product management": "Product Management",
+  product: "Product Management",
+  design: "Design",
+  startup: "Entrepreneurship",
+  founder: "Entrepreneurship",
+  entrepreneurship: "Entrepreneurship",
+  engineering: "Software Engineering",
+  software: "Software Engineering",
+  hack: "Software Engineering",
+  developer: "Software Engineering",
+  data: "Data Science",
+  investing: "Investing",
+  venture: "Investing",
+  vc: "Investing",
+  marketing: "Marketing",
+  networking: "Networking",
+  meetup: "Networking",
 }
 
-function guessTags(title: string, description: string): string[] {
-  const combined = `${title} ${description}`.toLowerCase()
-  const tagMap: Record<string, string> = {
-    ai: "AI",
-    "machine learning": "Machine Learning / AI",
-    fintech: "Finance",
-    finance: "Finance",
-    "product management": "Product Management",
-    design: "Design",
-    startup: "Entrepreneurship",
-    entrepreneurship: "Entrepreneurship",
-    engineering: "Software Engineering",
-    software: "Software Engineering",
-    data: "Data Science",
-    investing: "Investing",
-    venture: "Investing",
-    marketing: "Marketing",
-    networking: "Networking",
-  }
-
+function guessTags(title: string): string[] {
+  const lower = title.toLowerCase()
   const tags = new Set<string>()
-  for (const [keyword, tag] of Object.entries(tagMap)) {
-    if (combined.includes(keyword)) {
+  for (const [keyword, tag] of Object.entries(TAG_MAP)) {
+    if (lower.includes(keyword)) {
       tags.add(tag)
-      if (tags.size >= 4) break
+      if (tags.size >= 3) break
     }
   }
-
   if (tags.size === 0) tags.add("Networking")
   return Array.from(tags)
 }
 
-function mapLumaEvent(raw: LumaApiEvent): ScrapedEvent | null {
-  if (!raw.name || !raw.start_at) return null
+// Find each "event":{...} JSON object in the HTML using a balanced-brace parser.
+// Luma embeds these in the Next.js Flight payload as escaped JSON inside script
+// tags. The string is escape-encoded so we extract the raw substring and call
+// JSON.parse on each balanced block.
+function extractEventJson(html: string): LumaEventJson[] {
+  const out: LumaEventJson[] = []
+  const needle = '"event":{'
+  let cursor = 0
+  while (true) {
+    const start = html.indexOf(needle, cursor)
+    if (start === -1) break
+    const objStart = start + needle.length - 1 // position of '{'
+    let depth = 0
+    let i = objStart
+    let inString = false
+    let escaped = false
+    for (; i < html.length; i++) {
+      const ch = html[i]
+      if (escaped) { escaped = false; continue }
+      if (ch === "\\") { escaped = true; continue }
+      if (ch === '"') { inString = !inString; continue }
+      if (inString) continue
+      if (ch === "{") depth++
+      else if (ch === "}") {
+        depth--
+        if (depth === 0) { i++; break }
+      }
+    }
+    const raw = html.slice(objStart, i)
+    try {
+      const parsed = JSON.parse(raw) as LumaEventJson
+      if (parsed && parsed.name && parsed.url && parsed.start_at) {
+        out.push(parsed)
+      }
+    } catch { /* skip malformed */ }
+    cursor = i
+  }
+  return out
+}
 
+function toScrapedEvent(raw: LumaEventJson): ScrapedEvent | null {
+  if (!raw.name || !raw.url || !raw.start_at) return null
   const startDate = new Date(raw.start_at)
   if (isNaN(startDate.getTime())) return null
 
-  const eventUrl = raw.url
-    ? raw.url.startsWith("http")
-      ? raw.url
-      : `${BASE_URL}/${raw.url}`
-    : raw.api_id
-      ? `${BASE_URL}/event/${raw.api_id}`
-      : BASE_URL
-
-  const isVirtual =
-    raw.location_type === "online" ||
-    raw.location_type === "virtual" ||
-    Boolean(raw.zoom_meeting_url)
-
-  const location = raw.geo_address_info?.full_address ?? raw.geo_address_info?.city ?? undefined
-
-  const isFree =
-    raw.ticket_info?.is_free === true ||
-    raw.ticket_info?.price === 0 ||
-    raw.ticket_info === undefined
-
-  const tags =
-    raw.tags && raw.tags.length > 0
-      ? raw.tags.slice(0, 4)
-      : guessTags(raw.name, raw.description ?? "")
+  const isVirtual = raw.location_type === "online" || raw.location_type === "virtual"
+  const url = `${BASE_URL}/${raw.url}`
 
   return {
     title: raw.name,
-    description: raw.description?.slice(0, 2000) || undefined,
     startDate,
     endDate: raw.end_at ? new Date(raw.end_at) : undefined,
-    location: isVirtual ? undefined : location,
+    location: isVirtual ? undefined : raw.timezone?.replace(/^America\//, "").replace(/_/g, " "),
     isVirtual,
-    registrationUrl: eventUrl,
-    imageUrl: raw.cover_url || undefined,
-    tags,
+    registrationUrl: url,
+    imageUrl: raw.cover_url,
+    tags: guessTags(raw.name),
     source: SOURCE,
-    sourceUrl: eventUrl,
-    isFree,
+    sourceUrl: url,
+    isFree: true,
   }
 }
 
-async function fetchLumaApi(query: string): Promise<ScrapedEvent[]> {
-  const url = `${BASE_URL}/api/search/events?query=${encodeURIComponent(query)}&pagination_limit=20`
-
-  const res = await fetch(url, {
-    headers: {
-      "User-Agent": "Mozilla/5.0 (compatible; Meow/1.0; +https://meow.app)",
-      Accept: "application/json",
-    },
-    next: { revalidate: 3600 },
-  })
-
-  if (!res.ok) throw new Error(`Luma API responded with ${res.status}`)
-
-  const json: LumaApiResponse = await res.json()
-
-  // API may return entries[] or events[] depending on endpoint version
-  const rawEvents: LumaApiEvent[] =
-    ((json.entries ?? []).map((e) => e.event ?? (e as unknown as LumaApiEvent)).filter(Boolean).length > 0
-      ? (json.entries ?? []).map((e) => e.event ?? (e as unknown as LumaApiEvent)).filter(Boolean)
-      : (json.events ?? []))
-
-  return rawEvents.flatMap((e) => {
-    const mapped = mapLumaEvent(e)
-    return mapped ? [mapped] : []
-  })
-}
-
-async function scrapeLumaWeb(query: string): Promise<ScrapedEvent[]> {
-  const searchUrl = `${BASE_URL}/discover/events?query=${encodeURIComponent(query)}`
-
-  const res = await fetch(searchUrl, {
-    headers: {
-      "User-Agent": "Mozilla/5.0 (compatible; Meow/1.0; +https://meow.app)",
-      Accept: "text/html,application/xhtml+xml",
-    },
-    next: { revalidate: 3600 },
-  })
-
-  if (!res.ok) return []
-
-  const html = await res.text()
-  const $ = cheerio.load(html)
-  const events: ScrapedEvent[] = []
-
-  // Luma's web app renders event cards with various class patterns
-  const selectors = [
-    "[class*='event-link']",
-    "[class*='EventCard']",
-    "a[href*='/event/']",
-    "[class*='card']",
-  ]
-
-  let $cards = $([])
-  for (const sel of selectors) {
-    const found = $(sel)
-    if (found.length >= 2) {
-      $cards = found
-      break
-    }
-  }
-
-  $cards.each((_, el) => {
-    try {
-      const $el = $(el)
-
-      const title =
-        $el.find("h1,h2,h3,h4").first().text().trim() ||
-        $el.find("[class*='title']").first().text().trim()
-
-      if (!title || title.length < 4) return
-
-      const href = $el.is("a") ? $el.attr("href") : $el.find("a").first().attr("href")
-      const fullUrl = href
-        ? href.startsWith("http")
-          ? href
-          : `${BASE_URL}${href}`
-        : searchUrl
-
-      const timeEl = $el.find("time").first()
-      const dateText =
-        timeEl.attr("datetime") ??
-        timeEl.text().trim() ??
-        $el.find("[class*='date']").first().text().trim()
-
-      const startDate = dateText ? new Date(dateText) : new Date(Date.now() + 7 * 86400000)
-      if (isNaN(startDate.getTime())) return
-
-      const locationText = $el.find("[class*='location'],address").first().text().trim()
-      const isVirtual = /virtual|online|zoom/i.test(locationText)
-
-      const desc = $el.find("p").first().text().trim()
-      const imgSrc = $el.find("img").first().attr("src")
-
-      events.push({
-        title,
-        description: desc || undefined,
-        startDate,
-        location: isVirtual ? undefined : locationText || undefined,
-        isVirtual,
-        registrationUrl: fullUrl,
-        imageUrl: imgSrc
-          ? imgSrc.startsWith("http")
-            ? imgSrc
-            : `${BASE_URL}${imgSrc}`
-          : undefined,
-        tags: guessTags(title, desc),
-        source: SOURCE,
-        sourceUrl: fullUrl,
-        isFree: true,
-      })
-    } catch {
-      // Skip malformed card
-    }
-  })
-
-  return events.slice(0, 20)
-}
-
-// Maps common city names to Luma city slugs
 const CITY_SLUGS: Record<string, string> = {
   "san francisco": "sf",
-  "sf": "sf",
+  sf: "sf",
+  "bay area": "sf",
   "new york": "nyc",
-  "nyc": "nyc",
   "new york city": "nyc",
+  nyc: "nyc",
+  brooklyn: "nyc",
   "los angeles": "la",
-  "la": "la",
-  "london": "london",
-  "toronto": "toronto",
-  "boston": "boston",
-  "chicago": "chicago",
-  "seattle": "seattle",
-  "miami": "miami",
-  "austin": "austin",
-  "denver": "denver",
-  "atlanta": "atlanta",
-  "washington": "dc",
-  "dc": "dc",
-  "berlin": "berlin",
-  "singapore": "singapore",
+  la: "la",
+  london: "london",
+  toronto: "toronto",
+  boston: "boston",
+  chicago: "chicago",
+  seattle: "seattle",
+  miami: "miami",
+  austin: "austin",
+  denver: "denver",
+  atlanta: "atlanta",
+  washington: "dc",
+  dc: "dc",
+  berlin: "berlin",
+  singapore: "singapore",
 }
 
-function getCitySlug(city: string): string | null {
+function getCitySlug(city: string | undefined): string | null {
+  if (!city) return null
   const lower = city.toLowerCase().trim()
   for (const [key, slug] of Object.entries(CITY_SLUGS)) {
     if (lower.includes(key)) return slug
@@ -261,82 +158,56 @@ function getCitySlug(city: string): string | null {
   return null
 }
 
-async function scrapeLumaCity(citySlug: string): Promise<ScrapedEvent[]> {
-  const url = `${BASE_URL}/c/${citySlug}`
+async function scrapeLumaPath(path: string): Promise<ScrapedEvent[]> {
   try {
-    const res = await fetch(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; Meow/1.0; +https://meow.app)",
-        Accept: "text/html,application/xhtml+xml",
-      },
-      next: { revalidate: 3600 },
+    const res = await fetch(`${BASE_URL}${path}`, {
+      headers: BROWSER_HEADERS,
+      redirect: "follow",
+      next: { revalidate: 1800 },
     })
     if (!res.ok) return []
     const html = await res.text()
-    const $ = cheerio.load(html)
-    const events: ScrapedEvent[] = []
-
-    $("a[href*='/event/'], a[href*='lu.ma/']").each((_, el) => {
-      try {
-        const $el = $(el)
-        const href = $el.attr("href") ?? ""
-        if (!href || href === "/") return
-        const fullUrl = href.startsWith("http") ? href : `${BASE_URL}${href}`
-        const title =
-          $el.find("h1,h2,h3,h4,[class*='title']").first().text().trim() ||
-          $el.text().trim().slice(0, 100)
-        if (!title || title.length < 4) return
-
-        const timeEl = $el.find("time").first()
-        const dateText = timeEl.attr("datetime") ?? timeEl.text().trim()
-        const startDate = dateText ? new Date(dateText) : new Date(Date.now() + 7 * 86400000)
-        if (isNaN(startDate.getTime())) return
-
-        const locationText = $el.find("[class*='location'],address").first().text().trim()
-        const isVirtual = /virtual|online|zoom/i.test(locationText)
-
-        events.push({
-          title,
-          startDate,
-          location: isVirtual ? undefined : (locationText || citySlug),
-          isVirtual,
-          registrationUrl: fullUrl,
-          tags: guessTags(title, ""),
-          source: SOURCE,
-          sourceUrl: fullUrl,
-          isFree: true,
-        })
-      } catch { /* skip */ }
+    const events = extractEventJson(html)
+    const mapped = events.flatMap((e) => {
+      const s = toScrapedEvent(e)
+      return s ? [s] : []
     })
-    return events.slice(0, 20)
+    // De-dupe by URL
+    const seen = new Set<string>()
+    return mapped.filter((e) => {
+      if (seen.has(e.registrationUrl)) return false
+      seen.add(e.registrationUrl)
+      return true
+    })
   } catch {
     return []
   }
 }
 
-export async function scrapeLuma(query: string = "networking", city?: string): Promise<ScrapedEvent[]> {
-  // If we have a city, try city-specific page first
-  if (city) {
-    const slug = getCitySlug(city)
-    if (slug) {
-      const cityEvents = await scrapeLumaCity(slug)
-      if (cityEvents.length > 0) return cityEvents
-    }
+export async function scrapeLuma(_query: string = "networking", city?: string): Promise<ScrapedEvent[]> {
+  // Try the user's city first, then SF/NYC/discover as fallback so we always
+  // have something to show.
+  const tried = new Set<string>()
+  const paths: string[] = []
+
+  const userCity = getCitySlug(city)
+  if (userCity) paths.push(`/${userCity}`)
+  paths.push("/sf", "/nyc", "/discover")
+
+  const all: ScrapedEvent[] = []
+  for (const p of paths) {
+    if (tried.has(p)) continue
+    tried.add(p)
+    const events = await scrapeLumaPath(p)
+    all.push(...events)
+    if (all.length >= 30) break
   }
 
-  // Build query incorporating city for relevance
-  const searchQuery = city ? `${query} ${city}` : query
-
-  try {
-    const apiResults = await fetchLumaApi(searchQuery)
-    if (apiResults.length > 0) return apiResults
-  } catch {
-    // Fall through to web scraping
-  }
-
-  try {
-    return await scrapeLumaWeb(searchQuery)
-  } catch {
-    return []
-  }
+  // Final de-dupe across all paths
+  const seen = new Set<string>()
+  return all.filter((e) => {
+    if (seen.has(e.registrationUrl)) return false
+    seen.add(e.registrationUrl)
+    return true
+  })
 }

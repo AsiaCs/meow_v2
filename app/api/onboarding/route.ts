@@ -5,8 +5,7 @@ import { createClient } from "@/lib/supabase/server"
 const onboardingSchema = z.object({
   interests: z.array(z.string()).min(1),
   location: z.string().optional(),
-  lookingFor: z.array(z.enum(["internships", "events", "mentors"])),
-  linkedinUrl: z.string().url().optional().or(z.literal("")),
+  lookingFor: z.array(z.enum(["internships", "events", "mentors", "all"])),
 })
 
 export async function POST(request: Request) {
@@ -25,7 +24,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Validation failed", issues: result.error.issues }, { status: 400 })
     }
 
-    const { interests, location, linkedinUrl } = result.data
+    const { interests, location } = result.data
 
     const { data, error } = await supabase
       .from("users")
@@ -36,7 +35,7 @@ export async function POST(request: Request) {
         image: user.user_metadata?.avatar_url ?? null,
         interests,
         location: location ?? null,
-        linkedinUrl: linkedinUrl || null,
+        linkedinUrl: null,
         onboarded: true,
         updatedAt: new Date().toISOString(),
       }, { onConflict: "id" })

@@ -1,11 +1,27 @@
 import { redirect } from "next/navigation"
+import { unstable_cache } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
-import { ArrowRight, Sparkles, CalendarDays, Briefcase, Users } from "lucide-react"
+import { ArrowRight, CalendarDays, Briefcase, Users } from "lucide-react"
 import { EventCard } from "@/components/events/event-card"
 import { InternshipCard } from "@/components/internships/internship-card"
 import { PersonCard } from "@/components/people/person-card"
-import { CURATED_INTERNSHIPS, getCuratedEvents, hasGoodUrl } from "@/lib/data/curated"
+import { scrapeCerebralValley, type ScrapedEvent } from "@/lib/scrapers/cerebralvalley"
+import { scrapeLuma } from "@/lib/scrapers/luma"
+import { filterReachable } from "@/lib/validators/links"
+import { isSpecificEventUrl, isSpecificApplyUrl } from "@/lib/validators/specific-urls"
+
+export const runtime = "nodejs"
+export const revalidate = 1800
+
+function stableId(s: string): string {
+  let h = 0
+  for (let i = 0; i < s.length; i++) {
+    h = ((h << 5) - h) + s.charCodeAt(i)
+    h |= 0
+  }
+  return `ev-${Math.abs(h).toString(36)}`
+}
 
 function getGreeting(): string {
   const hour = new Date().getHours()
@@ -49,24 +65,32 @@ function EmptySection({ message }: { message: string }) {
   )
 }
 
+const getCachedScrapedEvents = unstable_cache(
+  async (city: string | null): Promise<ScrapedEvent[]> => {
+    const [cv, lu] = await Promise.allSettled([
+      scrapeCerebralValley(),
+      scrapeLuma("networking tech startup", city ?? undefined),
+    ])
+    const cvEvents = cv.status === "fulfilled" ? cv.value : []
+    const luEvents = lu.status === "fulfilled" ? lu.value : []
+    const specific = [...cvEvents, ...luEvents].filter((e) => isSpecificEventUrl(e.registrationUrl))
+    return await filterReachable(specific, (e) => e.registrationUrl)
+  },
+  ["dashboard-events-v2"],
+  { revalidate: 1800, tags: ["events"] },
+)
+
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/auth/signin")
 
-  const [{ data: eventsRaw }, { data: internshipsRaw }, { data: peopleRaw }, { data: profileRaw }] = await Promise.all([
-    supabase
-      .from("events")
-      .select("id, title, description, startDate, endDate, location, isVirtual, registrationUrl, imageUrl, tags, isFree, source")
-      .eq("status", "APPROVED")
-      .gte("startDate", new Date().toISOString())
-      .order("startDate")
-      .limit(20),
+  const [{ data: internshipsRaw }, { data: peopleRaw }, { data: profileRaw }] = await Promise.all([
     supabase
       .from("internships")
       .select("id, title, company, location, isRemote, deadline, isPaid, salary, tags, applicationUrl")
       .order("createdAt", { ascending: false })
-      .limit(6),
+      .limit(20),
     supabase
       .from("users")
       .select("id, name, location, interests")
@@ -84,35 +108,30 @@ export default async function DashboardPage() {
   const userLocation = (profileRaw as any)?.location as string | null ?? null
   const userCity = userLocation?.split(",")[0]?.trim().toLowerCase() ?? null
 
-  // Merge DB events with curated fallback, filter bad URLs and past events
-  const dbEvents = (eventsRaw ?? []).filter((e: any) => hasGoodUrl(e.registrationUrl))
-  const curatedEvents = getCuratedEvents()
-  const seenEventTitles = new Set(dbEvents.map((e: any) => e.title.toLowerCase()))
-  const fallbackEvents = curatedEvents.filter(e => !seenEventTitles.has(e.title.toLowerCase()))
-  const allEvents = [...dbEvents, ...fallbackEvents]
+  // Live-scrape events (cached 30 min) and validate URLs
+  const scrapedEvents = await getCachedScrapedEvents(userLocation)
+  const now = new Date()
+  const futureEvents = scrapedEvents.filter((e) => new Date(e.startDate) > now)
 
+  // Bias by user's city
   const nearbyEvents = userCity
-    ? allEvents.filter(e => e.location?.toLowerCase().includes(userCity))
+    ? futureEvents.filter((e) => e.location?.toLowerCase().includes(userCity))
     : []
-  const virtualEvents = allEvents.filter(e => e.isVirtual && !nearbyEvents.includes(e))
-  const otherEvents = allEvents.filter(e => !nearbyEvents.includes(e) && !virtualEvents.includes(e))
+  const virtualEvents = futureEvents.filter((e) => e.isVirtual && !nearbyEvents.includes(e))
+  const otherEvents = futureEvents.filter((e) => !nearbyEvents.includes(e) && !virtualEvents.includes(e))
   const events = [...nearbyEvents, ...virtualEvents, ...otherEvents].slice(0, 6)
 
-  // Merge DB internships (filter bad URLs) with curated fallback
-  const dbInternships = (internshipsRaw ?? []).filter((i: any) => hasGoodUrl(i.applicationUrl))
-  const seenInternships = new Set(dbInternships.map((i: any) => `${i.company}|${i.title}`))
-  const fallbackInternships = CURATED_INTERNSHIPS.filter(
-    i => !seenInternships.has(`${i.company}|${i.title}`)
-  )
-  const internships = [...dbInternships, ...fallbackInternships].slice(0, 6)
+  // Validate internship URLs: must point at specific apply pages AND be reachable
+  const dbInternships = Array.isArray(internshipsRaw) ? (internshipsRaw as any[]) : []
+  const specificInternships = dbInternships.filter((i) => isSpecificApplyUrl(i.applicationUrl))
+  const validInternships = await filterReachable(specificInternships, (i) => i.applicationUrl)
+  const internships = validInternships.slice(0, 6)
 
   const people = peopleRaw ?? []
-
   const firstName = (user.user_metadata?.full_name as string | undefined)?.split(" ")[0] ?? "there"
 
   return (
     <div className="min-h-dvh bg-bg-base">
-      {/* Header */}
       <div className="border-b border-border bg-bg-surface px-6 py-8">
         <div className="max-w-5xl mx-auto">
           <h1 className="text-2xl font-bold text-text-primary font-display">
@@ -125,23 +144,22 @@ export default async function DashboardPage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-6 py-8 space-y-12">
-        {/* Events */}
         <section>
           <SectionHeader title="Upcoming Events" icon={CalendarDays} href="/events" />
           {events.length === 0 ? (
-            <EmptySection message="We're still loading opportunities for you. Check back soon!" />
+            <EmptySection message="No verified events at the moment — try again later as we re-scrape every 30 minutes." />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {events.map((event) => (
                 <EventCard
-                  key={event.id}
-                  id={event.id}
+                  key={stableId(event.registrationUrl)}
+                  id={stableId(event.registrationUrl)}
                   title={event.title}
                   description={event.description ?? undefined}
-                  startDate={event.startDate}
+                  startDate={new Date(event.startDate).toISOString()}
                   location={event.location ?? undefined}
                   isVirtual={event.isVirtual}
-                  registrationUrl={event.registrationUrl ?? undefined}
+                  registrationUrl={event.registrationUrl}
                   imageUrl={event.imageUrl ?? undefined}
                   tags={event.tags}
                   isFree={event.isFree}
@@ -152,14 +170,13 @@ export default async function DashboardPage() {
           )}
         </section>
 
-        {/* Internships */}
         <section>
           <SectionHeader title="Internship Listings" icon={Briefcase} href="/internships" />
           {internships.length === 0 ? (
-            <EmptySection message="No internships yet — we're sourcing the best opportunities." />
+            <EmptySection message="No internships available right now — we only show listings with verified application links." />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {internships.map((internship) => (
+              {internships.map((internship: any) => (
                 <InternshipCard
                   key={internship.id}
                   id={internship.id}
@@ -178,7 +195,6 @@ export default async function DashboardPage() {
           )}
         </section>
 
-        {/* People */}
         <section>
           <SectionHeader title="People to Connect With" icon={Users} href="/people" />
           {people.length === 0 ? (

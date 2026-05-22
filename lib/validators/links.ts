@@ -1,8 +1,7 @@
-// Domains we trust without network checks — avoids 408s from blocking servers
+// Domains where HEAD requests are blocked or unreliable. We trust these without
+// checking. Lu.ma and LinkedIn are NOT here — we must actually verify those
+// because broken event/profile URLs are the #1 source of user pain.
 const TRUSTED_DOMAINS = [
-  "lu.ma",
-  "cerebralvalley.ai",
-  "linkedin.com",
   "greenhouse.io",
   "boards.greenhouse.io",
   "lever.co",
@@ -24,6 +23,7 @@ const TRUSTED_DOMAINS = [
   "meetup.com",
   "wellfound.com",
   "ycombinator.com",
+  "cerebralvalley.ai",
 ]
 
 function isTrusted(url: string): boolean {
