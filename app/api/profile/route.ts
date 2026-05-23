@@ -15,7 +15,20 @@ export async function GET() {
       .single()
 
     if (error || !data) return NextResponse.json({ error: "User not found" }, { status: 404 })
-    return NextResponse.json(data)
+
+    // Always return a stable shape — interests/experiences default to [] so the
+    // client never has to defend against undefined.
+    const shaped = {
+      id: (data as any).id,
+      name: (data as any).name ?? null,
+      email: (data as any).email ?? user.email ?? null,
+      image: (data as any).image ?? null,
+      location: (data as any).location ?? null,
+      onboarded: Boolean((data as any).onboarded),
+      interests: Array.isArray((data as any).interests) ? (data as any).interests : [],
+      experiences: Array.isArray((data as any).experiences) ? (data as any).experiences : [],
+    }
+    return NextResponse.json(shaped)
   } catch (error) {
     console.error("[profile/GET]", error)
     return NextResponse.json({ error: "Failed to fetch profile" }, { status: 500 })

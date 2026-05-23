@@ -166,9 +166,25 @@ export default function ProfilePage() {
     fetch("/api/profile")
       .then((r) => r.json())
       .then((data) => {
-        setProfile(data)
-        setEditLocation(data.location ?? "")
-        setEditInterests(data.interests ?? [])
+        if (!data || data.error) {
+          setLoading(false)
+          return
+        }
+        // Defensive normalization — the API can return a user with no
+        // experiences/interests rows. Treat missing as empty so .filter and
+        // .map calls never crash.
+        const normalized: ProfileData = {
+          id: data.id,
+          name: data.name ?? null,
+          email: data.email ?? null,
+          image: data.image ?? null,
+          location: data.location ?? null,
+          interests: Array.isArray(data.interests) ? data.interests : [],
+          experiences: Array.isArray(data.experiences) ? data.experiences : [],
+        }
+        setProfile(normalized)
+        setEditLocation(normalized.location ?? "")
+        setEditInterests(normalized.interests)
         setLoading(false)
       })
       .catch(() => setLoading(false))
@@ -236,7 +252,7 @@ export default function ProfilePage() {
         const newExp = await res.json()
         setProfile((prev) =>
           prev
-            ? { ...prev, experiences: [...prev.experiences, newExp] }
+            ? { ...prev, experiences: [...(prev.experiences ?? []), newExp] }
             : prev
         )
         setShowAddForm(false)
@@ -262,13 +278,13 @@ export default function ProfilePage() {
     if (res.ok) {
       setProfile((prev) =>
         prev
-          ? { ...prev, experiences: prev.experiences.filter((e) => e.id !== id) }
+          ? { ...prev, experiences: (prev.experiences ?? []).filter((e) => e.id !== id) }
           : prev
       )
     }
   }
 
-  const filteredExp = profile?.experiences.filter((e) => e.type === activeTab) ?? []
+  const filteredExp = profile?.experiences?.filter((e) => e.type === activeTab) ?? []
 
   if (loading) {
     return (
