@@ -41,13 +41,16 @@ export function isWellFormedProfileUrl(url: string | null | undefined): url is s
 }
 
 // Strings LinkedIn renders in its "this profile does not exist" page body.
-// Conservative — only marks broken on high-confidence matches.
+// CONSERVATIVE — every marker here is unique to the LinkedIn 404 page and
+// will not appear on a real profile or on the bot-block / auth-wall pages.
+// Generic strings like ">404<" or "page not found" were causing false
+// positives on bot-block responses and are intentionally omitted.
 const NOT_FOUND_BODY_MARKERS = [
-  "this page doesn’t exist",       // curly apostrophe
-  "this page doesn't exist",       // straight apostrophe
+  "this page doesn’t exist",                   // curly apostrophe variant
+  "this page doesn't exist",                   // straight apostrophe variant
+  "the page you’re looking for doesn’t exist", // curly
+  "the page you're looking for doesn't exist", // straight
   "this profile is not available",
-  "page not found",
-  ">404<",
 ]
 
 // Browser-class headers — gets us past the simplest bot checks. LinkedIn

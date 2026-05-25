@@ -76,7 +76,7 @@ export async function GET(
   let row: UserRow | null = null
   try {
     const supabase = await createClient()
-    const { data } = await supabase
+    const wide = await supabase
       .from("users")
       .select(
         "name, location, linkedinUrl, linkedinStatus, " +
@@ -84,12 +84,10 @@ export async function GET(
       )
       .eq("id", id)
       .single()
-    row = (data as UserRow | null) ?? null
-  } catch {
-    // Column might not exist yet — fall back to narrower select
-    try {
-      const supabase = await createClient()
-      const { data } = await supabase
+
+    // Supabase returns {data:null, error} on column-missing — does NOT throw.
+    if (wide.error && /column .*linkedinStatus.* does not exist/i.test(wide.error.message ?? "")) {
+      const narrow = await supabase
         .from("users")
         .select(
           "name, location, linkedinUrl, " +
@@ -97,14 +95,16 @@ export async function GET(
         )
         .eq("id", id)
         .single()
-      row = data
+      row = narrow.data
         ? ({
-            ...(data as unknown as Omit<UserRow, "linkedinStatus">),
+            ...(narrow.data as unknown as Omit<UserRow, "linkedinStatus">),
             linkedinStatus: null,
           } as UserRow)
         : null
-    } catch { /* swallow */ }
-  }
+    } else {
+      row = (wide.data as UserRow | null) ?? null
+    }
+  } catch { /* swallow — fall through to public-search fallback */ }
 
   const savedUrl = row?.linkedinUrl ?? null
   const isFormed = isWellFormedProfileUrl(savedUrl)
