@@ -34,7 +34,48 @@ export async function POST(request: NextRequest) {
 
     if (mode === "signup") {
       const { data, error } = await supabase.auth.signUp({ email, password })
-      if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+      if (error) {
+        // Common: a broken handle_new_user trigger on the Supabase side.
+        // Surfaces as "Database error saving new user". The /supabase/
+        // migrations/20260524_fix_signup.sql file in this repo fixes it.
+        const msg = error.message
+        if (/database error saving new user/i.test(msg)) {
+          return NextResponse.json(
+            {
+              error:
+                "Signup failed because the Supabase user-creation trigger is misconfigured. " +
+                "Open Supabase → SQL Editor and run the migration at " +
+                "supabase/migrations/20260524_fix_signup.sql in this repo.",
+              code: "TRIGGER_BROKEN",
+            },
+            { status: 500 },
+          )
+        }
+        return NextResponse.json({ error: msg }, { status: 400 })
+      }
+
+      // Defense-in-depth: even if the SQL trigger silently no-ops, manually
+      // upsert the row we need. Uses the same authed client so RLS allows it
+      // (or the trigger ran as SECURITY DEFINER and beat us to it — the
+      // ON CONFLICT makes that a no-op).
+      if (data.user) {
+        await supabase
+          .from("users")
+          .upsert(
+            {
+              id: data.user.id,
+              email: data.user.email!,
+              onboarded: false,
+              interests: [],
+              updatedAt: new Date().toISOString(),
+            },
+            { onConflict: "id", ignoreDuplicates: false },
+          )
+          .then(({ error: upsertErr }) => {
+            if (upsertErr) console.warn("[auth/email] users upsert", upsertErr.message)
+          })
+      }
+
       if (!data.session) return NextResponse.json({ confirm: true })
     } else {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
