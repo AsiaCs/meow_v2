@@ -168,20 +168,22 @@ export default function ProfilePage() {
     fetch("/api/profile")
       .then((r) => r.json())
       .then((data) => {
-        if (!data || data.error) {
-          setLoading(false)
-          return
-        }
-        // Defensive normalization — the API can return a user with no
-        // experiences/interests rows. Treat missing as empty so .filter and
-        // .map calls never crash.
-        const normalized = normalizeProfileData(data) as ProfileData
+        // ALWAYS render a profile object — even on error, fall back to empty
+        // defaults so the page never goes blank. The user can still edit and
+        // save (PATCH upserts so it'll create the row).
+        const safe = data && !data.error ? data : { id: "", email: null, name: null, image: null, location: null, interests: [], experiences: [], digestEnabled: true }
+        const normalized = normalizeProfileData(safe) as ProfileData
         setProfile(normalized)
         setEditLocation(normalized.location ?? "")
         setEditInterests(normalized.interests)
         setLoading(false)
       })
-      .catch(() => setLoading(false))
+      .catch(() => {
+        // Network error — still show an empty editable profile
+        const normalized = normalizeProfileData({ interests: [], experiences: [] }) as ProfileData
+        setProfile(normalized)
+        setLoading(false)
+      })
   }, [])
 
   async function saveProfile() {

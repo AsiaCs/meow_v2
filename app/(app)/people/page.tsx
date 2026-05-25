@@ -13,6 +13,9 @@ interface Person {
   interests: string[]
   experienceCount?: number
   experienceSummary?: Record<string, number>
+  contactUrl?: string | null
+  contactLabel?: string | null
+  contactVerified?: boolean
 }
 
 type PeopleTab = "all" | "mentors" | "peers"
@@ -182,6 +185,9 @@ export default function PeoplePage() {
                 location={person.location ?? undefined}
                 interests={person.interests}
                 isMentor={(person.experienceSummary?.WORK ?? 0) > 0}
+                contactUrl={person.contactUrl ?? undefined}
+                contactLabel={person.contactLabel ?? undefined}
+                contactVerified={person.contactVerified ?? false}
               />
             ))}
           </div>

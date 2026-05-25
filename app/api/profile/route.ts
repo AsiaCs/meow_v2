@@ -13,19 +13,58 @@ export async function GET() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from("users")
       .select("id, name, email, image, location, interests, onboarded, digestEnabled, experiences(*)")
       .eq("id", user.id)
       .single()
 
-    if (error || !data) return NextResponse.json({ error: "User not found" }, { status: 404 })
+    // Auto-bootstrap: if the auth user exists but the public.users row does
+    // not, create it on the fly. Happens for accounts signed up before the
+    // handle_new_user trigger was fixed.
+    if (error || !data) {
+      const { error: insertErr } = await supabase
+        .from("users")
+        .upsert(
+          {
+            id: user.id,
+            email: user.email!,
+            name: user.user_metadata?.full_name ?? null,
+            image: user.user_metadata?.avatar_url ?? null,
+            interests: [],
+            onboarded: false,
+            updatedAt: new Date().toISOString(),
+          },
+          { onConflict: "id", ignoreDuplicates: false },
+        )
+      if (insertErr) {
+        console.error("[profile/GET] bootstrap failed", insertErr.message)
+        // Still return a minimal stable shape so the client renders something
+        return NextResponse.json(
+          normalizeProfileData({
+            id: user.id,
+            email: user.email ?? null,
+            name: user.user_metadata?.full_name ?? null,
+            image: user.user_metadata?.avatar_url ?? null,
+            interests: [],
+            experiences: [],
+          }),
+        )
+      }
+      // Re-read after upsert so we get the canonical row
+      const refetch = await supabase
+        .from("users")
+        .select("id, name, email, image, location, interests, onboarded, digestEnabled, experiences(*)")
+        .eq("id", user.id)
+        .single()
+      data = refetch.data
+    }
 
     // Always return a stable shape — interests/experiences default to [] so the
     // client never has to defend against undefined.
     const shaped = normalizeProfileData({
       ...data,
-      email: (data as ProfileRow).email ?? user.email ?? null,
+      email: (data as ProfileRow)?.email ?? user.email ?? null,
     })
     return NextResponse.json(shaped)
   } catch (error) {
@@ -57,16 +96,20 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Validation failed", issues: result.error.issues }, { status: 400 })
     }
 
-    const updateData: Record<string, unknown> = { updatedAt: new Date().toISOString() }
-    if (result.data.name !== undefined) updateData.name = result.data.name
-    if (result.data.location !== undefined) updateData.location = result.data.location
-    if (result.data.interests !== undefined) updateData.interests = result.data.interests
-    if (result.data.digestEnabled !== undefined) updateData.digestEnabled = result.data.digestEnabled
+    // Upsert so a row is created if missing (defense-in-depth for pre-trigger-fix accounts)
+    const upsertRow: Record<string, unknown> = {
+      id: user.id,
+      email: user.email!,
+      updatedAt: new Date().toISOString(),
+    }
+    if (result.data.name !== undefined) upsertRow.name = result.data.name
+    if (result.data.location !== undefined) upsertRow.location = result.data.location
+    if (result.data.interests !== undefined) upsertRow.interests = result.data.interests
+    if (result.data.digestEnabled !== undefined) upsertRow.digestEnabled = result.data.digestEnabled
 
     const { data, error } = await supabase
       .from("users")
-      .update(updateData)
-      .eq("id", user.id)
+      .upsert(upsertRow, { onConflict: "id", ignoreDuplicates: false })
       .select("id, name, location, interests, image, onboarded, digestEnabled")
       .single()
 

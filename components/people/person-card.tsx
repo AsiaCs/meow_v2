@@ -14,6 +14,9 @@ interface PersonCardProps {
   location?: string
   interests: string[]
   linkedinUrl?: string
+  contactUrl?: string
+  contactLabel?: string
+  contactVerified?: boolean
   bio?: string
   isMentor?: boolean
 }
@@ -42,8 +45,13 @@ export function PersonCard({
   location,
   interests,
   isMentor,
+  contactUrl,
+  contactLabel,
+  contactVerified,
 }: PersonCardProps) {
-  const linkedinCtaUrl = buildLinkedInSearchUrl(name)
+  // Prefer the verified contact URL from the API; fall back to a name search
+  const ctaUrl = contactUrl ?? buildLinkedInSearchUrl(name)
+  const ctaLabel = contactLabel ?? "Search on LinkedIn"
 
   return (
     <motion.div
@@ -109,16 +117,20 @@ export function PersonCard({
             View Profile
             <ArrowRight size={12} strokeWidth={1.5} />
           </Link>
-          {linkedinCtaUrl && (
+          {ctaUrl && (
             <a
-              href={linkedinCtaUrl}
+              href={ctaUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs font-medium text-text-secondary hover:text-text-primary transition-colors"
-              aria-label={`Search for ${name} on LinkedIn`}
+              className={
+                contactVerified
+                  ? "inline-flex items-center gap-1 text-xs font-medium text-[#0077B5] hover:text-[#0a8cc7] transition-colors"
+                  : "inline-flex items-center gap-1 text-xs font-medium text-text-secondary hover:text-text-primary transition-colors"
+              }
+              aria-label={ctaLabel}
             >
               <Search size={12} strokeWidth={1.5} />
-              Search on LinkedIn
+              {ctaLabel}
             </a>
           )}
         </div>
