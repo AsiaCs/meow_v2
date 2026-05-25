@@ -27,6 +27,7 @@ type UserRow = {
   location: string | null
   interests: unknown
   linkedinUrl: string | null
+  linkedinStatus: string | null   // 'verified' | 'broken' | 'inconclusive' | 'skipped' | null
   experiences: unknown
 }
 
@@ -38,9 +39,12 @@ export async function GET(request: Request) {
     const searchParam = searchParams.get("search")
 
     const supabase = await createClient()
+    // Try the select that includes verification status. If linkedinStatus
+    // doesn't exist as a column yet, Supabase will error — fall back to the
+    // narrower select. That keeps the page working before the migration is run.
     let query = supabase
       .from("users")
-      .select(`id, name, image, location, interests, linkedinUrl, experiences!experiences_userId_fkey(id, type)`)
+      .select(`id, name, image, location, interests, linkedinUrl, linkedinStatus, experiences!experiences_userId_fkey(id, type)`)
       .eq("onboarded", true)
       .order("createdAt", { ascending: false })
 
@@ -50,10 +54,30 @@ export async function GET(request: Request) {
     }
     if (searchParam?.trim()) query = query.ilike("name", `%${searchParam.trim()}%`)
 
-    const { data, error } = await query
+    let { data, error } = await query
+
+    // Retry without linkedinStatus if the column doesn't exist yet
+    if (error && /column .*linkedinStatus.* does not exist/i.test(error.message)) {
+      const fallback = await supabase
+        .from("users")
+        .select(`id, name, image, location, interests, linkedinUrl, experiences!experiences_userId_fkey(id, type)`)
+        .eq("onboarded", true)
+        .order("createdAt", { ascending: false })
+      data = fallback.data as unknown as typeof data
+      error = fallback.error
+    }
     if (error) throw error
 
     let users = (data ?? []) as unknown as UserRow[]
+    // Backfill missing column gracefully — treat as never-checked.
+    for (const u of users) {
+      if (u.linkedinStatus === undefined) u.linkedinStatus = null
+    }
+
+    // GATEKEEPER: never serve profiles the verifier has confirmed are broken.
+    // Verified, inconclusive, skipped, and never-checked profiles all pass —
+    // unverified ones fall back to the safe LinkedIn People-search URL.
+    users = users.filter((u) => u.linkedinStatus !== "broken")
 
     if (mentorParam === "true") {
       users = users.filter((u) =>
@@ -72,12 +96,16 @@ export async function GET(request: Request) {
         }, {})
 
         // Always point at the server-side redirector. It picks the best
-        // available target on click: saved profile URL if present, otherwise
-        // a hyper-targeted "I'm Feeling Lucky" style redirect that lands on
-        // the actual LinkedIn profile rather than a logged-out search wall.
+        // available target on click: saved profile URL if verified, otherwise
+        // a hyper-targeted LinkedIn People-search URL.
         const contactUrl = `/api/people/${user.id}/linkedin`
         const hasSaved = isWellFormedLinkedInProfile(user.linkedinUrl)
-        const contactLabel = hasSaved ? "Connect on LinkedIn" : "Open LinkedIn profile"
+        const isVerified = user.linkedinStatus === "verified"
+        const contactLabel = isVerified
+          ? "Connect on LinkedIn"
+          : hasSaved
+            ? "Open LinkedIn profile"
+            : "Find on LinkedIn"
 
         return {
           id: user.id,
@@ -89,7 +117,8 @@ export async function GET(request: Request) {
           experienceCount: experiences.length,
           contactUrl,
           contactLabel,
-          contactVerified: hasSaved,
+          contactVerified: isVerified,
+          linkedinStatus: user.linkedinStatus ?? "pending",
         }
       })
       // Drop anyone where we couldn't build a contact link (defensive — should never happen if name exists)

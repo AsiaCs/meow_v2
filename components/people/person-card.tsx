@@ -77,6 +77,17 @@ export function PersonCard({
                   className="text-yellow-400 flex-shrink-0 fill-yellow-400"
                 />
               )}
+              {contactVerified && (
+                <span
+                  title="LinkedIn profile verified"
+                  className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-[#0077B5] text-white flex-shrink-0"
+                  aria-label="Verified LinkedIn profile"
+                >
+                  <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </span>
+              )}
             </div>
             {location && (
               <div className="flex items-center gap-1 text-[11px] text-text-muted mt-1">

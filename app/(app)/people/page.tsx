@@ -16,6 +16,7 @@ interface Person {
   contactUrl?: string | null
   contactLabel?: string | null
   contactVerified?: boolean
+  linkedinStatus?: "verified" | "broken" | "inconclusive" | "skipped" | "pending"
 }
 
 type PeopleTab = "all" | "mentors" | "peers"
@@ -32,6 +33,7 @@ export default function PeoplePage() {
   const [tab, setTab] = useState<PeopleTab>("all")
   const [search, setSearch] = useState("")
   const [selectedInterests, setSelectedInterests] = useState<string[]>([])
+  const [verifiedOnly, setVerifiedOnly] = useState(false)
 
   useEffect(() => {
     fetch("/api/people")
@@ -55,28 +57,35 @@ export default function PeoplePage() {
     )
   }
 
-  const filtered = people.filter((person) => {
-    // Consider someone a "mentor" if they have work experience
-    const isMentor = (person.experienceSummary?.WORK ?? 0) > 0
-    if (tab === "mentors" && !isMentor) return false
-    if (tab === "peers" && isMentor) return false
+  const filtered = people
+    // Belt-and-suspenders client-side gatekeeper. The API already excludes
+    // linkedinStatus === 'broken', but if the server ever leaks one through
+    // (column missing, stale cache, etc.) we still keep them out of the UI.
+    .filter((p) => p.linkedinStatus !== "broken")
+    // Opt-in "verified only" mode hides anything we haven't positively
+    // confirmed yet. Useful for high-trust networking views.
+    .filter((p) => (verifiedOnly ? p.linkedinStatus === "verified" : true))
+    .filter((person) => {
+      const isMentor = (person.experienceSummary?.WORK ?? 0) > 0
+      if (tab === "mentors" && !isMentor) return false
+      if (tab === "peers" && isMentor) return false
 
-    if (selectedInterests.length > 0) {
-      if (!selectedInterests.some((i) => person.interests.includes(i)))
-        return false
-    }
+      if (selectedInterests.length > 0) {
+        if (!selectedInterests.some((i) => person.interests.includes(i)))
+          return false
+      }
 
-    if (search.trim()) {
-      const q = search.toLowerCase()
-      if (
-        !(person.name ?? "").toLowerCase().includes(q) &&
-        !person.interests.some((i) => i.toLowerCase().includes(q))
-      )
-        return false
-    }
+      if (search.trim()) {
+        const q = search.toLowerCase()
+        if (
+          !(person.name ?? "").toLowerCase().includes(q) &&
+          !person.interests.some((i) => i.toLowerCase().includes(q))
+        )
+          return false
+      }
 
-    return true
-  })
+      return true
+    })
 
   return (
     <div className="min-h-dvh">
@@ -101,27 +110,44 @@ export default function PeoplePage() {
             />
           </div>
 
-          {/* Tabs */}
-          <div className="flex gap-1">
-            {TABS.map((t) => (
-              <button
-                key={t.value}
-                onClick={() => setTab(t.value)}
-                className={cn(
-                  "px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-150",
-                  tab === t.value
-                    ? "text-white"
-                    : "text-text-secondary hover:text-text-primary hover:bg-white/[0.04]"
-                )}
-                style={
-                  tab === t.value
-                    ? { background: "var(--gradient-brand)" }
-                    : undefined
-                }
-              >
-                {t.label}
-              </button>
-            ))}
+          {/* Tabs + Verified-only toggle */}
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex gap-1">
+              {TABS.map((t) => (
+                <button
+                  key={t.value}
+                  onClick={() => setTab(t.value)}
+                  className={cn(
+                    "px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-150",
+                    tab === t.value
+                      ? "text-white"
+                      : "text-text-secondary hover:text-text-primary hover:bg-white/[0.04]"
+                  )}
+                  style={
+                    tab === t.value
+                      ? { background: "var(--gradient-brand)" }
+                      : undefined
+                  }
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setVerifiedOnly((v) => !v)}
+              aria-pressed={verifiedOnly}
+              className={cn(
+                "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-150",
+                verifiedOnly
+                  ? "border-purple bg-purple/15 text-purple-light"
+                  : "border-border text-text-muted hover:border-border-strong hover:text-text-secondary"
+              )}
+            >
+              <svg width={12} height={12} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+              Verified only
+            </button>
           </div>
 
           {/* Interest filter chips */}

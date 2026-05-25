@@ -1,18 +1,22 @@
-// Server-side LinkedIn redirector.
+// Server-side LinkedIn redirector + last-mile verifier.
 //
 // Click flow:
 //   PersonCard <a href="/api/people/{id}/linkedin"> -> this route -> 302 -> profile
 //
 // Priority order for the redirect target:
-//   1. Saved users.linkedinUrl (the canonical, hand-verified profile URL)
-//   2. DuckDuckGo "!ducky" bang: 302s straight to the first Google result for
-//      `site:linkedin.com/in <Full Name> <Role> <Location>`. This almost always
-//      lands on the actual profile page rather than a logged-out search wall.
-//   3. As a last resort if the user row doesn't exist or has no name, send to
-//      LinkedIn's people-search keywords page.
+//   1. linkedinStatus = 'verified' AND well-formed linkedinUrl -> straight to that URL
+//   2. Well-formed linkedinUrl that hasn't been confirmed broken yet:
+//      run an on-demand verification. If verified or inconclusive -> straight there;
+//      if broken -> persist and fall through.
+//   3. No usable saved URL -> redirect to LinkedIn's own People-search results,
+//      keyword-stuffed with name + most-recent role (+ location). This always
+//      resolves to a real LinkedIn page, never a 404.
 
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { createClient as createServiceClient } from "@supabase/supabase-js"
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/supabase/config"
+import { verifyLinkedInProfile, isWellFormedProfileUrl } from "@/lib/linkedin/verify"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -21,45 +25,46 @@ interface UserRow {
   name: string | null
   location: string | null
   linkedinUrl: string | null
+  linkedinStatus: string | null
   experiences: { type: string; title: string | null; organization: string | null }[] | null
-}
-
-function isWellFormedLinkedInProfile(url: string | null): url is string {
-  if (!url) return false
-  try {
-    const u = new URL(url)
-    return (
-      (u.hostname === "linkedin.com" || u.hostname === "www.linkedin.com") &&
-      /^\/in\/[A-Za-z0-9-]+\/?$/.test(u.pathname)
-    )
-  } catch {
-    return false
-  }
 }
 
 function pickRoleAndOrg(experiences: UserRow["experiences"]): string {
   if (!experiences || experiences.length === 0) return ""
-  // Prefer most recent WORK experience
   const work = experiences.find((e) => e.type === "WORK")
   const pick = work ?? experiences[0]
   return [pick.title, pick.organization].filter(Boolean).join(" ")
 }
 
-// Build a DuckDuckGo I'm-Feeling-Lucky-equivalent that resolves to the actual
-// LinkedIn profile, not a search results wall.
-function buildDuckyUrl(name: string, role: string, location: string | null): string {
-  const parts = [`site:linkedin.com/in`, name]
+// LinkedIn-native People search. Spec'd format:
+//   /search/results/people/?keywords=Firstname+Lastname+CurrentRole
+// This is the high-relevance directory result the user explicitly requested.
+function buildLinkedInPeopleSearchUrl(
+  name: string,
+  role: string,
+  location: string | null,
+): string {
+  const parts = [name]
   if (role) parts.push(role)
   if (location) parts.push(location)
-  const query = parts.join(" ")
-  // !ducky bang on DDG -> Google first-hit redirect
-  return `https://duckduckgo.com/?q=${encodeURIComponent(`!ducky ${query}`)}`
+  return (
+    "https://www.linkedin.com/search/results/people/?keywords=" +
+    encodeURIComponent(parts.join(" ")) +
+    "&origin=GLOBAL_SEARCH_HEADER"
+  )
 }
 
-// LinkedIn's keywords-only people-search page (last-resort, still requires login)
-function buildLinkedInSearchFallback(name: string, location: string | null): string {
-  const keywords = location ? `${name} ${location}` : name
-  return `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(keywords)}&origin=GLOBAL_SEARCH_HEADER`
+async function persistStatus(id: string, status: string): Promise<void> {
+  try {
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? SUPABASE_ANON_KEY
+    const sb = createServiceClient(SUPABASE_URL, key, { auth: { persistSession: false } })
+    await sb
+      .from("users")
+      .update({ linkedinStatus: status, linkedinCheckedAt: new Date().toISOString() })
+      .eq("id", id)
+  } catch {
+    // Column might not exist yet — silently skip
+  }
 }
 
 export async function GET(
@@ -73,36 +78,61 @@ export async function GET(
     const supabase = await createClient()
     const { data } = await supabase
       .from("users")
-      .select("name, location, linkedinUrl, experiences!experiences_userId_fkey(type, title, organization)")
+      .select(
+        "name, location, linkedinUrl, linkedinStatus, " +
+        "experiences!experiences_userId_fkey(type, title, organization)",
+      )
       .eq("id", id)
       .single()
     row = (data as UserRow | null) ?? null
   } catch {
-    /* fall through to generic fallback below */
+    // Column might not exist yet — fall back to narrower select
+    try {
+      const supabase = await createClient()
+      const { data } = await supabase
+        .from("users")
+        .select(
+          "name, location, linkedinUrl, " +
+          "experiences!experiences_userId_fkey(type, title, organization)",
+        )
+        .eq("id", id)
+        .single()
+      row = data
+        ? ({
+            ...(data as unknown as Omit<UserRow, "linkedinStatus">),
+            linkedinStatus: null,
+          } as UserRow)
+        : null
+    } catch { /* swallow */ }
   }
 
-  // Strict-form saved URL wins — straight to the profile, no extra hop.
-  if (row && isWellFormedLinkedInProfile(row.linkedinUrl)) {
-    return NextResponse.redirect(row.linkedinUrl, 302)
+  const savedUrl = row?.linkedinUrl ?? null
+  const isFormed = isWellFormedProfileUrl(savedUrl)
+
+  // Path 1: already verified → straight through
+  if (row?.linkedinStatus === "verified" && isFormed) {
+    return NextResponse.redirect(savedUrl as string, 302)
   }
 
-  // No saved URL — build a hyper-targeted I'm-Feeling-Lucky-style redirect.
+  // Path 2: well-formed URL we haven't confirmed broken → verify on demand
+  if (isFormed && row?.linkedinStatus !== "broken") {
+    const verdict = await verifyLinkedInProfile(savedUrl as string, { timeoutMs: 5000 })
+    // Persist whatever we learned for next time
+    if (verdict.status === "verified" || verdict.status === "broken") {
+      void persistStatus(id, verdict.status)
+    }
+    if (verdict.status === "verified" || verdict.status === "inconclusive") {
+      return NextResponse.redirect(savedUrl as string, 302)
+    }
+    // verdict.status === "broken" → fall through to search
+  }
+
+  // Path 3: no usable saved URL → LinkedIn-native People search
   const name = (row?.name ?? "").trim()
   if (!name) {
-    // Nothing to search for; bounce them to LinkedIn home.
     return NextResponse.redirect("https://www.linkedin.com/", 302)
   }
-
   const role = pickRoleAndOrg(row?.experiences ?? [])
-  const ducky = buildDuckyUrl(name, role, row?.location ?? null)
-
-  // We could redirect to LinkedIn's search page directly, but !ducky usually
-  // resolves the actual profile, which is what the user wants. If DDG ever
-  // fails we still have `fallback` for the worst case via a client retry —
-  // but for now a single 302 is enough.
-  // (Build the LinkedIn fallback to make sure it's syntactically valid even
-  // though we don't redirect to it on this hop.)
-  void buildLinkedInSearchFallback(name, row?.location ?? null)
-
-  return NextResponse.redirect(ducky, 302)
+  const search = buildLinkedInPeopleSearchUrl(name, role, row?.location ?? null)
+  return NextResponse.redirect(search, 302)
 }
