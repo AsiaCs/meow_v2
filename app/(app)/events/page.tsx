@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { Search, PlusCircle, MapPin, Globe } from "lucide-react"
 import { EventCard } from "@/components/events/event-card"
 import { CalendarSidebar } from "@/components/events/calendar-sidebar"
@@ -29,6 +30,11 @@ const TABS: { label: string; value: FilterTab }[] = [
   { label: "Virtual", value: "virtual" },
   { label: "Free", value: "free" },
 ]
+
+const CATEGORY_CHIPS = [
+  "AI", "Hackathon", "Demo Night", "Vibe Coding",
+  "Crypto", "Design", "Founders", "VC", "Networking",
+] as const
 
 function extractCity(location: string): string {
   return location.split(",")[0].trim()
@@ -89,12 +95,25 @@ function groupByDay(events: Event[]): DayGroup[] {
 }
 
 export default function EventsPage() {
+  const searchParams = useSearchParams()
+  const cityParam = searchParams.get("city")
+  const categoryParam = searchParams.get("category")
+
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<FilterTab>("all")
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [search, setSearch] = useState("")
-  const [selectedCity, setSelectedCity] = useState<string>("all")
+  const [selectedCity, setSelectedCity] = useState<string>(cityParam ?? "all")
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(
+    categoryParam ? [categoryParam] : []
+  )
+
+  function toggleCategory(cat: string) {
+    setSelectedCategories((prev) =>
+      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
+    )
+  }
 
   useEffect(() => {
     // Load events and user location in parallel
@@ -107,8 +126,8 @@ export default function EventsPage() {
         ...event,
         tags: Array.isArray(event.tags) ? event.tags : [],
       })))
-      // Auto-select user's city if they have a saved location
-      if (meData?.location) {
+      // Auto-select user's city ONLY if no city was explicitly set via query string
+      if (!cityParam && meData?.location) {
         const city = (meData.location as string).split(",")[0].trim()
         setSelectedCity(city)
       }
@@ -156,6 +175,13 @@ export default function EventsPage() {
         !(e.description ?? "").toLowerCase().includes(q) &&
         !e.tags.some((t) => t.toLowerCase().includes(q))
       )
+        return false
+    }
+
+    if (selectedCategories.length > 0) {
+      // OR-match: event passes if it has any of the selected categories
+      const tagsLower = e.tags.map((t) => t.toLowerCase())
+      if (!selectedCategories.some((c) => tagsLower.includes(c.toLowerCase())))
         return false
     }
 
@@ -262,6 +288,38 @@ export default function EventsPage() {
                 ))}
               </div>
             )}
+
+            {/* Category filter chips */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] uppercase tracking-wider text-text-muted flex-shrink-0 mr-1">
+                Categories
+              </span>
+              {CATEGORY_CHIPS.map((cat) => {
+                const active = selectedCategories.includes(cat)
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => toggleCategory(cat)}
+                    className={cn(
+                      "px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150",
+                      active
+                        ? "border-purple bg-purple/15 text-purple-light"
+                        : "border-border text-text-muted hover:border-border-strong hover:text-text-secondary"
+                    )}
+                  >
+                    {cat}
+                  </button>
+                )
+              })}
+              {selectedCategories.length > 0 && (
+                <button
+                  onClick={() => setSelectedCategories([])}
+                  className="px-3 py-1 rounded-full text-xs font-medium text-text-muted hover:text-text-secondary transition-colors"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
         </div>
 

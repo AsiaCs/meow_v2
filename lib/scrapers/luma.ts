@@ -23,42 +23,44 @@ interface LumaEventJson {
   event_type?: string
 }
 
-const TAG_MAP: Record<string, string> = {
-  ai: "Machine Learning / AI",
-  "machine learning": "Machine Learning / AI",
-  ml: "Machine Learning / AI",
-  fintech: "Finance",
-  finance: "Finance",
-  "product management": "Product Management",
-  product: "Product Management",
-  design: "Design",
-  startup: "Entrepreneurship",
-  founder: "Entrepreneurship",
-  entrepreneurship: "Entrepreneurship",
-  engineering: "Software Engineering",
-  software: "Software Engineering",
-  hack: "Software Engineering",
-  developer: "Software Engineering",
-  data: "Data Science",
-  investing: "Investing",
-  venture: "Investing",
-  vc: "Investing",
-  marketing: "Marketing",
-  networking: "Networking",
-  meetup: "Networking",
+// Discoverable category taxonomy. Keep these short — they show up as filter chips.
+export const EVENT_CATEGORIES = [
+  "AI",
+  "Hackathon",
+  "Demo Night",
+  "Vibe Coding",
+  "Crypto",
+  "Design",
+  "Founders",
+  "VC",
+  "Networking",
+] as const
+
+export type EventCategory = (typeof EVENT_CATEGORIES)[number]
+
+const CATEGORY_RULES: Array<{ category: EventCategory; patterns: RegExp[] }> = [
+  { category: "Hackathon",  patterns: [/\bhack(athon)?\b/i, /\bhack night\b/i, /\bjam\b/i] },
+  { category: "Demo Night", patterns: [/\bdemo\s*(night|day)\b/i, /\bshowcase\b/i, /\bpitch night\b/i] },
+  { category: "Vibe Coding", patterns: [/\bvibe\s*cod/i, /\bcozy coding\b/i, /\bpair program/i] },
+  { category: "Crypto",     patterns: [/\b(crypto|web3|blockchain|defi|nft|ethereum|solana)\b/i] },
+  { category: "AI",         patterns: [/\b(ai|llm|gpt|claude|gemini|agent|ml|machine learning|diffusion|inference|gpu|fine[- ]?tune)\b/i] },
+  { category: "Design",     patterns: [/\b(design|figma|ux|ui|prototyp)\b/i] },
+  { category: "VC",         patterns: [/\b(vc|venture|investor|angel|seed|series\s+[a-c])\b/i] },
+  { category: "Founders",   patterns: [/\b(founder|startup|launch)\b/i] },
+]
+
+function inferCategories(title: string, description = ""): EventCategory[] {
+  const text = `${title} ${description}`
+  const out = new Set<EventCategory>()
+  for (const { category, patterns } of CATEGORY_RULES) {
+    if (patterns.some((re) => re.test(text))) out.add(category)
+  }
+  if (out.size === 0) out.add("Networking")
+  return Array.from(out).slice(0, 4)
 }
 
-function guessTags(title: string): string[] {
-  const lower = title.toLowerCase()
-  const tags = new Set<string>()
-  for (const [keyword, tag] of Object.entries(TAG_MAP)) {
-    if (lower.includes(keyword)) {
-      tags.add(tag)
-      if (tags.size >= 3) break
-    }
-  }
-  if (tags.size === 0) tags.add("Networking")
-  return Array.from(tags)
+function guessTags(title: string, description = ""): string[] {
+  return inferCategories(title, description)
 }
 
 // Find each "event":{...} JSON object in the HTML using a balanced-brace parser.
@@ -184,23 +186,45 @@ async function scrapeLumaPath(path: string): Promise<ScrapedEvent[]> {
   }
 }
 
+// Named tech community calendars on Luma. These are the same kind of feeds
+// Cerebral Valley aggregates — each one is curated by a known organizer and
+// produces high-signal AI / hacker events.
+const COMMUNITY_CALENDARS: Array<{ slug: string; tag: EventCategory }> = [
+  { slug: "cerebralvalley", tag: "AI" },
+  { slug: "aitinkerers",    tag: "AI" },
+  { slug: "agihouse",       tag: "AI" },
+  { slug: "build-club",     tag: "Hackathon" },
+  { slug: "founders",       tag: "Founders" },
+]
+
 export async function scrapeLuma(_query: string = "networking", city?: string): Promise<ScrapedEvent[]> {
-  // Try the user's city first, then SF/NYC/discover as fallback so we always
-  // have something to show.
+  // Three signals stacked, in priority order:
+  // 1. User's city (so local events come first)
+  // 2. Major hubs (SF, NYC) — fills the list if user has no city or it's empty
+  // 3. Discover (global)
+  // 4. Named tech communities — Cerebral-Valley-style curated feeds
   const tried = new Set<string>()
   const paths: string[] = []
 
   const userCity = getCitySlug(city)
   if (userCity) paths.push(`/${userCity}`)
   paths.push("/sf", "/nyc", "/discover")
+  for (const c of COMMUNITY_CALENDARS) paths.push(`/${c.slug}`)
 
   const all: ScrapedEvent[] = []
   for (const p of paths) {
     if (tried.has(p)) continue
     tried.add(p)
     const events = await scrapeLumaPath(p)
+    // If this path is a known community, force-tag every event with the community tag
+    const community = COMMUNITY_CALENDARS.find((c) => `/${c.slug}` === p)
+    if (community) {
+      for (const e of events) {
+        if (!e.tags.includes(community.tag)) e.tags.unshift(community.tag)
+      }
+    }
     all.push(...events)
-    if (all.length >= 30) break
+    if (all.length >= 80) break
   }
 
   // Final de-dupe across all paths

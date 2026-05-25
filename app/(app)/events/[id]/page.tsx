@@ -7,7 +7,7 @@ import { scrapeLuma } from "@/lib/scrapers/luma"
 import { filterReachable } from "@/lib/validators/links"
 import { isSpecificEventUrl } from "@/lib/validators/specific-urls"
 import { safeExternalUrl } from "@/lib/url-helpers"
-import { ArrowLeft, MapPin, Monitor, CalendarDays, ExternalLink, Clock, Tag } from "lucide-react"
+import { ArrowLeft, MapPin, Monitor, CalendarDays, ExternalLink, Clock, Tag, CalendarPlus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
 export const runtime = "nodejs"
@@ -209,26 +209,36 @@ export default async function EventDetailPage({
           </section>
         )}
 
-        {canRegister && safeRegistrationUrl ? (
+        <div className="flex flex-col sm:flex-row gap-3">
+          {canRegister && safeRegistrationUrl ? (
+            <a
+              href={safeRegistrationUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl text-white font-semibold text-base hover:opacity-90 active:scale-[0.98] transition-all"
+              style={{ background: "var(--gradient-brand)" }}
+            >
+              RSVP / Register
+              <ExternalLink size={16} strokeWidth={1.5} />
+            </a>
+          ) : (
+            <button
+              type="button"
+              disabled
+              className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl border border-border-strong text-text-muted font-semibold text-base opacity-70 cursor-not-allowed"
+            >
+              RSVP unavailable
+            </button>
+          )}
           <a
-            href={safeRegistrationUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl text-white font-semibold text-base hover:opacity-90 active:scale-[0.98] transition-all"
-            style={{ background: "var(--gradient-brand)" }}
+            href={`/api/events/${id}/ics`}
+            className="sm:w-auto flex items-center justify-center gap-2 py-4 sm:px-6 rounded-2xl border border-white/[0.08] bg-white/[0.02] text-text-secondary hover:bg-white/[0.04] hover:text-text-primary font-medium text-sm transition-all"
+            aria-label="Download calendar invite"
           >
-            RSVP / Register
-            <ExternalLink size={16} strokeWidth={1.5} />
+            <CalendarPlus size={16} strokeWidth={1.5} />
+            Add to Calendar
           </a>
-        ) : (
-          <button
-            type="button"
-            disabled
-            className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl border border-border-strong text-text-muted font-semibold text-base opacity-70 cursor-not-allowed"
-          >
-            RSVP unavailable
-          </button>
-        )}
+        </div>
       </div>
     </div>
   )

@@ -65,7 +65,7 @@ const fetchLiveEvents = unstable_cache(
     // Validate every URL is actually reachable
     return await filterReachable(deduped, (e) => e.registrationUrl)
   },
-  ["events-live-v3"],
+  ["events-live-v4-categories"],
   { revalidate: 1800, tags: ["events"] },
 )
 
