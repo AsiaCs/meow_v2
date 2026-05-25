@@ -198,15 +198,70 @@ export default function ProfilePage() {
           interests: editInterests,
         }),
       })
+      const text = await res.text()
       if (res.ok) {
-        const updated = await res.json()
-        setProfile((prev) => (prev ? normalizeProfileData({ ...prev, ...updated }) as ProfileData : prev))
-        setSaveMessage("Saved successfully")
+        try {
+          const updated = JSON.parse(text)
+          setProfile((prev) => (prev ? normalizeProfileData({ ...prev, ...updated }) as ProfileData : prev))
+        } catch { /* ok if non-JSON */ }
+        setSaveMessage("Saved")
         setTimeout(() => setSaveMessage(""), 3000)
+      } else {
+        // Surface the actual error so we know why save fails
+        let detail = `HTTP ${res.status}`
+        try {
+          const err = JSON.parse(text) as { error?: string; issues?: unknown }
+          if (err.error) detail = err.error
+          if (err.issues) detail += " — " + JSON.stringify(err.issues).slice(0, 200)
+        } catch {
+          if (text) detail = text.slice(0, 200)
+        }
+        setSaveMessage(`Save failed: ${detail}`)
       }
+    } catch (e) {
+      setSaveMessage(`Network error: ${e instanceof Error ? e.message : "unknown"}`)
     } finally {
       setSaving(false)
     }
+  }
+
+  async function useMyLocation() {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setSaveMessage("Geolocation not supported in this browser")
+      return
+    }
+    setSaveMessage("Detecting location…")
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const { latitude, longitude } = pos.coords
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&zoom=10`,
+            { headers: { "Accept-Language": "en" } },
+          )
+          if (!res.ok) throw new Error(`reverse-geocode ${res.status}`)
+          const data = (await res.json()) as {
+            address?: { city?: string; town?: string; village?: string; state?: string; country?: string }
+          }
+          const a = data.address ?? {}
+          const city = a.city ?? a.town ?? a.village ?? ""
+          const region = a.state ?? a.country ?? ""
+          const label = [city, region].filter(Boolean).join(", ") || "Unknown"
+          setEditLocation(label)
+          setSaveMessage(`Detected: ${label}. Click Save to apply.`)
+        } catch (e) {
+          setSaveMessage(`Could not look up city: ${e instanceof Error ? e.message : "error"}`)
+        }
+      },
+      (err) => {
+        setSaveMessage(
+          err.code === err.PERMISSION_DENIED
+            ? "Location permission denied — enable it in your browser settings"
+            : `Location error: ${err.message}`,
+        )
+      },
+      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 60_000 },
+    )
   }
 
   function toggleInterest(area: string) {
@@ -327,23 +382,52 @@ export default function ProfilePage() {
           </div>
 
           {/* Location */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              label="Location"
-              placeholder="City, Region"
-              value={editLocation}
-              onChange={(e) => setEditLocation(e.target.value)}
-            />
+          <div className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input
+                label="Location"
+                placeholder="City, Region"
+                value={editLocation}
+                onChange={(e) => setEditLocation(e.target.value)}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={useMyLocation}
+              className="inline-flex items-center gap-1.5 text-xs text-purple-light hover:text-purple transition-colors"
+            >
+              <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3" />
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="2" x2="12" y2="4" />
+                <line x1="12" y1="20" x2="12" y2="22" />
+                <line x1="2" y1="12" x2="4" y2="12" />
+                <line x1="20" y1="12" x2="22" y2="12" />
+              </svg>
+              Use my current location
+            </button>
           </div>
 
           {/* Save */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <Button onClick={saveProfile} loading={saving} size="md">
               <Save size={15} strokeWidth={1.5} />
               Save Profile
             </Button>
             {saveMessage && (
-              <span className="text-sm text-green-400">{saveMessage}</span>
+              <span
+                className={cn(
+                  "text-sm",
+                  saveMessage.toLowerCase().startsWith("save failed") ||
+                    saveMessage.toLowerCase().startsWith("network") ||
+                    saveMessage.toLowerCase().includes("error") ||
+                    saveMessage.toLowerCase().includes("denied")
+                    ? "text-red-400"
+                    : "text-green-400"
+                )}
+              >
+                {saveMessage}
+              </span>
             )}
           </div>
         </CardContent>

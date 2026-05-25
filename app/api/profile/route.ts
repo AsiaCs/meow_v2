@@ -96,25 +96,75 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Validation failed", issues: result.error.issues }, { status: 400 })
     }
 
-    // Upsert so a row is created if missing (defense-in-depth for pre-trigger-fix accounts)
-    const upsertRow: Record<string, unknown> = {
+    // Step 1: try to UPDATE the existing row with only the changed columns.
+    // This is the safest path under RLS — most policies allow update on own row.
+    const updateData: Record<string, unknown> = { updatedAt: new Date().toISOString() }
+    if (result.data.name !== undefined) updateData.name = result.data.name
+    if (result.data.location !== undefined) updateData.location = result.data.location
+    if (result.data.interests !== undefined) updateData.interests = result.data.interests
+    if (result.data.digestEnabled !== undefined) updateData.digestEnabled = result.data.digestEnabled
+
+    const updateRes = await supabase
+      .from("users")
+      .update(updateData)
+      .eq("id", user.id)
+      .select("id, name, location, interests, image, onboarded, digestEnabled")
+
+    // If a row matched, we're done.
+    if (!updateRes.error && Array.isArray(updateRes.data) && updateRes.data.length > 0) {
+      return NextResponse.json(updateRes.data[0])
+    }
+
+    // If updatedAt or digestEnabled doesn't exist as a column, retry without them.
+    if (updateRes.error && /column .* does not exist/i.test(updateRes.error.message)) {
+      const safe = { ...updateData }
+      delete safe.updatedAt
+      delete safe.digestEnabled
+      const retry = await supabase
+        .from("users")
+        .update(safe)
+        .eq("id", user.id)
+        .select("id, name, location, interests, image, onboarded")
+      if (!retry.error && Array.isArray(retry.data) && retry.data.length > 0) {
+        return NextResponse.json(retry.data[0])
+      }
+      if (retry.error) {
+        return NextResponse.json(
+          { error: `Update failed: ${retry.error.message}` },
+          { status: 500 },
+        )
+      }
+    }
+
+    if (updateRes.error) {
+      return NextResponse.json(
+        { error: `Update failed: ${updateRes.error.message}` },
+        { status: 500 },
+      )
+    }
+
+    // Step 2: no row matched — bootstrap with insert
+    const insertRow: Record<string, unknown> = {
       id: user.id,
       email: user.email!,
-      updatedAt: new Date().toISOString(),
+      name: result.data.name ?? user.user_metadata?.full_name ?? null,
+      image: user.user_metadata?.avatar_url ?? null,
+      interests: result.data.interests ?? [],
+      location: result.data.location ?? null,
+      onboarded: false,
     }
-    if (result.data.name !== undefined) upsertRow.name = result.data.name
-    if (result.data.location !== undefined) upsertRow.location = result.data.location
-    if (result.data.interests !== undefined) upsertRow.interests = result.data.interests
-    if (result.data.digestEnabled !== undefined) upsertRow.digestEnabled = result.data.digestEnabled
-
-    const { data, error } = await supabase
+    const insertRes = await supabase
       .from("users")
-      .upsert(upsertRow, { onConflict: "id", ignoreDuplicates: false })
-      .select("id, name, location, interests, image, onboarded, digestEnabled")
+      .insert(insertRow)
+      .select("id, name, location, interests, image, onboarded")
       .single()
-
-    if (error) throw error
-    return NextResponse.json(data)
+    if (insertRes.error) {
+      return NextResponse.json(
+        { error: `Bootstrap insert failed: ${insertRes.error.message}` },
+        { status: 500 },
+      )
+    }
+    return NextResponse.json(insertRes.data)
   } catch (error) {
     console.error("[profile/PATCH]", error)
     return NextResponse.json({ error: "Failed to update profile" }, { status: 500 })
