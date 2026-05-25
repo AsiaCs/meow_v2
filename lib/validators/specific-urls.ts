@@ -39,10 +39,10 @@ export function isSpecificEventUrl(url: string | null | undefined): boolean {
       return true
     }
 
-    // Cerebral Valley — only accept paths beneath /events/ or specific slugs,
-    // never the /events index itself
+    // Cerebral Valley — accept /e/<slug> (canonical event URL the CV API
+    // returns) or /events/<slug>. Reject the /events index page itself.
     if (hostname.endsWith("cerebralvalley.ai")) {
-      return /^\/events\/[^/]+/.test(path)
+      return /^\/e\/[^/]+/.test(path) || /^\/events\/[^/]+/.test(path)
     }
 
     // Eventbrite — only /e/{slug-id} is a specific event
@@ -53,6 +53,11 @@ export function isSpecificEventUrl(url: string | null | undefined): boolean {
     // Meetup — only /{group}/events/{numeric-id} is a specific event
     if (hostname.endsWith("meetup.com")) {
       return /^\/[^/]+\/events\/\d{6,}/.test(path)
+    }
+
+    // Partiful — /e/<id> is a specific event invite
+    if (hostname.endsWith("partiful.com")) {
+      return /^\/e\/[A-Za-z0-9]+/.test(path)
     }
 
     // Everything else: reject. We do not have a verified pattern for this

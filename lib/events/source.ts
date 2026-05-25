@@ -22,8 +22,27 @@ export function stableEventId(url: string): string {
 
 // Bump the version suffix to invalidate the shared cache when scraper output
 // shape changes. Both routes import this function so they share the entry.
-const CACHE_KEY = "events-shared-v1"
+const CACHE_KEY = "events-shared-v3-cv-featured"
 const CACHE_TTL_SECONDS = 1800
+
+// Cross-source dedupe: same event posted on CV + Luma should appear once.
+// Key = lowercased title + ISO date. CV is listed first so it wins ties
+// (richer description, cover image).
+function dedupeAcrossSources(events: ScrapedEvent[]): ScrapedEvent[] {
+  const byUrl = new Set<string>()
+  const byTitleDay = new Set<string>()
+  const out: ScrapedEvent[] = []
+  for (const e of events) {
+    if (byUrl.has(e.registrationUrl)) continue
+    const day = new Date(e.startDate).toISOString().slice(0, 10)
+    const titleKey = `${e.title.toLowerCase().trim()}|${day}`
+    if (byTitleDay.has(titleKey)) continue
+    byUrl.add(e.registrationUrl)
+    byTitleDay.add(titleKey)
+    out.push(e)
+  }
+  return out
+}
 
 export const getEventsForLocation = unstable_cache(
   async (city: string | null): Promise<ScrapedEvent[]> => {
@@ -36,18 +55,13 @@ export const getEventsForLocation = unstable_cache(
     const cv = cvResult.status === "fulfilled" ? cvResult.value : []
     const lu = lumaResult.status === "fulfilled" ? lumaResult.value : []
 
-    // Reject community/discovery URLs — only specific event pages
+    // Reject community/discovery URLs — only specific event pages.
+    // CV URLs are on cerebralvalley.ai/e/<slug> which is always specific.
     const specific = [...cv, ...lu].filter((e) =>
       isSpecificEventUrl(e.registrationUrl),
     )
 
-    // De-dupe by registrationUrl
-    const seen = new Set<string>()
-    const deduped = specific.filter((e) => {
-      if (seen.has(e.registrationUrl)) return false
-      seen.add(e.registrationUrl)
-      return true
-    })
+    const deduped = dedupeAcrossSources(specific)
 
     // Validate URLs are actually reachable
     return await filterReachable(deduped, (e) => e.registrationUrl)

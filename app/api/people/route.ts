@@ -1,7 +1,19 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { normalizeStringArray } from "@/lib/profile-normalization"
-import { buildLinkedInSearchUrl } from "@/lib/url-helpers"
+
+function isWellFormedLinkedInProfile(url: string | null): boolean {
+  if (!url) return false
+  try {
+    const u = new URL(url)
+    return (
+      (u.hostname === "linkedin.com" || u.hostname === "www.linkedin.com") &&
+      /^\/in\/[A-Za-z0-9-]+\/?$/.test(u.pathname)
+    )
+  } catch {
+    return false
+  }
+}
 
 type ExperienceRow = {
   id: string
@@ -59,13 +71,13 @@ export async function GET(request: Request) {
           return acc
         }, {})
 
-        // We can't HEAD-check LinkedIn URLs (they block bots), so syntactic
-        // validity is not enough — seed and fake URLs pass the format test
-        // and still 404 on LinkedIn. Until we add a real verification signal
-        // (LinkedIn OAuth, manual confirmation, etc.), ALL users get the
-        // People-search URL. It's guaranteed to land on a real LinkedIn page.
-        const contactUrl = buildLinkedInSearchUrl(user.name)
-        const contactLabel = "Search on LinkedIn"
+        // Always point at the server-side redirector. It picks the best
+        // available target on click: saved profile URL if present, otherwise
+        // a hyper-targeted "I'm Feeling Lucky" style redirect that lands on
+        // the actual LinkedIn profile rather than a logged-out search wall.
+        const contactUrl = `/api/people/${user.id}/linkedin`
+        const hasSaved = isWellFormedLinkedInProfile(user.linkedinUrl)
+        const contactLabel = hasSaved ? "Connect on LinkedIn" : "Open LinkedIn profile"
 
         return {
           id: user.id,
@@ -77,7 +89,7 @@ export async function GET(request: Request) {
           experienceCount: experiences.length,
           contactUrl,
           contactLabel,
-          contactVerified: false,
+          contactVerified: hasSaved,
         }
       })
       // Drop anyone where we couldn't build a contact link (defensive — should never happen if name exists)

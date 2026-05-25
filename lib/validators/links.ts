@@ -7,6 +7,11 @@ const TRUSTED_DOMAINS = [
   "goldmansachs.com",
   "notion.com",
   "vercel.com",
+  // CV events come straight from the CV API — the events on its site are
+  // the source of truth, so HEAD-checking them just adds latency.
+  "cerebralvalley.ai",
+  // Partiful HEAD-checks are unreliable (some events return 403 to bots).
+  "partiful.com",
 ]
 
 function isTrusted(url: string): boolean {

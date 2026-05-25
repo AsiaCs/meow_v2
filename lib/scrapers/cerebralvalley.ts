@@ -1,4 +1,29 @@
-import * as cheerio from "cheerio"
+// Cerebral Valley event scraper.
+//
+// CV's public site (cerebralvalley.ai/events) is a Next.js client-rendered SPA.
+// The HTML payload contains zero event data, so Cheerio/Axios over the page
+// returns nothing. The site's React bundle calls a public API endpoint that we
+// hit directly — same endpoint their own /events page uses, so the data is
+// always current.
+//
+//   GET https://api.cerebralvalley.ai/v1/public/event/pull?approved=true&limit=50&offset=0
+//
+// Response shape (truncated):
+//   {
+//     detail: "Events retrieved successfully",
+//     events: [
+//       {
+//         id, name, description, descriptionSummary,
+//         startDateTime, endDateTime,       // "YYYY-MM-DD HH:MM:SS" in UTC
+//         url,                              // canonical https://cerebralvalley.ai/e/<slug>
+//         location, venue,
+//         type,                             // "HACKATHON" | "MEETUP" | null
+//         CVEvent, status, imageUrl,
+//         featuredStartTime, featuredEndTime,
+//         platformEventData,
+//       }, ...
+//     ],
+//   }
 
 export interface ScrapedEvent {
   title: string
@@ -15,206 +40,184 @@ export interface ScrapedEvent {
   isFree: boolean
 }
 
-const BASE_URL = "https://cerebralvalley.ai"
-const EVENTS_URL = `${BASE_URL}/events`
 const SOURCE = "Cerebral Valley"
+const API = "https://api.cerebralvalley.ai/v1/public/event/pull"
+const PAGE_SIZE = 50
+const MAX_EVENTS = 100
 
-function parseEventDate(raw: string): Date | null {
-  if (!raw) return null
-  const trimmed = raw.trim()
-  const parsed = new Date(trimmed)
-  if (!isNaN(parsed.getTime())) return parsed
-
-  // Try common formats: "May 20, 2026" / "May 20" / "5/20/2026"
-  const withYear = /(\w+ \d{1,2},?\s*\d{4})/i.exec(trimmed)
-  if (withYear) {
-    const d = new Date(withYear[1])
-    if (!isNaN(d.getTime())) return d
-  }
-
-  return null
+interface CVEventRaw {
+  id?: string
+  name?: string
+  description?: string | null
+  descriptionSummary?: string | null
+  startDateTime?: string
+  endDateTime?: string | null
+  url?: string
+  location?: string | null
+  venue?: string | null
+  type?: string | null         // "HACKATHON", "MEETUP", etc.
+  CVEvent?: boolean
+  status?: string              // "approved"
+  imageUrl?: string | null
 }
 
-function isVirtualEvent(text: string): boolean {
-  return /virtual|online|zoom|remote|livestream/i.test(text)
+interface CVPullResponse {
+  detail?: string
+  events?: CVEventRaw[]
 }
 
-function guessTags(title: string, description: string): string[] {
-  const combined = `${title} ${description}`.toLowerCase()
-  const tagMap: Record<string, string> = {
-    ai: "AI",
-    "machine learning": "Machine Learning / AI",
-    ml: "Machine Learning / AI",
-    fintech: "Finance",
-    finance: "Finance",
-    "product management": "Product Management",
-    design: "Design",
-    startup: "Entrepreneurship",
-    entrepreneurship: "Entrepreneurship",
-    engineering: "Software Engineering",
-    software: "Software Engineering",
-    data: "Data Science",
-    investing: "Investing",
-    venture: "Investing",
-    marketing: "Marketing",
-  }
+// "2025-05-24 16:00:00" — CV API returns naive timestamps. Treat as UTC.
+function parseCVDate(s: string | undefined): Date | null {
+  if (!s) return null
+  const isoLike = s.includes("T") ? s : s.replace(" ", "T") + "Z"
+  const d = new Date(isoLike)
+  return isNaN(d.getTime()) ? null : d
+}
 
+function isVirtualLocation(location: string | null | undefined): boolean {
+  if (!location) return true
+  return /\b(remote|virtual|online|zoom)\b/i.test(location)
+}
+
+function inferTags(name: string, type: string | null | undefined): string[] {
   const tags = new Set<string>()
-  for (const [keyword, tag] of Object.entries(tagMap)) {
-    if (combined.includes(keyword)) {
-      tags.add(tag)
-      if (tags.size >= 4) break
-    }
-  }
-
+  if (type === "HACKATHON") tags.add("Hackathon")
+  const lower = name.toLowerCase()
+  if (/\b(ai|llm|gpt|claude|gemini|agent|ml|machine learning|diffusion|inference|gpu|fine[- ]?tune|llama|mistral)\b/i.test(lower)) tags.add("AI")
+  if (/\bhack(athon)?\b/i.test(lower)) tags.add("Hackathon")
+  if (/\bdemo\s*(night|day)\b/i.test(lower) || /\bshowcase\b/i.test(lower)) tags.add("Demo Night")
+  if (/\b(crypto|web3|blockchain|defi|nft|solana)\b/i.test(lower)) tags.add("Crypto")
+  if (/\b(design|figma)\b/i.test(lower)) tags.add("Design")
+  if (/\b(founder|startup)\b/i.test(lower)) tags.add("Founders")
+  if (/\b(vc|venture|investor)\b/i.test(lower)) tags.add("VC")
   if (tags.size === 0) tags.add("Networking")
-  return Array.from(tags)
+  return Array.from(tags).slice(0, 4)
+}
+
+function mapEvent(raw: CVEventRaw): ScrapedEvent | null {
+  if (!raw.name || !raw.url) return null
+  const start = parseCVDate(raw.startDateTime)
+  if (!start) return null
+  const end = parseCVDate(raw.endDateTime ?? undefined) ?? undefined
+
+  // Canonicalize the URL — keep it on cerebralvalley.ai/e/<slug>, which 302s
+  // to the actual RSVP host (Luma, partiful, etc.) at click time.
+  const url = raw.url.startsWith("http") ? raw.url : `https://cerebralvalley.ai${raw.url}`
+
+  const locationRaw = raw.venue?.trim() || raw.location?.trim() || null
+  const isVirtual = isVirtualLocation(locationRaw)
+
+  return {
+    title: raw.name.trim(),
+    description: (raw.descriptionSummary ?? raw.description ?? "").trim().slice(0, 1000) || undefined,
+    startDate: start,
+    endDate: end,
+    location: isVirtual ? undefined : locationRaw ?? undefined,
+    isVirtual,
+    registrationUrl: url,
+    imageUrl: raw.imageUrl ?? undefined,
+    tags: inferTags(raw.name, raw.type),
+    source: SOURCE,
+    sourceUrl: url,
+    isFree: true,  // CV events are free to RSVP; ticketing is on the host
+  }
+}
+
+async function pullFeatured(): Promise<CVEventRaw[]> {
+  // featured=true returns the curated upcoming-events feed shown on CV's
+  // /events page. approved=true returns the full historical archive, which
+  // is almost entirely past events.
+  const res = await fetch(`${API}?featured=true`, {
+    headers: {
+      Accept: "application/json",
+      "User-Agent": "Mozilla/5.0 (compatible; Meow/1.0; +https://meow-two-pied.vercel.app)",
+    },
+    next: { revalidate: 1800 },
+  })
+  if (!res.ok) return []
+  const json = (await res.json()) as CVPullResponse
+  return Array.isArray(json.events) ? json.events : []
+}
+
+async function pullApprovedUpcoming(): Promise<CVEventRaw[]> {
+  // Also paginate approved=true and keep only upcoming. CV's archive includes
+  // future hackathons that aren't in the "featured" highlight set.
+  const collected: CVEventRaw[] = []
+  const now = new Date()
+  for (let offset = 0; offset < 250; offset += PAGE_SIZE) {
+    const params = new URLSearchParams({
+      approved: "true",
+      limit: String(PAGE_SIZE),
+      offset: String(offset),
+    })
+    const res = await fetch(`${API}?${params}`, {
+      headers: {
+        Accept: "application/json",
+        "User-Agent": "Mozilla/5.0 (compatible; Meow/1.0; +https://meow-two-pied.vercel.app)",
+      },
+      next: { revalidate: 1800 },
+    })
+    if (!res.ok) break
+    const json = (await res.json()) as CVPullResponse
+    const page = Array.isArray(json.events) ? json.events : []
+    if (page.length === 0) break
+
+    // Stop once we hit a page where every event is in the past — the API
+    // returns chronologically and there's no point paging further back.
+    let pageHasFuture = false
+    for (const ev of page) {
+      const sd = parseCVDate(ev.startDateTime)
+      if (sd && sd > now) {
+        collected.push(ev)
+        pageHasFuture = true
+      }
+    }
+    if (!pageHasFuture) break
+    if (page.length < PAGE_SIZE) break
+  }
+  return collected
+}
+
+// De-dupe by (lowercased title, UTC date). Keeps the first occurrence per
+// match — caller decides ordering.
+function dedupe(events: ScrapedEvent[]): ScrapedEvent[] {
+  const seen = new Set<string>()
+  const out: ScrapedEvent[] = []
+  for (const e of events) {
+    const day = e.startDate.toISOString().slice(0, 10)
+    const key = `${e.title.toLowerCase().trim()}|${day}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push(e)
+  }
+  return out
 }
 
 export async function scrapeCerebralValley(): Promise<ScrapedEvent[]> {
   try {
-    const res = await fetch(EVENTS_URL, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; Meow/1.0; +https://meow.app)",
-        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.5",
-      },
-      next: { revalidate: 3600 },
-    })
-
-    if (!res.ok) return []
-
-    const html = await res.text()
-    const $ = cheerio.load(html)
-    const events: ScrapedEvent[] = []
-
-    // Try multiple selectors to find event cards
-    const candidateSelectors = [
-      "article",
-      "[class*='event-card']",
-      "[class*='EventCard']",
-      "[class*='event_card']",
-      "[class*='card']",
-      "[class*='Event']",
-      "li[class*='event']",
-      "li[class*='Event']",
-      ".events-list > *",
-      "[data-testid*='event']",
+    // Pull both feeds in parallel: the curated featured list + the upcoming
+    // slice of the full archive. Merge, dedupe, filter to future.
+    const [featured, archive] = await Promise.allSettled([
+      pullFeatured(),
+      pullApprovedUpcoming(),
+    ])
+    const all: CVEventRaw[] = [
+      ...(featured.status === "fulfilled" ? featured.value : []),
+      ...(archive.status === "fulfilled" ? archive.value : []),
     ]
 
-    let $cards = $([]) // empty cheerio collection
-    for (const sel of candidateSelectors) {
-      const found = $(sel)
-      if (found.length >= 2) {
-        $cards = found
-        break
-      }
+    const mapped: ScrapedEvent[] = []
+    for (const raw of all) {
+      const m = mapEvent(raw)
+      if (m) mapped.push(m)
+      if (mapped.length >= MAX_EVENTS) break
     }
 
-    // Fall back to any anchor with an event-like path
-    if ($cards.length === 0) {
-      $("a[href*='/event']").each((_, el) => {
-        const $el = $(el)
-        const title =
-          $el.find("h1,h2,h3,h4").first().text().trim() ||
-          $el.attr("aria-label")?.trim() ||
-          $el.text().trim()
-
-        if (!title || title.length < 4) return
-
-        const href = $el.attr("href") ?? ""
-        const fullUrl = href.startsWith("http") ? href : `${BASE_URL}${href}`
-        const dateText =
-          $el.find("time").attr("datetime") ??
-          $el.find("[class*='date']").first().text().trim()
-        const startDate = parseEventDate(dateText) ?? new Date(Date.now() + 7 * 86400000)
-        const locationText = $el.find("[class*='location'],address").first().text().trim()
-        const virtual = isVirtualEvent(locationText)
-        const desc = $el.find("p").first().text().trim()
-        const imgSrc = $el.find("img").first().attr("src")
-
-        events.push({
-          title,
-          description: desc || undefined,
-          startDate,
-          location: virtual ? undefined : locationText || undefined,
-          isVirtual: virtual,
-          registrationUrl: fullUrl,
-          imageUrl: imgSrc ? (imgSrc.startsWith("http") ? imgSrc : `${BASE_URL}${imgSrc}`) : undefined,
-          tags: guessTags(title, desc),
-          source: SOURCE,
-          sourceUrl: fullUrl,
-          isFree: true,
-        })
-      })
-
-      return events.slice(0, 20)
-    }
-
-    $cards.each((_, el) => {
-      try {
-        const $el = $(el)
-
-        const title =
-          $el.find("h1,h2,h3,h4").first().text().trim() ||
-          $el.find("[class*='title']").first().text().trim() ||
-          $el.find("[class*='Title']").first().text().trim()
-
-        if (!title || title.length < 4) return
-
-        // Registration URL
-        const anchor = $el.find("a[href]").first()
-        const href = anchor.attr("href") ?? $el.closest("a").attr("href") ?? ""
-        const fullUrl = href.startsWith("http") ? href : href ? `${BASE_URL}${href}` : EVENTS_URL
-
-        // Date
-        const timeEl = $el.find("time").first()
-        const dateText =
-          timeEl.attr("datetime") ??
-          timeEl.text().trim() ??
-          $el.find("[class*='date'],[class*='Date']").first().text().trim()
-        const startDate = parseEventDate(dateText) ?? new Date(Date.now() + 7 * 86400000)
-
-        // Location / virtual
-        const locationText =
-          $el.find("[class*='location'],[class*='Location'],address").first().text().trim()
-        const virtual = isVirtualEvent(locationText + " " + title)
-
-        // Description
-        const desc = $el.find("p").first().text().trim()
-
-        // Image
-        const imgSrc = $el.find("img").first().attr("src")
-        const imageUrl = imgSrc
-          ? imgSrc.startsWith("http")
-            ? imgSrc
-            : `${BASE_URL}${imgSrc}`
-          : undefined
-
-        // Free check
-        const priceText = $el.find("[class*='price'],[class*='Price']").first().text().trim()
-        const isFree = !priceText || /free|0/i.test(priceText)
-
-        events.push({
-          title,
-          description: desc || undefined,
-          startDate,
-          location: virtual ? undefined : locationText || undefined,
-          isVirtual: virtual,
-          registrationUrl: fullUrl,
-          imageUrl,
-          tags: guessTags(title, desc),
-          source: SOURCE,
-          sourceUrl: fullUrl,
-          isFree,
-        })
-      } catch {
-        // Skip malformed card silently
-      }
-    })
-
-    return events.slice(0, 20)
-  } catch {
+    const now = new Date()
+    const upcoming = mapped.filter((e) => (e.endDate ?? e.startDate) > now)
+    return dedupe(upcoming)
+  } catch (err) {
+    console.error("[scrapeCerebralValley]", err)
     return []
   }
 }
