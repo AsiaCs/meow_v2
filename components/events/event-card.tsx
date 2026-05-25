@@ -1,10 +1,8 @@
-﻿"use client"
+"use client"
 
 import Link from "next/link"
-import { motion } from "framer-motion"
-import { MapPin, Monitor, CalendarDays, Tag, ArrowRight } from "lucide-react"
+import { MapPin, Monitor, Clock } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { formatDateShort } from "@/lib/utils"
 
 interface EventCardProps {
   id: string
@@ -22,137 +20,93 @@ interface EventCardProps {
 
 const SOURCE_LABELS: Record<string, string> = {
   "cerebral-valley": "Cerebral Valley",
+  "Cerebral Valley": "Cerebral Valley",
   luma: "Luma",
+  Luma: "Luma",
   community: "Community",
   user: "Community",
   scraped: "Curated",
 }
 
 function getSourceLabel(source: string) {
-  return SOURCE_LABELS[source.toLowerCase()] ?? source
+  return SOURCE_LABELS[source] ?? SOURCE_LABELS[source.toLowerCase()] ?? source
 }
 
-const tagVariants: Array<"purple" | "pink" | "green" | "gray"> = [
-  "purple",
-  "pink",
-  "green",
-  "gray",
-]
+function formatTime(date: Date | string): string {
+  const d = typeof date === "string" ? new Date(date) : date
+  return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+}
 
-function tagVariant(index: number): "purple" | "pink" | "green" | "gray" {
-  return tagVariants[index % tagVariants.length]
+function GradientThumb({ title }: { title: string }) {
+  // Deterministic hue from title so the same event always gets the same color
+  let h = 0
+  for (let i = 0; i < title.length; i++) h = ((h << 5) - h) + title.charCodeAt(i)
+  const hue = Math.abs(h) % 360
+  return (
+    <div
+      className="w-full h-full"
+      style={{
+        background: `linear-gradient(135deg, hsl(${hue},70%,55%) 0%, hsl(${(hue + 60) % 360},70%,45%) 100%)`,
+      }}
+    />
+  )
 }
 
 export function EventCard({
   id,
   title,
-  description,
   startDate,
   location,
   isVirtual,
   imageUrl,
-  tags,
-  isFree,
   source,
 }: EventCardProps) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -4 }}
-      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
-      className="border border-white/[0.06] rounded-3xl p-1.5 bg-white/[0.02] h-full cursor-pointer"
+    <Link
+      href={`/events/${id}`}
+      className="group flex items-stretch gap-4 p-3 rounded-2xl hover:bg-white/[0.03] transition-colors"
     >
-      <Link href={`/events/${id}`} className="block h-full">
-        <div className="bg-bg-card rounded-[calc(1.5rem-0.375rem)] overflow-hidden flex flex-col h-full">
-          {/* Image or gradient header */}
-          {imageUrl ? (
-            <div className="h-36 overflow-hidden">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={imageUrl}
-                alt={title}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          ) : (
-            <div
-              className="h-28 opacity-60"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(124,58,237,0.3) 0%, rgba(236,72,153,0.2) 100%)",
-              }}
-            />
-          )}
+      {/* Thumbnail (left) — Luma uses a square thumb, so we do too */}
+      <div className="w-[88px] h-[88px] sm:w-[112px] sm:h-[112px] rounded-xl overflow-hidden flex-shrink-0 border border-white/[0.06]">
+        {imageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
+        ) : (
+          <GradientThumb title={title} />
+        )}
+      </div>
 
-          <div className="flex flex-col flex-1 p-5 gap-3">
-            {/* Tags row */}
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {tags.slice(0, 3).map((tag, i) => (
-                  <Badge key={tag} variant={tagVariant(i)}>
-                    <Tag size={10} className="mr-1 opacity-70" />
-                    {tag}
-                  </Badge>
-                ))}
-                {tags.length > 3 && (
-                  <Badge variant="gray">+{tags.length - 3}</Badge>
-                )}
-              </div>
-            )}
-
-            {/* Date chip */}
-            <div className="flex items-center gap-1.5 text-xs text-text-secondary">
-              <CalendarDays size={13} strokeWidth={1.5} />
-              <span className="font-medium">{formatDateShort(startDate)}</span>
-            </div>
-
-            {/* Title */}
-            <h3 className="text-text-primary font-semibold text-base leading-snug line-clamp-2">
-              {title}
-            </h3>
-
-            {/* Description */}
-            {description && (
-              <p className="text-text-secondary text-sm leading-relaxed line-clamp-2">
-                {description}
-              </p>
-            )}
-
-            {/* Location */}
-            <div className="flex items-center gap-1.5">
-              {isVirtual ? (
-                <Badge variant="purple">
-                  <Monitor size={11} className="mr-1" />
-                  Virtual
-                </Badge>
-              ) : location ? (
-                <div className="flex items-center gap-1 text-xs text-text-muted">
-                  <MapPin size={12} strokeWidth={1.5} />
-                  <span>{location}</span>
-                </div>
-              ) : null}
-            </div>
-
-            {/* Spacer */}
-            <div className="flex-1" />
-
-            {/* Footer */}
-            <div className="flex items-center justify-between pt-2 border-t border-white/[0.06]">
-              <div className="flex items-center gap-2">
-                <Badge variant={isFree ? "green" : "gray"}>
-                  {isFree ? "Free" : "Paid"}
-                </Badge>
-                <Badge variant="outline">{getSourceLabel(source)}</Badge>
-              </div>
-              <span className="flex items-center gap-1 text-xs font-medium text-purple-light">
-                View details
-                <ArrowRight size={12} strokeWidth={1.5} />
-              </span>
-            </div>
-          </div>
+      {/* Content (right) */}
+      <div className="flex-1 min-w-0 flex flex-col justify-center gap-1.5">
+        {/* Time */}
+        <div className="flex items-center gap-1.5 text-xs text-text-muted">
+          <Clock size={12} strokeWidth={1.5} />
+          {formatTime(startDate)}
         </div>
-      </Link>
-    </motion.div>
+
+        {/* Title */}
+        <h3 className="text-text-primary font-semibold text-[15px] leading-snug line-clamp-2 group-hover:text-purple-light transition-colors">
+          {title}
+        </h3>
+
+        {/* Meta row */}
+        <div className="flex items-center gap-3 text-xs text-text-secondary flex-wrap">
+          {isVirtual ? (
+            <span className="inline-flex items-center gap-1">
+              <Monitor size={12} strokeWidth={1.5} />
+              Virtual
+            </span>
+          ) : location ? (
+            <span className="inline-flex items-center gap-1 truncate max-w-[200px]">
+              <MapPin size={12} strokeWidth={1.5} className="flex-shrink-0" />
+              <span className="truncate">{location}</span>
+            </span>
+          ) : null}
+          <Badge variant="gray" className="text-[10px] uppercase tracking-wider">
+            {getSourceLabel(source)}
+          </Badge>
+        </div>
+      </div>
+    </Link>
   )
 }

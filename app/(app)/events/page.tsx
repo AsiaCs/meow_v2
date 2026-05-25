@@ -34,6 +34,60 @@ function extractCity(location: string): string {
   return location.split(",")[0].trim()
 }
 
+interface DayGroup {
+  key: string
+  label: string
+  sublabel: string
+  items: Event[]
+}
+
+function groupByDay(events: Event[]): DayGroup[] {
+  const groups = new Map<string, Event[]>()
+  for (const ev of events) {
+    const d = new Date(ev.startDate)
+    const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
+    const bucket = groups.get(key)
+    if (bucket) bucket.push(ev)
+    else groups.set(key, [ev])
+  }
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+
+  return Array.from(groups.entries())
+    .sort(([a], [b]) => {
+      const [ay, am, ad] = a.split("-").map(Number)
+      const [by, bm, bd] = b.split("-").map(Number)
+      return new Date(ay, am, ad).getTime() - new Date(by, bm, bd).getTime()
+    })
+    .map(([key, items]) => {
+      const d = new Date(items[0].startDate)
+      const sameDay = (a: Date, b: Date) =>
+        a.getFullYear() === b.getFullYear() &&
+        a.getMonth() === b.getMonth() &&
+        a.getDate() === b.getDate()
+
+      let label: string
+      if (sameDay(d, today)) label = "Today"
+      else if (sameDay(d, tomorrow)) label = "Tomorrow"
+      else
+        label = d.toLocaleDateString("en-US", {
+          weekday: "long",
+          month: "long",
+          day: "numeric",
+        })
+
+      const sublabel = d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      })
+
+      return { key, label, sublabel: label === sublabel ? "" : sublabel, items }
+    })
+}
+
 export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
@@ -211,15 +265,22 @@ export default function EventsPage() {
           </div>
         </div>
 
-        {/* Grid */}
-        <div className="px-6 py-6">
+        {/* Vertical list grouped by day — Luma / Cerebral Valley pattern */}
+        <div className="px-6 py-6 max-w-3xl">
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className="space-y-4">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div
                   key={i}
-                  className="border border-white/[0.06] rounded-3xl h-72 bg-white/[0.01] animate-pulse"
-                />
+                  className="flex gap-4 p-3 rounded-2xl bg-white/[0.01] animate-pulse"
+                >
+                  <div className="w-[112px] h-[112px] rounded-xl bg-white/[0.04]" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3 w-16 bg-white/[0.04] rounded" />
+                    <div className="h-4 w-3/4 bg-white/[0.04] rounded" />
+                    <div className="h-3 w-1/2 bg-white/[0.04] rounded" />
+                  </div>
+                </div>
               ))}
             </div>
           ) : filtered.length === 0 ? (
@@ -238,22 +299,36 @@ export default function EventsPage() {
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-              {filtered.map((event) => (
-                <EventCard
-                  key={event.id}
-                  id={event.id}
-                  title={event.title}
-                  description={event.description ?? undefined}
-                  startDate={event.startDate}
-                  location={event.location ?? undefined}
-                  isVirtual={event.isVirtual}
-                  registrationUrl={event.registrationUrl ?? undefined}
-                  imageUrl={event.imageUrl ?? undefined}
-                  tags={event.tags}
-                  isFree={event.isFree}
-                  source={event.source}
-                />
+            <div className="space-y-8">
+              {groupByDay(filtered).map(({ key, label, sublabel, items }) => (
+                <section key={key}>
+                  <div className="flex items-baseline gap-3 mb-3 sticky top-[160px] bg-bg-base/90 backdrop-blur-sm py-2 z-10 -mx-3 px-3">
+                    <h2 className="text-base font-bold text-text-primary font-display">
+                      {label}
+                    </h2>
+                    <span className="text-xs text-text-muted uppercase tracking-wider">
+                      {sublabel}
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    {items.map((event) => (
+                      <EventCard
+                        key={event.id}
+                        id={event.id}
+                        title={event.title}
+                        description={event.description ?? undefined}
+                        startDate={event.startDate}
+                        location={event.location ?? undefined}
+                        isVirtual={event.isVirtual}
+                        registrationUrl={event.registrationUrl ?? undefined}
+                        imageUrl={event.imageUrl ?? undefined}
+                        tags={event.tags}
+                        isFree={event.isFree}
+                        source={event.source}
+                      />
+                    ))}
+                  </div>
+                </section>
               ))}
             </div>
           )}
