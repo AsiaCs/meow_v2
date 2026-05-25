@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server"
-import { unstable_cache } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
-import { scrapeCerebralValley, type ScrapedEvent } from "@/lib/scrapers/cerebralvalley"
-import { scrapeLuma } from "@/lib/scrapers/luma"
+import { getEventsForLocation, stableEventId, type ScrapedEvent } from "@/lib/events/source"
 import { filterReachable, isLinkReachable } from "@/lib/validators/links"
 import { isSpecificEventUrl } from "@/lib/validators/specific-urls"
 
@@ -10,15 +8,6 @@ export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 export const maxDuration = 30
 export const revalidate = 1800
-
-function stableId(s: string): string {
-  let h = 0
-  for (let i = 0; i < s.length; i++) {
-    h = ((h << 5) - h) + s.charCodeAt(i)
-    h |= 0
-  }
-  return `ev-${Math.abs(h).toString(36)}`
-}
 
 type UserLocationRow = {
   location?: string | null
@@ -37,37 +26,6 @@ type DbEventRow = {
   source: string
   isFree: boolean
 }
-
-const fetchLiveEvents = unstable_cache(
-  async (city: string | null): Promise<ScrapedEvent[]> => {
-    const cityHint = city ?? undefined
-    const [cvResult, lumaResult] = await Promise.allSettled([
-      scrapeCerebralValley(),
-      scrapeLuma("networking tech startup", cityHint),
-    ])
-
-    const cvEvents = cvResult.status === "fulfilled" ? cvResult.value : []
-    const lumaEvents = lumaResult.status === "fulfilled" ? lumaResult.value : []
-
-    // Drop community/discovery URLs — we only want specific event pages
-    const specific = [...cvEvents, ...lumaEvents].filter((e) =>
-      isSpecificEventUrl(e.registrationUrl),
-    )
-
-    // De-dupe by registrationUrl
-    const seenUrls = new Set<string>()
-    const deduped = specific.filter((e) => {
-      if (seenUrls.has(e.registrationUrl)) return false
-      seenUrls.add(e.registrationUrl)
-      return true
-    })
-
-    // Validate every URL is actually reachable
-    return await filterReachable(deduped, (e) => e.registrationUrl)
-  },
-  ["events-live-v4-categories"],
-  { revalidate: 1800, tags: ["events"] },
-)
 
 export async function GET(request: Request) {
   try {
@@ -95,7 +53,7 @@ export async function GET(request: Request) {
       }
     } catch { /* anonymous viewers still get events */ }
 
-    let events = await fetchLiveEvents(userCity)
+    let events = await getEventsForLocation(userCity)
 
     // Pull DB events too, validate their URLs the same way
     try {
@@ -158,7 +116,7 @@ export async function GET(request: Request) {
 
     // Shape for client (stable IDs from URL)
     const shaped = events.map((e) => ({
-      id: stableId(e.registrationUrl),
+      id: stableEventId(e.registrationUrl),
       title: e.title,
       description: e.description ?? null,
       startDate: new Date(e.startDate).toISOString(),

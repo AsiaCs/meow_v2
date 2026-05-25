@@ -11,7 +11,6 @@ import {
   PlusCircle,
   LogOut,
   User,
-  Sparkles,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
@@ -26,7 +25,6 @@ interface SidebarProps {
 
 const navItems = [
   { href: "/dashboard", label: "Home", icon: Home },
-  { href: "/canvas", label: "Canvas", icon: Sparkles },
   { href: "/events", label: "Events", icon: Calendar },
   { href: "/internships", label: "Internships", icon: Briefcase },
   { href: "/people", label: "People", icon: Users },

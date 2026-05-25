@@ -1,10 +1,7 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
-import { unstable_cache } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
-import { scrapeCerebralValley, type ScrapedEvent } from "@/lib/scrapers/cerebralvalley"
-import { scrapeLuma } from "@/lib/scrapers/luma"
-import { filterReachable } from "@/lib/validators/links"
+import { getEventsForLocation, stableEventId, type ScrapedEvent } from "@/lib/events/source"
 import { isSpecificEventUrl } from "@/lib/validators/specific-urls"
 import { safeExternalUrl } from "@/lib/url-helpers"
 import { ArrowLeft, MapPin, Monitor, CalendarDays, ExternalLink, Clock, Tag, CalendarPlus } from "lucide-react"
@@ -27,15 +24,6 @@ const SOURCE_LABELS: Record<string, string> = {
 
 function getSourceLabel(source: string) {
   return SOURCE_LABELS[source] ?? SOURCE_LABELS[source.toLowerCase()] ?? source
-}
-
-function stableId(s: string): string {
-  let h = 0
-  for (let i = 0; i < s.length; i++) {
-    h = ((h << 5) - h) + s.charCodeAt(i)
-    h |= 0
-  }
-  return `ev-${Math.abs(h).toString(36)}`
 }
 
 type EventRow = {
@@ -62,23 +50,14 @@ function formatEventDate(date: Date) {
   return { dateStr, timeStr }
 }
 
-const getCachedScrapedEvents = unstable_cache(
-  async (): Promise<ScrapedEvent[]> => {
-    const [cvResult, lumaResult] = await Promise.allSettled([
-      scrapeCerebralValley(),
-      scrapeLuma("networking tech startup"),
-    ])
-    const cv = cvResult.status === "fulfilled" ? cvResult.value : []
-    const lu = lumaResult.status === "fulfilled" ? lumaResult.value : []
-    const specific = [...cv, ...lu].filter((e) => isSpecificEventUrl(e.registrationUrl))
-    return await filterReachable(specific, (e) => e.registrationUrl)
-  },
-  ["events-detail-source-v3"],
-  { revalidate: 1800, tags: ["events"] },
-)
-
 async function findEvent(id: string): Promise<ScrapedEvent | null> {
-  // Try DB first
+  // 1. Try the shared live-scraped cache first. Same function the listing
+  //    endpoint uses, so the IDs always line up.
+  const scrapedCity = await getEventsForLocation(null)
+  let hit = scrapedCity.find((e) => stableEventId(e.registrationUrl) === id)
+  if (hit) return hit
+
+  // 2. Fallback to DB (user-submitted or older scraped rows)
   try {
     const supabase = await createClient()
     const { data: dbEvents } = await supabase
@@ -87,7 +66,7 @@ async function findEvent(id: string): Promise<ScrapedEvent | null> {
       .eq("status", "APPROVED")
     if (Array.isArray(dbEvents)) {
       const match = (dbEvents as EventRow[]).find(
-        (e) => stableId(e.registrationUrl) === id && isSpecificEventUrl(e.registrationUrl),
+        (e) => stableEventId(e.registrationUrl) === id && isSpecificEventUrl(e.registrationUrl),
       )
       if (match) {
         return {
@@ -95,14 +74,15 @@ async function findEvent(id: string): Promise<ScrapedEvent | null> {
           startDate: new Date(match.startDate),
           endDate: match.endDate ? new Date(match.endDate) : undefined,
           sourceUrl: match.registrationUrl,
+          description: match.description ?? undefined,
+          location: match.location ?? undefined,
+          imageUrl: match.imageUrl ?? undefined,
         } as ScrapedEvent
       }
     }
   } catch { /* fall through */ }
 
-  // Otherwise look in the live scraped set
-  const scraped = await getCachedScrapedEvents()
-  return scraped.find((e) => stableId(e.registrationUrl) === id) ?? null
+  return null
 }
 
 export default async function EventDetailPage({
