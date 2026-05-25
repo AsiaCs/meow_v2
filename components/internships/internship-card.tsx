@@ -5,6 +5,8 @@ import { MapPin, Wifi, Clock, ExternalLink, DollarSign } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn, formatDateShort } from "@/lib/utils"
+import { safeExternalUrl } from "@/lib/url-helpers"
+import { isSpecificApplyUrl } from "@/lib/validators/specific-urls"
 
 interface InternshipCardProps {
   id: string
@@ -17,7 +19,7 @@ interface InternshipCardProps {
   isPaid?: boolean
   salary?: string
   tags: string[]
-  applicationUrl: string
+  applicationUrl?: string | null
   matchScore?: number
 }
 
@@ -56,6 +58,8 @@ export function InternshipCard({
   const daysLeft = deadline ? getDaysUntilDeadline(deadline) : null
   const isUrgent = daysLeft !== null && daysLeft <= 7 && daysLeft >= 0
   const isPast = daysLeft !== null && daysLeft < 0
+  const safeApplicationUrl = safeExternalUrl(applicationUrl)
+  const canApply = Boolean(safeApplicationUrl && isSpecificApplyUrl(safeApplicationUrl) && !isPast)
 
   return (
     <motion.div
@@ -157,16 +161,22 @@ export function InternshipCard({
             )}
           </div>
 
-          <a
-            href={applicationUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Button variant="primary" size="sm" className="gap-1">
-              Apply Now
-              <ExternalLink size={12} strokeWidth={1.5} />
+          {canApply && safeApplicationUrl ? (
+            <a
+              href={safeApplicationUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <Button variant="primary" size="sm" className="gap-1">
+                Apply Now
+                <ExternalLink size={12} strokeWidth={1.5} />
+              </Button>
+            </a>
+          ) : (
+            <Button variant="outline" size="sm" disabled>
+              Apply unavailable
             </Button>
-          </a>
+          )}
         </div>
       </div>
     </motion.div>

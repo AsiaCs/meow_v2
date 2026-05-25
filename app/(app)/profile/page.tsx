@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { INTEREST_AREAS, cn, formatDate } from "@/lib/utils"
+import { normalizeExperience, normalizeProfileData } from "@/lib/profile-normalization"
 
 type ExperienceType =
   | "WORK"
@@ -173,15 +174,7 @@ export default function ProfilePage() {
         // Defensive normalization — the API can return a user with no
         // experiences/interests rows. Treat missing as empty so .filter and
         // .map calls never crash.
-        const normalized: ProfileData = {
-          id: data.id,
-          name: data.name ?? null,
-          email: data.email ?? null,
-          image: data.image ?? null,
-          location: data.location ?? null,
-          interests: Array.isArray(data.interests) ? data.interests : [],
-          experiences: Array.isArray(data.experiences) ? data.experiences : [],
-        }
+        const normalized = normalizeProfileData(data) as ProfileData
         setProfile(normalized)
         setEditLocation(normalized.location ?? "")
         setEditInterests(normalized.interests)
@@ -204,7 +197,7 @@ export default function ProfilePage() {
       })
       if (res.ok) {
         const updated = await res.json()
-        setProfile((prev) => (prev ? { ...prev, ...updated } : prev))
+        setProfile((prev) => (prev ? normalizeProfileData({ ...prev, ...updated }) as ProfileData : prev))
         setSaveMessage("Saved successfully")
         setTimeout(() => setSaveMessage(""), 3000)
       }
@@ -250,9 +243,10 @@ export default function ProfilePage() {
       })
       if (res.ok) {
         const newExp = await res.json()
+        const normalizedExp = normalizeExperience(newExp) as Experience
         setProfile((prev) =>
           prev
-            ? { ...prev, experiences: [...(prev.experiences ?? []), newExp] }
+            ? { ...prev, experiences: [...(prev.experiences ?? []), normalizedExp] }
             : prev
         )
         setShowAddForm(false)

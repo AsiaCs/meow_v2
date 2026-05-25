@@ -1,29 +1,12 @@
-// Domains where HEAD requests are blocked or unreliable. We trust these without
-// checking. Lu.ma and LinkedIn are NOT here — we must actually verify those
-// because broken event/profile URLs are the #1 source of user pain.
+// Domains where individual pages are expensive or unreliable to check. Keep
+// this list tiny: event and job platforms can return valid homepages while
+// specific listings are 404, so those must be checked per URL.
 const TRUSTED_DOMAINS = [
-  "greenhouse.io",
-  "boards.greenhouse.io",
-  "lever.co",
-  "jobs.lever.co",
-  "ashbyhq.com",
-  "jobs.ashbyhq.com",
-  "workdayjobs.com",
-  "myworkdayjobs.com",
   "stripe.com",
-  "vercel.com",
-  "figma.com",
   "databricks.com",
   "goldmansachs.com",
-  "a16z.com",
-  "notion.so",
-  "ramp.com",
-  "cohere.com",
-  "eventbrite.com",
-  "meetup.com",
-  "wellfound.com",
-  "ycombinator.com",
-  "cerebralvalley.ai",
+  "notion.com",
+  "vercel.com",
 ]
 
 function isTrusted(url: string): boolean {
@@ -40,18 +23,35 @@ export async function isLinkReachable(url: string, timeoutMs = 5000): Promise<bo
   try { new URL(url) } catch { return false }
   if (isTrusted(url)) return true
 
+  const headers = { "User-Agent": "Mozilla/5.0 (compatible; Meow-Bot/1.0)" }
+
   try {
     const controller = new AbortController()
     const id = setTimeout(() => controller.abort(), timeoutMs)
     const res = await fetch(url, {
       method: "HEAD",
       signal: controller.signal,
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; Meow-Bot/1.0)" },
+      headers,
       redirect: "follow",
     })
     clearTimeout(id)
-    // 405 = HEAD not allowed but server exists; anything <400 is fine
-    return res.status < 400 || res.status === 405
+    if (res.status < 400) return true
+    if (res.status !== 405) return false
+  } catch {
+    // Some event/job boards block HEAD. Fall through to a small GET probe.
+  }
+
+  try {
+    const controller = new AbortController()
+    const id = setTimeout(() => controller.abort(), timeoutMs)
+    const res = await fetch(url, {
+      method: "GET",
+      signal: controller.signal,
+      headers,
+      redirect: "follow",
+    })
+    clearTimeout(id)
+    return res.status < 400
   } catch {
     return false
   }

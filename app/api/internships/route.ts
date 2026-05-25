@@ -6,6 +6,7 @@ import { filterReachable } from "@/lib/validators/links"
 import { isSpecificApplyUrl } from "@/lib/validators/specific-urls"
 
 export const runtime = "nodejs"
+export const dynamic = "force-dynamic"
 export const maxDuration = 30
 export const revalidate = 1800
 
@@ -15,13 +16,24 @@ function matchesTags(itemTags: string[], filterTags: string[]): boolean {
   )
 }
 
+type UserInterestsRow = {
+  interests?: string[] | null
+}
+
+type DbInternshipRow = ScrapedInternship & {
+  id?: string
+  deadline?: string | null
+  salary?: string | null
+  createdAt?: string
+}
+
 const fetchLiveInternships = unstable_cache(
   async (interests: string[]): Promise<ScrapedInternship[]> => {
     const scraped = await scrapeInternships(interests)
     const specific = scraped.filter((i) => isSpecificApplyUrl(i.applicationUrl))
     return await filterReachable(specific, (i) => i.applicationUrl)
   },
-  ["internships-live"],
+  ["internships-live-v4"],
   { revalidate: 1800, tags: ["internships"] },
 )
 
@@ -46,7 +58,7 @@ export async function GET(request: Request) {
           .select("interests")
           .eq("id", user.id)
           .single()
-        interests = ((data as any)?.interests as string[]) ?? []
+        interests = (data as UserInterestsRow | null)?.interests ?? []
       }
     } catch { /* anonymous still gets internships */ }
 
@@ -60,7 +72,7 @@ export async function GET(request: Request) {
         .select("id, title, company, location, isRemote, description, applicationUrl, deadline, isPaid, salary, tags, source, sourceUrl, createdAt")
         .order("createdAt", { ascending: false })
       if (Array.isArray(dbInternships) && dbInternships.length > 0) {
-        const specificDb = (dbInternships as any[]).filter((i) => isSpecificApplyUrl(i.applicationUrl))
+        const specificDb = (dbInternships as DbInternshipRow[]).filter((i) => isSpecificApplyUrl(i.applicationUrl))
         const validDb = await filterReachable(specificDb, (i) => i.applicationUrl)
         const seen = new Set(internships.map((i) => i.applicationUrl))
         for (const i of validDb) {
@@ -78,16 +90,16 @@ export async function GET(request: Request) {
     if (paidParam === "true") internships = internships.filter((i) => i.isPaid)
 
     const shaped = internships.map((i, idx) => ({
-      id: (i as any).id ?? `int-${idx}-${(i.applicationUrl ?? "").slice(-12)}`,
+      id: (i as DbInternshipRow).id ?? `int-${idx}-${(i.applicationUrl ?? "").slice(-12)}`,
       title: i.title,
       company: i.company,
       location: i.location ?? null,
       isRemote: i.isRemote,
       description: i.description ?? null,
       applicationUrl: i.applicationUrl,
-      deadline: (i as any).deadline ?? null,
+      deadline: (i as DbInternshipRow).deadline ?? null,
       isPaid: i.isPaid ?? null,
-      salary: (i as any).salary ?? null,
+      salary: (i as DbInternshipRow).salary ?? null,
       tags: i.tags ?? [],
       source: i.source,
     }))

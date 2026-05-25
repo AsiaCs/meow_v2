@@ -10,6 +10,7 @@ import { scrapeCerebralValley, type ScrapedEvent } from "@/lib/scrapers/cerebral
 import { scrapeLuma } from "@/lib/scrapers/luma"
 import { filterReachable } from "@/lib/validators/links"
 import { isSpecificEventUrl, isSpecificApplyUrl } from "@/lib/validators/specific-urls"
+import { normalizeStringArray } from "@/lib/profile-normalization"
 
 export const runtime = "nodejs"
 export const revalidate = 1800
@@ -65,6 +66,31 @@ function EmptySection({ message }: { message: string }) {
   )
 }
 
+type DashboardInternship = {
+  id: string
+  title: string
+  company: string
+  location: string | null
+  isRemote: boolean
+  deadline: string | null
+  isPaid: boolean | null
+  salary: string | null
+  tags: string[]
+  applicationUrl: string
+}
+
+type DashboardPerson = {
+  id: string
+  name: string | null
+  location: string | null
+  interests: unknown
+  linkedinUrl: string | null
+}
+
+type DashboardProfile = {
+  location?: string | null
+}
+
 const getCachedScrapedEvents = unstable_cache(
   async (city: string | null): Promise<ScrapedEvent[]> => {
     const [cv, lu] = await Promise.allSettled([
@@ -76,7 +102,7 @@ const getCachedScrapedEvents = unstable_cache(
     const specific = [...cvEvents, ...luEvents].filter((e) => isSpecificEventUrl(e.registrationUrl))
     return await filterReachable(specific, (e) => e.registrationUrl)
   },
-  ["dashboard-events-v2"],
+  ["dashboard-events-v3"],
   { revalidate: 1800, tags: ["events"] },
 )
 
@@ -93,7 +119,7 @@ export default async function DashboardPage() {
       .limit(20),
     supabase
       .from("users")
-      .select("id, name, location, interests")
+      .select("id, name, location, interests, linkedinUrl")
       .eq("onboarded", true)
       .neq("id", user.id)
       .order("createdAt", { ascending: false })
@@ -105,7 +131,8 @@ export default async function DashboardPage() {
       .single(),
   ])
 
-  const userLocation = (profileRaw as any)?.location as string | null ?? null
+  const profile = profileRaw as DashboardProfile | null
+  const userLocation = profile?.location ?? null
   const userCity = userLocation?.split(",")[0]?.trim().toLowerCase() ?? null
 
   // Live-scrape events (cached 30 min) and validate URLs
@@ -122,7 +149,7 @@ export default async function DashboardPage() {
   const events = [...nearbyEvents, ...virtualEvents, ...otherEvents].slice(0, 6)
 
   // Validate internship URLs: must point at specific apply pages AND be reachable
-  const dbInternships = Array.isArray(internshipsRaw) ? (internshipsRaw as any[]) : []
+  const dbInternships = Array.isArray(internshipsRaw) ? (internshipsRaw as DashboardInternship[]) : []
   const specificInternships = dbInternships.filter((i) => isSpecificApplyUrl(i.applicationUrl))
   const validInternships = await filterReachable(specificInternships, (i) => i.applicationUrl)
   const internships = validInternships.slice(0, 6)
@@ -176,7 +203,7 @@ export default async function DashboardPage() {
             <EmptySection message="No internships available right now — we only show listings with verified application links." />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {internships.map((internship: any) => (
+              {internships.map((internship: DashboardInternship) => (
                 <InternshipCard
                   key={internship.id}
                   id={internship.id}
@@ -207,7 +234,8 @@ export default async function DashboardPage() {
                   id={person.id}
                   name={person.name ?? "Anonymous"}
                   location={person.location ?? undefined}
-                  interests={person.interests}
+                  interests={normalizeStringArray((person as DashboardPerson).interests)}
+                  linkedinUrl={(person as DashboardPerson).linkedinUrl ?? undefined}
                 />
               ))}
             </div>

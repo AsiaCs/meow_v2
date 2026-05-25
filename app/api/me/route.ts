@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 
+type UserLocationRow = {
+  location?: string | null
+}
+
 export async function GET() {
   try {
     const supabase = await createClient()
@@ -13,7 +17,7 @@ export async function GET() {
       .eq("id", user.id)
       .single()
 
-    return NextResponse.json({ location: (data as any)?.location ?? null })
+    return NextResponse.json({ location: (data as UserLocationRow | null)?.location ?? null })
   } catch {
     return NextResponse.json({ location: null })
   }

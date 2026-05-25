@@ -14,7 +14,7 @@ interface Event {
   startDate: string
   location?: string | null
   isVirtual: boolean
-  registrationUrl: string
+  registrationUrl?: string | null
   imageUrl?: string | null
   tags: string[]
   isFree: boolean
@@ -48,7 +48,11 @@ export default function EventsPage() {
       fetch("/api/events").then((r) => r.json()),
       fetch("/api/me").then((r) => r.json()),
     ]).then(([eventsData, meData]) => {
-      setEvents(Array.isArray(eventsData) ? eventsData : eventsData.events ?? [])
+      const rawEvents = Array.isArray(eventsData) ? eventsData : eventsData.events ?? []
+      setEvents(rawEvents.map((event: Event) => ({
+        ...event,
+        tags: Array.isArray(event.tags) ? event.tags : [],
+      })))
       // Auto-select user's city if they have a saved location
       if (meData?.location) {
         const city = (meData.location as string).split(",")[0].trim()
@@ -244,7 +248,7 @@ export default function EventsPage() {
                   startDate={event.startDate}
                   location={event.location ?? undefined}
                   isVirtual={event.isVirtual}
-                  registrationUrl={event.registrationUrl}
+                  registrationUrl={event.registrationUrl ?? undefined}
                   imageUrl={event.imageUrl ?? undefined}
                   tags={event.tags}
                   isFree={event.isFree}

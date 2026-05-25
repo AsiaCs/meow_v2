@@ -15,7 +15,7 @@ interface Internship {
   isPaid?: boolean | null
   salary?: string | null
   tags: string[]
-  applicationUrl: string
+  applicationUrl?: string | null
 }
 
 type FilterTab = "all" | "remote" | "paid"
@@ -37,7 +37,11 @@ export default function InternshipsPage() {
     fetch("/api/internships")
       .then((r) => r.json())
       .then((data) => {
-        setInternships(Array.isArray(data) ? data : data.internships ?? [])
+        const rawInternships = Array.isArray(data) ? data : data.internships ?? []
+        setInternships(rawInternships.map((item: Internship) => ({
+          ...item,
+          tags: Array.isArray(item.tags) ? item.tags : [],
+        })))
         setLoading(false)
       })
       .catch(() => setLoading(false))
@@ -168,7 +172,7 @@ export default function InternshipsPage() {
                 isPaid={item.isPaid ?? undefined}
                 salary={item.salary ?? undefined}
                 tags={item.tags}
-                applicationUrl={item.applicationUrl}
+                applicationUrl={item.applicationUrl ?? undefined}
               />
             ))}
           </div>

@@ -3,6 +3,7 @@ import { scrapeLuma } from "./luma"
 import { scrapeInternships, type ScrapedInternship } from "./internships"
 import { createClient } from "@/lib/supabase/server"
 import { filterReachable } from "@/lib/validators/links"
+import { isSpecificApplyUrl, isSpecificEventUrl } from "@/lib/validators/specific-urls"
 
 async function saveEvents(events: ScrapedEvent[]): Promise<number> {
   const supabase = await createClient()
@@ -148,11 +149,11 @@ export async function runAllScrapers(interests: string[] = [], city?: string) {
   // Validate links before saving — filter out dead/unreachable URLs
   const [validEvents, validInternships] = await Promise.all([
     filterReachable(
-      [...cvEvents, ...lumaEvents],
+      [...cvEvents, ...lumaEvents].filter((e) => isSpecificEventUrl(e.registrationUrl)),
       (e) => e.registrationUrl,
     ),
     filterReachable(
-      rawInternships,
+      rawInternships.filter((i) => isSpecificApplyUrl(i.applicationUrl)),
       (i) => i.applicationUrl,
     ),
   ])

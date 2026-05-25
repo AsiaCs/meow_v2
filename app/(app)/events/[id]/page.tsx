@@ -6,6 +6,7 @@ import { scrapeCerebralValley, type ScrapedEvent } from "@/lib/scrapers/cerebral
 import { scrapeLuma } from "@/lib/scrapers/luma"
 import { filterReachable } from "@/lib/validators/links"
 import { isSpecificEventUrl } from "@/lib/validators/specific-urls"
+import { safeExternalUrl } from "@/lib/url-helpers"
 import { ArrowLeft, MapPin, Monitor, CalendarDays, ExternalLink, Clock, Tag } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
@@ -37,6 +38,20 @@ function stableId(s: string): string {
   return `ev-${Math.abs(h).toString(36)}`
 }
 
+type EventRow = {
+  title: string
+  description: string | null
+  startDate: string
+  endDate: string | null
+  location: string | null
+  isVirtual: boolean
+  registrationUrl: string
+  imageUrl: string | null
+  tags: string[]
+  source: string
+  isFree: boolean
+}
+
 function formatEventDate(date: Date) {
   const dateStr = date.toLocaleDateString("en-US", {
     weekday: "long", month: "long", day: "numeric", year: "numeric",
@@ -58,7 +73,7 @@ const getCachedScrapedEvents = unstable_cache(
     const specific = [...cv, ...lu].filter((e) => isSpecificEventUrl(e.registrationUrl))
     return await filterReachable(specific, (e) => e.registrationUrl)
   },
-  ["events-detail-source-v2"],
+  ["events-detail-source-v3"],
   { revalidate: 1800, tags: ["events"] },
 )
 
@@ -71,7 +86,7 @@ async function findEvent(id: string): Promise<ScrapedEvent | null> {
       .select("title, description, startDate, endDate, location, isVirtual, registrationUrl, imageUrl, tags, source, isFree")
       .eq("status", "APPROVED")
     if (Array.isArray(dbEvents)) {
-      const match = (dbEvents as any[]).find(
+      const match = (dbEvents as EventRow[]).find(
         (e) => stableId(e.registrationUrl) === id && isSpecificEventUrl(e.registrationUrl),
       )
       if (match) {
@@ -101,6 +116,8 @@ export default async function EventDetailPage({
 
   const start = new Date(event.startDate)
   const { dateStr, timeStr } = formatEventDate(start)
+  const safeRegistrationUrl = safeExternalUrl(event.registrationUrl)
+  const canRegister = Boolean(safeRegistrationUrl && isSpecificEventUrl(safeRegistrationUrl))
 
   return (
     <div className="min-h-dvh bg-bg-base">
@@ -192,16 +209,26 @@ export default async function EventDetailPage({
           </section>
         )}
 
-        <a
-          href={event.registrationUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl text-white font-semibold text-base hover:opacity-90 active:scale-[0.98] transition-all"
-          style={{ background: "var(--gradient-brand)" }}
-        >
-          RSVP / Register
-          <ExternalLink size={16} strokeWidth={1.5} />
-        </a>
+        {canRegister && safeRegistrationUrl ? (
+          <a
+            href={safeRegistrationUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl text-white font-semibold text-base hover:opacity-90 active:scale-[0.98] transition-all"
+            style={{ background: "var(--gradient-brand)" }}
+          >
+            RSVP / Register
+            <ExternalLink size={16} strokeWidth={1.5} />
+          </a>
+        ) : (
+          <button
+            type="button"
+            disabled
+            className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl border border-border-strong text-text-muted font-semibold text-base opacity-70 cursor-not-allowed"
+          >
+            RSVP unavailable
+          </button>
+        )}
       </div>
     </div>
   )

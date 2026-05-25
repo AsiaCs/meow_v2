@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server"
 import * as z from "zod"
 import { createClient } from "@/lib/supabase/server"
+import { normalizeProfileData } from "@/lib/profile-normalization"
+
+type ProfileRow = {
+  email?: string | null
+}
 
 export async function GET() {
   try {
@@ -18,16 +23,10 @@ export async function GET() {
 
     // Always return a stable shape — interests/experiences default to [] so the
     // client never has to defend against undefined.
-    const shaped = {
-      id: (data as any).id,
-      name: (data as any).name ?? null,
-      email: (data as any).email ?? user.email ?? null,
-      image: (data as any).image ?? null,
-      location: (data as any).location ?? null,
-      onboarded: Boolean((data as any).onboarded),
-      interests: Array.isArray((data as any).interests) ? (data as any).interests : [],
-      experiences: Array.isArray((data as any).experiences) ? (data as any).experiences : [],
-    }
+    const shaped = normalizeProfileData({
+      ...data,
+      email: (data as ProfileRow).email ?? user.email ?? null,
+    })
     return NextResponse.json(shaped)
   } catch (error) {
     console.error("[profile/GET]", error)

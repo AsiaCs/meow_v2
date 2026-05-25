@@ -99,7 +99,7 @@ export default function HowItWorks() {
             transition={{ duration: 0.6, delay: 0.16, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
             className="text-lg text-text-secondary max-w-xl mx-auto leading-relaxed"
           >
-            No lengthy onboarding. No hidden setup. Just a few seconds to tell us about yourself and you're ready.
+            No lengthy onboarding. No hidden setup. Just a few seconds to tell us about yourself and you&apos;re ready.
           </motion.p>
         </div>
 

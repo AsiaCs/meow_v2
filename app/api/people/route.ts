@@ -1,5 +1,20 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { normalizeStringArray } from "@/lib/profile-normalization"
+
+type ExperienceRow = {
+  id: string
+  type: string
+}
+
+type UserRow = {
+  id: string
+  name: string | null
+  image: string | null
+  location: string | null
+  interests: unknown
+  experiences: unknown
+}
 
 export async function GET(request: Request) {
   try {
@@ -24,17 +39,17 @@ export async function GET(request: Request) {
     const { data, error } = await query
     if (error) throw error
 
-    let users = data ?? []
+    let users = (data ?? []) as unknown as UserRow[]
 
     if (mentorParam === "true") {
-      users = users.filter((u: any) =>
-        Array.isArray(u.experiences) && u.experiences.some((e: any) => e.type === "WORK")
+      users = users.filter((u) =>
+        Array.isArray(u.experiences) && (u.experiences as ExperienceRow[]).some((e) => e.type === "WORK")
       )
     }
 
-    const shaped = users.map((user: any) => {
-      const experiences = Array.isArray(user.experiences) ? user.experiences : []
-      const experienceSummary = experiences.reduce((acc: Record<string, number>, exp: any) => {
+    const shaped = users.map((user) => {
+      const experiences = Array.isArray(user.experiences) ? user.experiences as ExperienceRow[] : []
+      const experienceSummary = experiences.reduce((acc: Record<string, number>, exp) => {
         acc[exp.type] = (acc[exp.type] ?? 0) + 1
         return acc
       }, {})
@@ -43,7 +58,7 @@ export async function GET(request: Request) {
         name: user.name,
         image: user.image,
         location: user.location,
-        interests: user.interests,
+        interests: normalizeStringArray(user.interests),
         experienceSummary,
         experienceCount: experiences.length,
       }

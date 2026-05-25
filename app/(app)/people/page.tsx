@@ -34,7 +34,11 @@ export default function PeoplePage() {
     fetch("/api/people")
       .then((r) => r.json())
       .then((data) => {
-        setPeople(Array.isArray(data) ? data : data.people ?? [])
+        const rawPeople = Array.isArray(data) ? data : data.people ?? []
+        setPeople(rawPeople.map((person: Person) => ({
+          ...person,
+          interests: Array.isArray(person.interests) ? person.interests : [],
+        })))
         setLoading(false)
       })
       .catch(() => setLoading(false))

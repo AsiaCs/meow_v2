@@ -34,12 +34,7 @@ const linkVariants = {
 }
 
 export default function LandingNav() {
-  const [mounted, setMounted] = useState(false)
   const [open, setOpen] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   useEffect(() => {
     if (open) {
@@ -57,7 +52,7 @@ export default function LandingNav() {
       <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-6 px-4 pointer-events-none">
         <motion.nav
           initial={{ opacity: 0, y: -16, filter: "blur(8px)" }}
-          animate={mounted ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
           className="pointer-events-auto flex items-center gap-2 px-3 py-2 rounded-full backdrop-blur-xl bg-white/[0.04] border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
         >

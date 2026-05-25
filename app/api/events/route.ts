@@ -7,6 +7,7 @@ import { filterReachable, isLinkReachable } from "@/lib/validators/links"
 import { isSpecificEventUrl } from "@/lib/validators/specific-urls"
 
 export const runtime = "nodejs"
+export const dynamic = "force-dynamic"
 export const maxDuration = 30
 export const revalidate = 1800
 
@@ -17,6 +18,24 @@ function stableId(s: string): string {
     h |= 0
   }
   return `ev-${Math.abs(h).toString(36)}`
+}
+
+type UserLocationRow = {
+  location?: string | null
+}
+
+type DbEventRow = {
+  title: string
+  description: string | null
+  startDate: string
+  endDate: string | null
+  location: string | null
+  isVirtual: boolean
+  registrationUrl: string
+  imageUrl: string | null
+  tags: string[]
+  source: string
+  isFree: boolean
 }
 
 const fetchLiveEvents = unstable_cache(
@@ -46,7 +65,7 @@ const fetchLiveEvents = unstable_cache(
     // Validate every URL is actually reachable
     return await filterReachable(deduped, (e) => e.registrationUrl)
   },
-  ["events-live-v2"],
+  ["events-live-v3"],
   { revalidate: 1800, tags: ["events"] },
 )
 
@@ -72,7 +91,7 @@ export async function GET(request: Request) {
           .select("location")
           .eq("id", user.id)
           .single()
-        userCity = (data as any)?.location ?? null
+        userCity = (data as UserLocationRow | null)?.location ?? null
       }
     } catch { /* anonymous viewers still get events */ }
 
@@ -88,7 +107,7 @@ export async function GET(request: Request) {
         .gte("startDate", new Date().toISOString())
         .order("startDate")
       if (Array.isArray(dbEvents) && dbEvents.length > 0) {
-        const dbSpecific = (dbEvents as any[]).filter((e) => isSpecificEventUrl(e.registrationUrl))
+        const dbSpecific = (dbEvents as DbEventRow[]).filter((e) => isSpecificEventUrl(e.registrationUrl))
         const validDb = await filterReachable(dbSpecific, (e) => e.registrationUrl)
         const seenUrls = new Set(events.map((e) => e.registrationUrl))
         for (const e of validDb) {

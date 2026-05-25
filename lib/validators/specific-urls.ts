@@ -28,7 +28,7 @@ export function isSpecificEventUrl(url: string | null | undefined): boolean {
     const path = pathname.replace(/\/$/, "")
 
     // Luma — anything that isn't a known discovery slug is a real event page
-    if (hostname.endsWith("lu.ma")) {
+    if (hostname.endsWith("lu.ma") || hostname.endsWith("luma.com")) {
       if (LUMA_NON_EVENT_PATHS.has(path)) return false
       // Path must have a body (e.g. /cerebral-valley-happy-hour, /e/{id})
       // and not be one of the generic discovery tokens
@@ -71,6 +71,14 @@ export function isSpecificApplyUrl(url: string | null | undefined): boolean {
     const { hostname, pathname } = new URL(url)
     const path = pathname.replace(/\/$/, "")
 
+    const search = new URL(url).search.toLowerCase()
+    const hasInternFilter =
+      search.includes("intern") ||
+      search.includes("student") ||
+      search.includes("university") ||
+      search.includes("early%20career") ||
+      search.includes("early+career")
+
     // ATS / job board URLs that have explicit job IDs are always specific
     if (hostname.endsWith("greenhouse.io") && /\/jobs\/\d+/.test(path)) return true
     if (hostname.endsWith("lever.co") && /\/[^/]+\/[a-f0-9-]{20,}/.test(path)) return true
@@ -79,22 +87,29 @@ export function isSpecificApplyUrl(url: string | null | undefined): boolean {
 
     // Filtered list pages (e.g., ?commitment=Intern, ?categories=Internship) — accept
     // because they show the actual postings, not generic homepages.
-    const search = new URL(url).search.toLowerCase()
-    if (search.includes("intern") || search.includes("student") || search.includes("university")) {
+    if (hasInternFilter) {
       return true
     }
 
     // Company-specific program pages we know are real apply portals.
     const knownProgramPages = [
-      /goldmansachs\.com\/careers\/students\/programs/,
+      /goldmansachs\.com\/careers\/students/,
       /databricks\.com\/company\/careers\/university-recruiting/,
       /stripe\.com\/jobs\/search/,
+      /vercel\.com\/careers/,
+      /notion\.com\/careers/,
+      /jobs\.a16z\.com\/jobs/,
     ]
     if (knownProgramPages.some((r) => r.test(url))) return true
 
     // Reject obvious homepages / general career pages.
     const genericPaths = ["", "/", "/careers", "/jobs", "/careers/jobs", "/about"]
     if (genericPaths.includes(path)) return false
+
+    // Unfiltered ATS board roots are too broad for an "Apply Now" CTA.
+    if (hostname.endsWith("greenhouse.io") && /^\/[^/]+$/.test(path)) return false
+    if (hostname.endsWith("lever.co") && /^\/[^/]+$/.test(path)) return false
+    if (hostname.endsWith("ashbyhq.com") && /^\/[^/]+$/.test(path)) return false
 
     // Generic safety net.
     for (const tok of GENERIC_PATH_TOKENS) {
