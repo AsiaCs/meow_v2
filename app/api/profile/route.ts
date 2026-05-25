@@ -15,7 +15,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from("users")
-      .select("id, name, email, image, location, interests, onboarded, experiences(*)")
+      .select("id, name, email, image, location, interests, onboarded, digestEnabled, experiences(*)")
       .eq("id", user.id)
       .single()
 
@@ -38,6 +38,7 @@ const profileSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   location: z.string().max(100).optional(),
   interests: z.array(z.string()).optional(),
+  digestEnabled: z.boolean().optional(),
 })
 
 export async function PATCH(request: Request) {
@@ -60,12 +61,13 @@ export async function PATCH(request: Request) {
     if (result.data.name !== undefined) updateData.name = result.data.name
     if (result.data.location !== undefined) updateData.location = result.data.location
     if (result.data.interests !== undefined) updateData.interests = result.data.interests
+    if (result.data.digestEnabled !== undefined) updateData.digestEnabled = result.data.digestEnabled
 
     const { data, error } = await supabase
       .from("users")
       .update(updateData)
       .eq("id", user.id)
-      .select("id, name, location, interests, image, onboarded")
+      .select("id, name, location, interests, image, onboarded, digestEnabled")
       .single()
 
     if (error) throw error

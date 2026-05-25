@@ -47,6 +47,7 @@ interface ProfileData {
   location?: string | null
   interests: string[]
   experiences: Experience[]
+  digestEnabled?: boolean
 }
 
 const EXPERIENCE_TABS: {
@@ -346,6 +347,29 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
+      {/* Weekly digest */}
+      <Card>
+        <CardHeader>
+          <h2 className="text-base font-semibold text-text-primary">Weekly digest</h2>
+          <p className="text-xs text-text-muted mt-1">
+            Monday morning email with the top events for your city and interests.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <DigestToggle
+            value={profile.digestEnabled ?? true}
+            onChange={async (next) => {
+              setProfile((prev) => (prev ? { ...prev, digestEnabled: next } : prev))
+              await fetch("/api/profile", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ digestEnabled: next }),
+              })
+            }}
+          />
+        </CardContent>
+      </Card>
+
       {/* Interests */}
       <Card>
         <CardHeader>
@@ -551,5 +575,40 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+function DigestToggle({ value, onChange }: { value: boolean; onChange: (next: boolean) => void }) {
+  return (
+    <label className="flex items-center justify-between gap-4 cursor-pointer">
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-text-primary">
+          {value ? "Subscribed" : "Unsubscribed"}
+        </p>
+        <p className="text-xs text-text-muted mt-0.5">
+          {value
+            ? "We'll send a weekly digest every Monday morning."
+            : "You won't receive the weekly digest."}
+        </p>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={value}
+        onClick={() => onChange(!value)}
+        className={cn(
+          "relative inline-flex h-6 w-11 flex-shrink-0 rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-purple/40",
+          value ? "bg-purple" : "bg-white/[0.08]"
+        )}
+      >
+        <span
+          aria-hidden="true"
+          className={cn(
+            "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out my-0.5",
+            value ? "translate-x-5" : "translate-x-0.5"
+          )}
+        />
+      </button>
+    </label>
   )
 }

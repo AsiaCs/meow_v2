@@ -18,6 +18,7 @@ export interface NormalizedProfileData {
   image: string | null
   location: string | null
   onboarded: boolean
+  digestEnabled: boolean
   interests: string[]
   experiences: NormalizedExperience[]
 }
@@ -59,6 +60,8 @@ export function normalizeProfileData(input: unknown): NormalizedProfileData {
     image: typeof data.image === "string" ? data.image : null,
     location: typeof data.location === "string" ? data.location : null,
     onboarded: Boolean(data.onboarded),
+    // Treat NULL/missing as opted-in (default until the user explicitly opts out).
+    digestEnabled: data.digestEnabled !== false,
     interests: normalizeStringArray(data.interests),
     experiences: Array.isArray(data.experiences)
       ? data.experiences.map(normalizeExperience)
