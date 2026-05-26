@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { INTEREST_AREAS, cn } from "@/lib/utils"
 
-type LookingFor = "internships" | "events" | "mentors" | "all"
+type LookingFor = "internships" | "events" | "all"
 
 const LOOKING_FOR_OPTIONS: {
   value: LookingFor
@@ -27,12 +27,6 @@ const LOOKING_FOR_OPTIONS: {
     label: "Events",
     emoji: "📅",
     description: "Discover networking events and workshops",
-  },
-  {
-    value: "mentors",
-    label: "Mentors",
-    emoji: "🧑‍🏫",
-    description: "Connect with industry professionals",
   },
   {
     value: "all",

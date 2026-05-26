@@ -11,7 +11,6 @@ const freeTier = {
   description: "Start discovering opportunities with no commitment.",
   features: [
     "Browse limited event & internship listings",
-    "3 mentor profile views per month",
     "Save up to 5 items",
     "Basic location filter",
     "Standard search",
@@ -29,11 +28,11 @@ const proPlan = {
   description: "Everything you need to stay ahead of opportunities.",
   badge: "Most Popular",
   features: [
-    "Unlimited events, internships & mentors",
+    "Unlimited events & internships",
     "Advanced filters (company size, industry, remote)",
     "Early access to new features",
     "Submit your own events",
-    "Profile badge (stand out to mentors)",
+    "Ride & Stay coordinator across all events",
     "Priority support",
   ],
   cta: "Start Meow+",

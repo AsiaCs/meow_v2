@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server"
 const onboardingSchema = z.object({
   interests: z.array(z.string()).min(1),
   location: z.string().optional(),
-  lookingFor: z.array(z.enum(["internships", "events", "mentors", "all"])),
+  lookingFor: z.array(z.enum(["internships", "events", "all"])),
 })
 
 export async function POST(request: Request) {

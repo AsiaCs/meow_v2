@@ -87,30 +87,6 @@ function InternshipCard() {
   )
 }
 
-function MentorCard() {
-  return (
-    <div className="w-56 rounded-2xl border border-white/[0.06] p-2 bg-white/[0.02]">
-      <div className="bg-bg-card rounded-[calc(1rem-0.5rem)] p-4">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white flex-shrink-0"
-            style={{ background: "linear-gradient(135deg, #7c3aed, #ec4899)" }}>
-            JL
-          </div>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-text-primary">Jamie Lee</p>
-            <p className="text-xs text-text-muted">PM @ Google</p>
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-1">
-          {["Product", "AI", "Startups"].map((tag) => (
-            <span key={tag} className="text-[10px] px-2 py-0.5 rounded-full text-text-secondary border border-white/[0.08]">{tag}</span>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export default function Hero() {
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center pt-32 pb-24 px-4 overflow-hidden">
@@ -170,7 +146,7 @@ export default function Hero() {
           animate="visible"
           className="text-lg md:text-xl text-text-secondary max-w-2xl leading-relaxed mb-10"
         >
-          Meow surfaces internships, networking events, and mentors tailored to you — all in one place. Stop scrolling five platforms. Start building your future.
+          Meow surfaces internships and networking events tailored to you — all in one place. Stop scrolling five platforms. Start building your future.
         </motion.p>
 
         {/* CTAs */}
@@ -247,16 +223,6 @@ export default function Hero() {
             <InternshipCard />
           </motion.div>
 
-          <motion.div
-            custom={2}
-            variants={cardVariants}
-            initial="hidden"
-            animate="visible"
-            whileHover={{ y: -4, transition: { type: "spring", stiffness: 300 } }}
-            className="md:mb-6"
-          >
-            <MentorCard />
-          </motion.div>
         </div>
 
         {/* Fade out gradient below cards */}

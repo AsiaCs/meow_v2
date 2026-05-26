@@ -21,8 +21,8 @@ const steps = [
     icon: Sparkles,
     title: "Discover what's out there",
     description:
-      "Get a personalized feed of upcoming events, open internships, and mentors — all matched to your profile. Updated daily, no stale listings.",
-    details: ["Events happening near you", "Internships that match your skills", "Mentors in your target industry"],
+      "Get a personalized feed of upcoming events and open internships — all matched to your profile. Updated daily, no stale listings.",
+    details: ["Events happening near you", "Internships that match your skills", "RSVPs in one tap"],
     color: "rgba(157,90,245,0.8)",
     glow: "rgba(157,90,245,0.3)",
     iconBg: "rgba(157,90,245,0.15)",

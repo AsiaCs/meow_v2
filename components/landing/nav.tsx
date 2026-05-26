@@ -9,7 +9,6 @@ const links = [
   { label: "Home", href: "/" },
   { label: "Events", href: "/events" },
   { label: "Internships", href: "/internships" },
-  { label: "People", href: "/people" },
 ]
 
 const overlayVariants = {

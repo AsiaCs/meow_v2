@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase/config'
 
-const PROTECTED_PATHS = ['/dashboard', '/events', '/internships', '/people', '/profile', '/onboarding', '/submit', '/saved']
+const PROTECTED_PATHS = ['/dashboard', '/events', '/internships', '/profile', '/onboarding', '/submit', '/saved']
 
 export async function proxy(request: NextRequest) {
   try {

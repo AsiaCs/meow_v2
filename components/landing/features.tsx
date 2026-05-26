@@ -1,7 +1,7 @@
 ﻿"use client"
 
 import { motion } from "framer-motion"
-import { Briefcase, Calendar, Users, CheckCircle2, MapPin, Link2, Bell, Search, Star } from "lucide-react"
+import { Briefcase, Calendar, CheckCircle2, MapPin, Link2, Bell, Search } from "lucide-react"
 
 const containerVariants = {
   hidden: {},
@@ -60,23 +60,6 @@ const features = [
       { icon: Bell, text: "Aggregated from top event platforms" },
       { icon: Calendar, text: "Calendar view with reminders" },
       { icon: Link2, text: "One-click RSVP links" },
-    ],
-  },
-  {
-    icon: Users,
-    tag: "Mentors",
-    title: "Connect with mentors",
-    description:
-      "Find people whose career path matches where you want to go. Filter by interest area, industry, or company — then reach out directly on LinkedIn.",
-    gradient: "from-pink/20 to-orange-500/20",
-    borderGlow: "rgba(236,72,153,0.3)",
-    iconColor: "text-pink",
-    tagColor: "#ec4899",
-    iconBg: "rgba(236,72,153,0.15)",
-    bullets: [
-      { icon: Star, text: "Match by interest and experience" },
-      { icon: Search, text: "Filter by industry or company" },
-      { icon: Link2, text: "LinkedIn direct message link" },
     ],
   },
 ]
@@ -179,7 +162,7 @@ export default function Features() {
             transition={{ duration: 0.6, delay: 0.16, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
             className="text-lg text-text-secondary max-w-xl mx-auto leading-relaxed"
           >
-            Meow pulls together internships, events, and mentors so you can spend less time searching and more time doing.
+            Meow pulls together internships and events so you can spend less time searching and more time doing.
           </motion.p>
         </div>
 

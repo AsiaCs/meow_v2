@@ -2,15 +2,13 @@ import { redirect } from "next/navigation"
 import { unstable_cache } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
-import { ArrowRight, CalendarDays, Briefcase, Users } from "lucide-react"
+import { ArrowRight, CalendarDays, Briefcase } from "lucide-react"
 import { EventCard } from "@/components/events/event-card"
 import { InternshipCard } from "@/components/internships/internship-card"
-import { PersonCard } from "@/components/people/person-card"
 import { scrapeCerebralValley, type ScrapedEvent } from "@/lib/scrapers/cerebralvalley"
 import { scrapeLuma } from "@/lib/scrapers/luma"
 import { filterReachable } from "@/lib/validators/links"
 import { isSpecificEventUrl, isSpecificApplyUrl } from "@/lib/validators/specific-urls"
-import { normalizeStringArray } from "@/lib/profile-normalization"
 
 export const runtime = "nodejs"
 export const revalidate = 1800
@@ -79,15 +77,6 @@ type DashboardInternship = {
   applicationUrl: string
 }
 
-type DashboardPerson = {
-  id: string
-  name: string | null
-  location: string | null
-  interests: unknown
-  githubUrl?: string | null
-  portfolioUrl?: string | null
-}
-
 type DashboardProfile = {
   location?: string | null
 }
@@ -112,19 +101,12 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/auth/signin")
 
-  const [{ data: internshipsRaw }, { data: peopleRaw }, { data: profileRaw }] = await Promise.all([
+  const [{ data: internshipsRaw }, { data: profileRaw }] = await Promise.all([
     supabase
       .from("internships")
       .select("id, title, company, location, isRemote, deadline, isPaid, salary, tags, applicationUrl")
       .order("createdAt", { ascending: false })
       .limit(20),
-    supabase
-      .from("users")
-      .select("id, name, location, interests")
-      .eq("onboarded", true)
-      .neq("id", user.id)
-      .order("createdAt", { ascending: false })
-      .limit(4),
     supabase
       .from("users")
       .select("location, interests")
@@ -155,7 +137,6 @@ export default async function DashboardPage() {
   const validInternships = await filterReachable(specificInternships, (i) => i.applicationUrl)
   const internships = validInternships.slice(0, 6)
 
-  const people = peopleRaw ?? []
   const firstName = (user.user_metadata?.full_name as string | undefined)?.split(" ")[0] ?? "there"
 
   return (
@@ -223,24 +204,6 @@ export default async function DashboardPage() {
           )}
         </section>
 
-        <section>
-          <SectionHeader title="People to Connect With" icon={Users} href="/people" />
-          {people.length === 0 ? (
-            <EmptySection message="No profiles yet — be the first to complete your profile!" />
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {people.map((person) => (
-                <PersonCard
-                  key={person.id}
-                  id={person.id}
-                  name={person.name ?? "Anonymous"}
-                  location={person.location ?? undefined}
-                  interests={normalizeStringArray((person as DashboardPerson).interests)}
-                />
-              ))}
-            </div>
-          )}
-        </section>
       </div>
     </div>
   )

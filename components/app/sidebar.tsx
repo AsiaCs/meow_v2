@@ -7,7 +7,6 @@ import {
   Home,
   Calendar,
   Briefcase,
-  Users,
   PlusCircle,
   LogOut,
   User,
@@ -27,7 +26,6 @@ const navItems = [
   { href: "/dashboard", label: "Home", icon: Home },
   { href: "/events", label: "Events", icon: Calendar },
   { href: "/internships", label: "Internships", icon: Briefcase },
-  { href: "/people", label: "People", icon: Users },
   { href: "/submit", label: "Submit Event", icon: PlusCircle },
 ]
 

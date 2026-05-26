@@ -17,10 +17,10 @@ const sora = Sora({
 export const metadata: Metadata = {
   title: "Meow — Find Your Next Opportunity",
   description:
-    "Discover internships, networking events, and mentors near you. Meow connects ambitious people with the opportunities that matter.",
+    "Discover internships and networking events near you. Meow connects ambitious people with the opportunities that matter.",
   openGraph: {
     title: "Meow — Find Your Next Opportunity",
-    description: "Discover internships, networking events, and mentors near you.",
+    description: "Discover internships and networking events near you.",
     type: "website",
   },
 }
