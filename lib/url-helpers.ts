@@ -21,12 +21,26 @@ export function safeExternalUrl(input: string | null | undefined): string | null
 // Build a LinkedIn People-search URL for a given name. Guaranteed to land on a
 // real LinkedIn page — worst case the search returns "no results" rather than
 // a 404. Use this as a fallback when a verified profile URL is not available.
-export function buildLinkedInSearchUrl(name: string | null | undefined): string | null {
+//
+// Spec format:
+//   https://www.linkedin.com/search/results/people/?keywords={name + role + location}
+//
+// The optional `role` and `location` args massively improve top-result accuracy
+// — a single first+last name often returns dozens of matches, but adding "VC,
+// New York" usually puts the exact person at index 0 of the results list.
+export function buildLinkedInSearchUrl(
+  name: string | null | undefined,
+  role?: string | null,
+  location?: string | null,
+): string | null {
   if (!name) return null
   const cleaned = name.trim()
   if (!cleaned) return null
+  const parts = [cleaned]
+  if (role && role.trim()) parts.push(role.trim())
+  if (location && location.trim()) parts.push(location.trim())
   const params = new URLSearchParams({
-    keywords: cleaned,
+    keywords: parts.join(" "),
     origin: "GLOBAL_SEARCH_HEADER",
   })
   return `https://www.linkedin.com/search/results/people/?${params.toString()}`

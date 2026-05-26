@@ -10,6 +10,8 @@ interface Person {
   name?: string | null
   image?: string | null
   location?: string | null
+  role?: string | null
+  linkedinUrl?: string | null
   interests: string[]
   experienceCount?: number
   experienceSummary?: Record<string, number>
@@ -209,9 +211,10 @@ export default function PeoplePage() {
                 name={person.name ?? "Anonymous"}
                 image={person.image ?? undefined}
                 location={person.location ?? undefined}
+                role={person.role ?? undefined}
+                linkedinUrl={person.linkedinUrl ?? undefined}
                 interests={person.interests}
                 isMentor={(person.experienceSummary?.WORK ?? 0) > 0}
-                contactUrl={person.contactUrl ?? undefined}
                 contactLabel={person.contactLabel ?? undefined}
                 contactVerified={person.contactVerified ?? false}
               />

@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { MapPin, Monitor, Clock } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -37,18 +38,63 @@ function formatTime(date: Date | string): string {
   return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
 }
 
-function GradientThumb({ title }: { title: string }) {
-  // Deterministic hue from title so the same event always gets the same color
-  let h = 0
-  for (let i = 0; i < title.length; i++) h = ((h << 5) - h) + title.charCodeAt(i)
-  const hue = Math.abs(h) % 360
+// Stylized date-block fallback for events with no cover image. Matches the
+// app's dark-purple neon aesthetic: deep-violet base, glowing inner border,
+// month abbreviation up top, day glyph below in a large heavy display font.
+function DateThumb({ startDate, title }: { startDate: Date | string; title: string }) {
+  const d = typeof startDate === "string" ? new Date(startDate) : startDate
+  const valid = !isNaN(d.getTime())
+  const month = valid ? d.toLocaleDateString("en-US", { month: "short" }).toUpperCase() : ""
+  const day = valid ? d.getDate() : ""
+
+  if (!valid) {
+    // No date and no image — deterministic gradient based on title so each
+    // event still gets a distinct visual fingerprint.
+    let h = 0
+    for (let i = 0; i < title.length; i++) h = ((h << 5) - h) + title.charCodeAt(i)
+    const hue = Math.abs(h) % 360
+    return (
+      <div
+        className="w-full h-full"
+        style={{
+          background: `linear-gradient(135deg, hsl(${hue},70%,55%) 0%, hsl(${(hue + 60) % 360},70%,45%) 100%)`,
+        }}
+      />
+    )
+  }
+
   return (
     <div
-      className="w-full h-full"
+      className="relative w-full h-full flex flex-col items-center justify-center select-none"
       style={{
-        background: `linear-gradient(135deg, hsl(${hue},70%,55%) 0%, hsl(${(hue + 60) % 360},70%,45%) 100%)`,
+        background: "linear-gradient(160deg, #1A102F 0%, #0C0820 70%, #050310 100%)",
+        // Inner neon-purple border for the glow rim
+        boxShadow:
+          "inset 0 0 0 1px rgba(168,85,247,0.45), inset 0 0 18px rgba(168,85,247,0.18), 0 0 24px rgba(168,85,247,0.08)",
       }}
-    />
+    >
+      {/* Subtle radial glow behind the numerals */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        aria-hidden="true"
+        style={{
+          background:
+            "radial-gradient(60% 50% at 50% 55%, rgba(168,85,247,0.22), transparent 70%)",
+        }}
+      />
+      <div className="relative font-display font-bold text-[10px] tracking-[0.18em] text-purple-light/85">
+        {month}
+      </div>
+      <div
+        className="relative font-display font-extrabold text-white leading-none mt-1"
+        style={{
+          fontSize: "2.25rem",
+          textShadow: "0 0 14px rgba(168,85,247,0.55)",
+        }}
+      >
+        {day}
+      </div>
+    </div>
   )
 }
 
@@ -61,6 +107,11 @@ export function EventCard({
   imageUrl,
   source,
 }: EventCardProps) {
+  // Track image-load failure so a 404 cover URL also reveals the date block,
+  // not just rows where imageUrl was null from the API.
+  const [imgFailed, setImgFailed] = useState(false)
+  const showImage = imageUrl && !imgFailed
+
   return (
     <Link
       href={`/events/${id}`}
@@ -68,11 +119,17 @@ export function EventCard({
     >
       {/* Thumbnail (left) — Luma uses a square thumb, so we do too */}
       <div className="w-[88px] h-[88px] sm:w-[112px] sm:h-[112px] rounded-xl overflow-hidden flex-shrink-0 border border-white/[0.06]">
-        {imageUrl ? (
+        {showImage ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
+          <img
+            src={imageUrl}
+            alt={title}
+            className="w-full h-full object-cover"
+            onError={() => setImgFailed(true)}
+            loading="lazy"
+          />
         ) : (
-          <GradientThumb title={title} />
+          <DateThumb startDate={startDate} title={title} />
         )}
       </div>
 

@@ -43,15 +43,24 @@ export function PersonCard({
   id,
   name,
   location,
+  role,
+  linkedinUrl,
   interests,
   isMentor,
-  contactUrl,
   contactLabel,
   contactVerified,
 }: PersonCardProps) {
-  // Prefer the verified contact URL from the API; fall back to a name search
-  const ctaUrl = contactUrl ?? buildLinkedInSearchUrl(name)
-  const ctaLabel = contactLabel ?? "Search on LinkedIn"
+  // Bulletproof LinkedIn click handler:
+  //   1. If the row carries a verified linkedinUrl (server-checked), go straight there.
+  //   2. Otherwise build LinkedIn's NATIVE People-search URL using name + role + location.
+  //      This is the spec format that guarantees a real LinkedIn page, never a 404.
+  //
+  //   https://www.linkedin.com/search/results/people/?keywords={name + role + location}
+  const ctaUrl =
+    contactVerified && linkedinUrl
+      ? linkedinUrl
+      : buildLinkedInSearchUrl(name, role ?? null, location ?? null)
+  const ctaLabel = contactLabel ?? (contactVerified ? "Connect on LinkedIn" : "Find on LinkedIn")
 
   return (
     <motion.div

@@ -18,6 +18,8 @@ function isWellFormedLinkedInProfile(url: string | null): boolean {
 type ExperienceRow = {
   id: string
   type: string
+  title?: string | null
+  organization?: string | null
 }
 
 type UserRow = {
@@ -44,7 +46,7 @@ export async function GET(request: Request) {
     // narrower select. That keeps the page working before the migration is run.
     let query = supabase
       .from("users")
-      .select(`id, name, image, location, interests, linkedinUrl, linkedinStatus, experiences!experiences_userId_fkey(id, type)`)
+      .select(`id, name, image, location, interests, linkedinUrl, linkedinStatus, experiences!experiences_userId_fkey(id, type, title, organization)`)
       .eq("onboarded", true)
       .order("createdAt", { ascending: false })
 
@@ -95,6 +97,14 @@ export async function GET(request: Request) {
           return acc
         }, {})
 
+        // Most-recent WORK experience as the "role" hint — used by the front
+        // end to construct a precise LinkedIn People-search URL that puts
+        // the right human at the top of the results.
+        const workExp = experiences.find((e) => e.type === "WORK") ?? experiences[0]
+        const role = workExp
+          ? [workExp.title, workExp.organization].filter(Boolean).join(" at ").trim() || null
+          : null
+
         // Always point at the server-side redirector. It picks the best
         // available target on click: saved profile URL if verified, otherwise
         // a hyper-targeted LinkedIn People-search URL.
@@ -112,6 +122,8 @@ export async function GET(request: Request) {
           name: user.name,
           image: user.image,
           location: user.location,
+          role,
+          linkedinUrl: isVerified ? user.linkedinUrl : null,
           interests: normalizeStringArray(user.interests),
           experienceSummary,
           experienceCount: experiences.length,
