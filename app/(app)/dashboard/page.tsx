@@ -84,7 +84,8 @@ type DashboardPerson = {
   name: string | null
   location: string | null
   interests: unknown
-  linkedinUrl: string | null
+  githubUrl?: string | null
+  portfolioUrl?: string | null
 }
 
 type DashboardProfile = {
@@ -119,7 +120,7 @@ export default async function DashboardPage() {
       .limit(20),
     supabase
       .from("users")
-      .select("id, name, location, interests, linkedinUrl")
+      .select("id, name, location, interests")
       .eq("onboarded", true)
       .neq("id", user.id)
       .order("createdAt", { ascending: false })
@@ -235,7 +236,6 @@ export default async function DashboardPage() {
                   name={person.name ?? "Anonymous"}
                   location={person.location ?? undefined}
                   interests={normalizeStringArray((person as DashboardPerson).interests)}
-                  linkedinUrl={(person as DashboardPerson).linkedinUrl ?? undefined}
                 />
               ))}
             </div>

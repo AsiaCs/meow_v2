@@ -35,7 +35,6 @@ export async function POST(request: Request) {
         image: user.user_metadata?.avatar_url ?? null,
         interests,
         location: location ?? null,
-        linkedinUrl: null,
         onboarded: true,
         updatedAt: new Date().toISOString(),
       }, { onConflict: "id" })

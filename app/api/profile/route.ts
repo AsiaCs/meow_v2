@@ -13,11 +13,24 @@ export async function GET() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
+    const WIDE = "id, name, email, image, location, interests, onboarded, digestEnabled, githubUrl, portfolioUrl, telegramHandle, discordHandle, experiences(*)"
+    const NARROW = "id, name, email, image, location, interests, onboarded, experiences(*)"
     let { data, error } = await supabase
       .from("users")
-      .select("id, name, email, image, location, interests, onboarded, digestEnabled, experiences(*)")
+      .select(WIDE)
       .eq("id", user.id)
       .single()
+
+    // Graceful fallback if new columns aren't migrated yet
+    if (error && /column .* does not exist/i.test(error.message ?? "")) {
+      const refetch = await supabase
+        .from("users")
+        .select(NARROW)
+        .eq("id", user.id)
+        .single()
+      data = refetch.data as unknown as typeof data
+      error = refetch.error
+    }
 
     // Auto-bootstrap: if the auth user exists but the public.users row does
     // not, create it on the fly. Happens for accounts signed up before the
@@ -52,12 +65,19 @@ export async function GET() {
         )
       }
       // Re-read after upsert so we get the canonical row
-      const refetch = await supabase
+      let refetch = await supabase
         .from("users")
-        .select("id, name, email, image, location, interests, onboarded, digestEnabled, experiences(*)")
+        .select(WIDE)
         .eq("id", user.id)
         .single()
-      data = refetch.data
+      if (refetch.error && /column .* does not exist/i.test(refetch.error.message ?? "")) {
+        refetch = await supabase
+          .from("users")
+          .select(NARROW)
+          .eq("id", user.id)
+          .single()
+      }
+      data = refetch.data as unknown as typeof data
     }
 
     // Always return a stable shape — interests/experiences default to [] so the
@@ -78,6 +98,12 @@ const profileSchema = z.object({
   location: z.string().max(100).optional(),
   interests: z.array(z.string()).optional(),
   digestEnabled: z.boolean().optional(),
+  // Proof-of-Build links. Plain string so users can paste with or without https.
+  githubUrl: z.string().max(200).optional().nullable(),
+  portfolioUrl: z.string().max(200).optional().nullable(),
+  // Coordination handles. Plain text — users enter @handles or emails directly.
+  telegramHandle: z.string().max(64).optional().nullable(),
+  discordHandle: z.string().max(64).optional().nullable(),
 })
 
 export async function PATCH(request: Request) {
@@ -103,6 +129,10 @@ export async function PATCH(request: Request) {
     if (result.data.location !== undefined) updateData.location = result.data.location
     if (result.data.interests !== undefined) updateData.interests = result.data.interests
     if (result.data.digestEnabled !== undefined) updateData.digestEnabled = result.data.digestEnabled
+    if (result.data.githubUrl !== undefined) updateData.githubUrl = result.data.githubUrl || null
+    if (result.data.portfolioUrl !== undefined) updateData.portfolioUrl = result.data.portfolioUrl || null
+    if (result.data.telegramHandle !== undefined) updateData.telegramHandle = result.data.telegramHandle || null
+    if (result.data.discordHandle !== undefined) updateData.discordHandle = result.data.discordHandle || null
 
     const updateRes = await supabase
       .from("users")

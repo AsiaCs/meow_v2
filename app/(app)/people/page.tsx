@@ -10,15 +10,12 @@ interface Person {
   name?: string | null
   image?: string | null
   location?: string | null
-  role?: string | null
-  linkedinUrl?: string | null
   interests: string[]
   experienceCount?: number
   experienceSummary?: Record<string, number>
-  contactUrl?: string | null
-  contactLabel?: string | null
-  contactVerified?: boolean
-  linkedinStatus?: "verified" | "broken" | "inconclusive" | "skipped" | "pending"
+  buildUrl?: string | null
+  buildKind?: "github" | "portfolio" | null
+  buildVerified?: boolean
 }
 
 type PeopleTab = "all" | "mentors" | "peers"
@@ -35,7 +32,7 @@ export default function PeoplePage() {
   const [tab, setTab] = useState<PeopleTab>("all")
   const [search, setSearch] = useState("")
   const [selectedInterests, setSelectedInterests] = useState<string[]>([])
-  const [verifiedOnly, setVerifiedOnly] = useState(false)
+  const [buildersOnly, setBuildersOnly] = useState(false)
 
   useEffect(() => {
     fetch("/api/people")
@@ -60,13 +57,8 @@ export default function PeoplePage() {
   }
 
   const filtered = people
-    // Belt-and-suspenders client-side gatekeeper. The API already excludes
-    // linkedinStatus === 'broken', but if the server ever leaks one through
-    // (column missing, stale cache, etc.) we still keep them out of the UI.
-    .filter((p) => p.linkedinStatus !== "broken")
-    // Opt-in "verified only" mode hides anything we haven't positively
-    // confirmed yet. Useful for high-trust networking views.
-    .filter((p) => (verifiedOnly ? p.linkedinStatus === "verified" : true))
+    // "Builders only" hides anyone without a verified GitHub link
+    .filter((p) => (buildersOnly ? p.buildVerified === true : true))
     .filter((person) => {
       const isMentor = (person.experienceSummary?.WORK ?? 0) > 0
       if (tab === "mentors" && !isMentor) return false
@@ -136,19 +128,19 @@ export default function PeoplePage() {
               ))}
             </div>
             <button
-              onClick={() => setVerifiedOnly((v) => !v)}
-              aria-pressed={verifiedOnly}
+              onClick={() => setBuildersOnly((v) => !v)}
+              aria-pressed={buildersOnly}
               className={cn(
                 "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-150",
-                verifiedOnly
-                  ? "border-purple bg-purple/15 text-purple-light"
+                buildersOnly
+                  ? "border-[#10b981] bg-[#10b981]/15 text-[#10b981]"
                   : "border-border text-text-muted hover:border-border-strong hover:text-text-secondary"
               )}
             >
               <svg width={12} height={12} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.27-.01-1-.02-1.96-3.2.7-3.87-1.54-3.87-1.54-.52-1.33-1.27-1.69-1.27-1.69-1.04-.71.08-.69.08-.69 1.15.08 1.76 1.18 1.76 1.18 1.02 1.75 2.69 1.24 3.34.95.1-.74.4-1.25.72-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.18-3.1-.12-.29-.51-1.45.11-3.02 0 0 .97-.31 3.18 1.18A11.07 11.07 0 0 1 12 6.81c.98.01 1.98.13 2.91.39 2.21-1.49 3.18-1.18 3.18-1.18.62 1.57.23 2.73.11 3.02.73.81 1.18 1.84 1.18 3.1 0 4.42-2.69 5.4-5.25 5.68.41.35.78 1.05.78 2.12 0 1.53-.01 2.76-.01 3.13 0 .31.21.68.8.56C20.21 21.38 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z" />
               </svg>
-              Verified only
+              Builders only
             </button>
           </div>
 
@@ -211,12 +203,11 @@ export default function PeoplePage() {
                 name={person.name ?? "Anonymous"}
                 image={person.image ?? undefined}
                 location={person.location ?? undefined}
-                role={person.role ?? undefined}
-                linkedinUrl={person.linkedinUrl ?? undefined}
                 interests={person.interests}
                 isMentor={(person.experienceSummary?.WORK ?? 0) > 0}
-                contactLabel={person.contactLabel ?? undefined}
-                contactVerified={person.contactVerified ?? false}
+                buildUrl={person.buildUrl ?? undefined}
+                buildKind={person.buildKind ?? undefined}
+                buildVerified={person.buildVerified ?? false}
               />
             ))}
           </div>

@@ -1,19 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { normalizeStringArray } from "@/lib/profile-normalization"
-
-function isWellFormedLinkedInProfile(url: string | null): boolean {
-  if (!url) return false
-  try {
-    const u = new URL(url)
-    return (
-      (u.hostname === "linkedin.com" || u.hostname === "www.linkedin.com") &&
-      /^\/in\/[A-Za-z0-9-]+\/?$/.test(u.pathname)
-    )
-  } catch {
-    return false
-  }
-}
+import { pickBuildUrl } from "@/lib/url-helpers"
 
 type ExperienceRow = {
   id: string
@@ -28,10 +16,19 @@ type UserRow = {
   image: string | null
   location: string | null
   interests: unknown
-  linkedinUrl: string | null
-  linkedinStatus: string | null   // 'verified' | 'broken' | 'inconclusive' | 'skipped' | null
+  githubUrl?: string | null
+  portfolioUrl?: string | null
   experiences: unknown
 }
+
+const WIDE_SELECT =
+  "id, name, image, location, interests, githubUrl, portfolioUrl, " +
+  "experiences!experiences_userId_fkey(id, type, title, organization)"
+const NARROW_SELECT =
+  "id, name, image, location, interests, " +
+  "experiences!experiences_userId_fkey(id, type, title, organization)"
+
+const MISSING_COL_RE = /column .*(githubUrl|portfolioUrl).* does not exist/i
 
 export async function GET(request: Request) {
   try {
@@ -41,12 +38,9 @@ export async function GET(request: Request) {
     const searchParam = searchParams.get("search")
 
     const supabase = await createClient()
-    // Try the select that includes verification status. If linkedinStatus
-    // doesn't exist as a column yet, Supabase will error — fall back to the
-    // narrower select. That keeps the page working before the migration is run.
     let query = supabase
       .from("users")
-      .select(`id, name, image, location, interests, linkedinUrl, linkedinStatus, experiences!experiences_userId_fkey(id, type, title, organization)`)
+      .select(WIDE_SELECT)
       .eq("onboarded", true)
       .order("createdAt", { ascending: false })
 
@@ -58,28 +52,25 @@ export async function GET(request: Request) {
 
     let { data, error } = await query
 
-    // Retry without linkedinStatus if the column doesn't exist yet
-    if (error && /column .*linkedinStatus.* does not exist/i.test(error.message)) {
-      const fallback = await supabase
+    // Graceful fallback if githubUrl / portfolioUrl columns don't exist yet
+    if (error && MISSING_COL_RE.test(error.message)) {
+      let fb = supabase
         .from("users")
-        .select(`id, name, image, location, interests, linkedinUrl, experiences!experiences_userId_fkey(id, type)`)
+        .select(NARROW_SELECT)
         .eq("onboarded", true)
         .order("createdAt", { ascending: false })
-      data = fallback.data as unknown as typeof data
-      error = fallback.error
+      if (interestsParam) {
+        const interests = interestsParam.split(",").map((i) => i.trim()).filter(Boolean)
+        if (interests.length > 0) fb = fb.overlaps("interests", interests)
+      }
+      if (searchParam?.trim()) fb = fb.ilike("name", `%${searchParam.trim()}%`)
+      const refetch = await fb
+      data = refetch.data as unknown as typeof data
+      error = refetch.error
     }
     if (error) throw error
 
     let users = (data ?? []) as unknown as UserRow[]
-    // Backfill missing column gracefully — treat as never-checked.
-    for (const u of users) {
-      if (u.linkedinStatus === undefined) u.linkedinStatus = null
-    }
-
-    // GATEKEEPER: never serve profiles the verifier has confirmed are broken.
-    // Verified, inconclusive, skipped, and never-checked profiles all pass —
-    // unverified ones fall back to the safe LinkedIn People-search URL.
-    users = users.filter((u) => u.linkedinStatus !== "broken")
 
     if (mentorParam === "true") {
       users = users.filter((u) =>
@@ -88,53 +79,30 @@ export async function GET(request: Request) {
     }
 
     const shaped = users
-      // Only include people with at least a name (so we can build a search URL)
       .filter((u) => !!u.name)
       .map((user) => {
-        const experiences = Array.isArray(user.experiences) ? user.experiences as ExperienceRow[] : []
+        const experiences = Array.isArray(user.experiences) ? (user.experiences as ExperienceRow[]) : []
         const experienceSummary = experiences.reduce((acc: Record<string, number>, exp) => {
           acc[exp.type] = (acc[exp.type] ?? 0) + 1
           return acc
         }, {})
 
-        // Most-recent WORK experience as the "role" hint — used by the front
-        // end to construct a precise LinkedIn People-search URL that puts
-        // the right human at the top of the results.
-        const workExp = experiences.find((e) => e.type === "WORK") ?? experiences[0]
-        const role = workExp
-          ? [workExp.title, workExp.organization].filter(Boolean).join(" at ").trim() || null
-          : null
-
-        // Always point at the server-side redirector. It picks the best
-        // available target on click: saved profile URL if verified, otherwise
-        // a hyper-targeted LinkedIn People-search URL.
-        const contactUrl = `/api/people/${user.id}/linkedin`
-        const hasSaved = isWellFormedLinkedInProfile(user.linkedinUrl)
-        const isVerified = user.linkedinStatus === "verified"
-        const contactLabel = isVerified
-          ? "Connect on LinkedIn"
-          : hasSaved
-            ? "Open LinkedIn profile"
-            : "Find on LinkedIn"
+        // Pick best Proof-of-Build link. Verified means we have a real GitHub.
+        const build = pickBuildUrl(user.githubUrl, user.portfolioUrl)
 
         return {
           id: user.id,
           name: user.name,
           image: user.image,
           location: user.location,
-          role,
-          linkedinUrl: isVerified ? user.linkedinUrl : null,
           interests: normalizeStringArray(user.interests),
           experienceSummary,
           experienceCount: experiences.length,
-          contactUrl,
-          contactLabel,
-          contactVerified: isVerified,
-          linkedinStatus: user.linkedinStatus ?? "pending",
+          buildUrl: build?.url ?? null,
+          buildKind: build?.kind ?? null,      // 'github' | 'portfolio' | null
+          buildVerified: build?.kind === "github",
         }
       })
-      // Drop anyone where we couldn't build a contact link (defensive — should never happen if name exists)
-      .filter((u) => !!u.contactUrl)
 
     return NextResponse.json(shaped)
   } catch (error) {

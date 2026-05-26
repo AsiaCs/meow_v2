@@ -48,6 +48,10 @@ interface ProfileData {
   interests: string[]
   experiences: Experience[]
   digestEnabled?: boolean
+  githubUrl?: string | null
+  portfolioUrl?: string | null
+  telegramHandle?: string | null
+  discordHandle?: string | null
 }
 
 const EXPERIENCE_TABS: {
@@ -151,6 +155,10 @@ export default function ProfilePage() {
 
   const [editLocation, setEditLocation] = useState("")
   const [editInterests, setEditInterests] = useState<string[]>([])
+  const [editGithub, setEditGithub] = useState("")
+  const [editPortfolio, setEditPortfolio] = useState("")
+  const [editTelegram, setEditTelegram] = useState("")
+  const [editDiscord, setEditDiscord] = useState("")
 
   const [expForm, setExpForm] = useState<ExperienceFormData>({
     type: "WORK",
@@ -176,6 +184,10 @@ export default function ProfilePage() {
         setProfile(normalized)
         setEditLocation(normalized.location ?? "")
         setEditInterests(normalized.interests)
+        setEditGithub(normalized.githubUrl ?? "")
+        setEditPortfolio(normalized.portfolioUrl ?? "")
+        setEditTelegram(normalized.telegramHandle ?? "")
+        setEditDiscord(normalized.discordHandle ?? "")
         setLoading(false)
       })
       .catch(() => {
@@ -196,6 +208,10 @@ export default function ProfilePage() {
         body: JSON.stringify({
           location: editLocation,
           interests: editInterests,
+          githubUrl: editGithub.trim() || null,
+          portfolioUrl: editPortfolio.trim() || null,
+          telegramHandle: editTelegram.trim() || null,
+          discordHandle: editDiscord.trim() || null,
         }),
       })
       const text = await res.text()
@@ -406,6 +422,55 @@ export default function ProfilePage() {
               </svg>
               Use my current location
             </button>
+          </div>
+
+          {/* Proof of Build */}
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-wider text-text-muted font-semibold">
+              Proof of Build
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input
+                label="GitHub URL"
+                placeholder="https://github.com/yourhandle"
+                value={editGithub}
+                onChange={(e) => setEditGithub(e.target.value)}
+              />
+              <Input
+                label="Portfolio / personal site"
+                placeholder="https://your.site"
+                value={editPortfolio}
+                onChange={(e) => setEditPortfolio(e.target.value)}
+              />
+            </div>
+            <p className="text-[11px] text-text-muted">
+              A linked GitHub gives you a verified badge on the People grid.
+            </p>
+          </div>
+
+          {/* Coordination handles */}
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-wider text-text-muted font-semibold">
+              Coordination handles
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input
+                label="Telegram"
+                placeholder="@yourhandle"
+                value={editTelegram}
+                onChange={(e) => setEditTelegram(e.target.value)}
+              />
+              <Input
+                label="Discord"
+                placeholder="yourhandle"
+                value={editDiscord}
+                onChange={(e) => setEditDiscord(e.target.value)}
+              />
+            </div>
+            <p className="text-[11px] text-text-muted">
+              Shown to attendees who opt in to coordinate rides &amp; housing for the
+              same event. Hidden everywhere else.
+            </p>
           </div>
 
           {/* Save */}

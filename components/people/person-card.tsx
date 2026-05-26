@@ -2,9 +2,22 @@
 
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { MapPin, Star, ArrowRight, ExternalLink } from "lucide-react"
+import { MapPin, Star, ArrowRight, ExternalLink, Globe } from "lucide-react"
+
+function GithubIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.27-.01-1-.02-1.96-3.2.7-3.87-1.54-3.87-1.54-.52-1.33-1.27-1.69-1.27-1.69-1.04-.71.08-.69.08-.69 1.15.08 1.76 1.18 1.76 1.18 1.02 1.75 2.69 1.24 3.34.95.1-.74.4-1.25.72-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.18-3.1-.12-.29-.51-1.45.11-3.02 0 0 .97-.31 3.18 1.18A11.07 11.07 0 0 1 12 6.81c.98.01 1.98.13 2.91.39 2.21-1.49 3.18-1.18 3.18-1.18.62 1.57.23 2.73.11 3.02.73.81 1.18 1.84 1.18 3.1 0 4.42-2.69 5.4-5.25 5.68.41.35.78 1.05.78 2.12 0 1.53-.01 2.76-.01 3.13 0 .31.21.68.8.56C20.21 21.38 23.5 17.08 23.5 12 23.5 5.65 18.35.5 12 .5z" />
+    </svg>
+  )
+}
 import { Badge } from "@/components/ui/badge"
-import { buildLinkedInSearchUrl } from "@/lib/url-helpers"
 
 interface PersonCardProps {
   id: string
@@ -13,12 +26,12 @@ interface PersonCardProps {
   role?: string
   location?: string
   interests: string[]
-  linkedinUrl?: string
-  contactUrl?: string
-  contactLabel?: string
-  contactVerified?: boolean
   bio?: string
   isMentor?: boolean
+  // Proof-of-Build link (replaces LinkedIn entirely)
+  buildUrl?: string | null
+  buildKind?: "github" | "portfolio" | null
+  buildVerified?: boolean
 }
 
 const tagVariants: Array<"purple" | "pink" | "green" | "gray"> = [
@@ -28,10 +41,25 @@ const tagVariants: Array<"purple" | "pink" | "green" | "gray"> = [
   "gray",
 ]
 
-function GradientInitial({ name }: { name: string }) {
+function Avatar({ name, image, verified }: { name: string; image?: string; verified: boolean }) {
+  const ring = verified
+    ? // neon green: clear "this person ships" signal
+      "ring-2 ring-[#10b981] ring-offset-2 ring-offset-bg-card shadow-[0_0_18px_rgba(16,185,129,0.45)]"
+    : ""
+
+  if (image) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={image}
+        alt={name}
+        className={`w-10 h-10 rounded-xl object-cover flex-shrink-0 ${ring}`}
+      />
+    )
+  }
   return (
     <div
-      className="w-10 h-10 rounded-xl flex items-center justify-center text-base font-bold text-white flex-shrink-0"
+      className={`w-10 h-10 rounded-xl flex items-center justify-center text-base font-bold text-white flex-shrink-0 ${ring}`}
       style={{ background: "var(--gradient-brand)" }}
     >
       {name.charAt(0).toUpperCase()}
@@ -42,25 +70,16 @@ function GradientInitial({ name }: { name: string }) {
 export function PersonCard({
   id,
   name,
+  image,
   location,
-  role,
-  linkedinUrl,
   interests,
   isMentor,
-  contactLabel,
-  contactVerified,
+  buildUrl,
+  buildKind,
+  buildVerified,
 }: PersonCardProps) {
-  // Bulletproof LinkedIn click handler:
-  //   1. If the row carries a verified linkedinUrl (server-checked), go straight there.
-  //   2. Otherwise build LinkedIn's NATIVE People-search URL using name + role + location.
-  //      This is the spec format that guarantees a real LinkedIn page, never a 404.
-  //
-  //   https://www.linkedin.com/search/results/people/?keywords={name + role + location}
-  const ctaUrl =
-    contactVerified && linkedinUrl
-      ? linkedinUrl
-      : buildLinkedInSearchUrl(name, role ?? null, location ?? null)
-  const ctaLabel = contactLabel ?? (contactVerified ? "Connect on LinkedIn" : "Find on LinkedIn")
+  const hasBuild = !!buildUrl
+  const buildLabel = buildKind === "github" ? "View GitHub" : "View Build"
 
   return (
     <motion.div
@@ -73,7 +92,7 @@ export function PersonCard({
       <div className="bg-bg-card rounded-[calc(1.5rem-0.375rem)] overflow-hidden flex flex-col h-full p-5 gap-4">
         {/* Header */}
         <div className="flex items-start gap-3">
-          <GradientInitial name={name} />
+          <Avatar name={name} image={image} verified={!!buildVerified} />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
               <h3 className="text-text-primary font-semibold text-sm leading-tight truncate">
@@ -86,15 +105,13 @@ export function PersonCard({
                   className="text-yellow-400 flex-shrink-0 fill-yellow-400"
                 />
               )}
-              {contactVerified && (
+              {buildVerified && (
                 <span
-                  title="LinkedIn profile verified"
-                  className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-[#0077B5] text-white flex-shrink-0"
-                  aria-label="Verified LinkedIn profile"
+                  title="Connected GitHub"
+                  aria-label="Verified GitHub"
+                  className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-[#10b981] text-bg-card flex-shrink-0"
                 >
-                  <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
+                  <GithubIcon size={9} />
                 </span>
               )}
             </div>
@@ -137,24 +154,28 @@ export function PersonCard({
             View Profile
             <ArrowRight size={12} strokeWidth={1.5} />
           </Link>
-          {ctaUrl && (
+          {hasBuild ? (
             <a
-              href={ctaUrl}
+              href={buildUrl}
               target="_blank"
               rel="noopener noreferrer"
               className={
-                contactVerified
-                  ? "inline-flex items-center gap-1.5 text-xs font-medium text-[#0077B5] hover:text-[#0a8cc7] transition-colors"
-                  : "inline-flex items-center gap-1.5 text-xs font-medium text-[#0077B5]/80 hover:text-[#0077B5] transition-colors"
+                buildVerified
+                  ? "inline-flex items-center gap-1.5 text-xs font-medium text-[#10b981] hover:brightness-110 transition-all"
+                  : "inline-flex items-center gap-1.5 text-xs font-medium text-text-secondary hover:text-text-primary transition-colors"
               }
-              aria-label={ctaLabel}
+              aria-label={buildLabel}
             >
-              <svg width={12} height={12} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-              </svg>
-              {ctaLabel}
+              {buildKind === "github" ? (
+                <GithubIcon size={12} />
+              ) : (
+                <Globe size={12} strokeWidth={1.75} />
+              )}
+              {buildLabel}
               <ExternalLink size={10} strokeWidth={1.75} className="opacity-60" />
             </a>
+          ) : (
+            <span className="text-[11px] text-text-muted italic">No build linked</span>
           )}
         </div>
       </div>

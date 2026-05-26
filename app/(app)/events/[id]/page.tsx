@@ -6,6 +6,7 @@ import { isSpecificEventUrl } from "@/lib/validators/specific-urls"
 import { safeExternalUrl } from "@/lib/url-helpers"
 import { ArrowLeft, MapPin, Monitor, CalendarDays, ExternalLink, Clock, Tag, CalendarPlus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { CoordinatePanel } from "@/components/events/coordinate-panel"
 
 export const runtime = "nodejs"
 export const revalidate = 1800
@@ -218,6 +219,11 @@ export default async function EventDetailPage({
             <CalendarPlus size={16} strokeWidth={1.5} />
             Add to Calendar
           </a>
+        </div>
+
+        {/* Event Logistics Matcher — share rides + housing with other attendees */}
+        <div className="mt-6">
+          <CoordinatePanel eventId={id} />
         </div>
       </div>
     </div>
