@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
-import { getEventsForLocation, stableEventId, type ScrapedEvent } from "@/lib/events/source"
+import { getAllEvents, stableEventId, type ScrapedEvent } from "@/lib/events/source"
 import { isSpecificEventUrl } from "@/lib/validators/specific-urls"
 import { safeExternalUrl } from "@/lib/url-helpers"
 import { ArrowLeft, MapPin, Monitor, CalendarDays, ExternalLink, Clock, Tag } from "lucide-react"
@@ -55,7 +55,7 @@ function formatEventDate(date: Date) {
 async function findEvent(id: string): Promise<ScrapedEvent | null> {
   // 1. Try the shared live-scraped cache first. Same function the listing
   //    endpoint uses, so the IDs always line up.
-  const scrapedCity = await getEventsForLocation(null)
+  const scrapedCity = await getAllEvents()
   let hit = scrapedCity.find((e) => stableEventId(e.registrationUrl) === id)
   if (hit) return hit
 

@@ -188,14 +188,53 @@ export default function EventsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Build city list from in-person events
+  // Curated global tech-hub list. Dynamic city extraction from event locations
+  // produced garbage chips like "Datadog - Headquarters" or "18 E 50th St" —
+  // those are venue / street strings, not cities. This is the locked allowlist.
+  // Each entry: a display label, and the matchers (substrings the event
+  // location can contain to be considered "in" that city).
+  const MAJOR_CITIES: Array<{ label: string; match: string[] }> = useMemo(
+    () => [
+      // North America
+      { label: "San Francisco", match: ["san francisco", "sf,", "bay area", "palo alto", "menlo park", "mountain view", "san jose", "oakland"] },
+      { label: "New York",      match: ["new york", "nyc", "manhattan", "brooklyn", "queens"] },
+      { label: "Los Angeles",   match: ["los angeles", "la,", " la ", "santa monica", "venice, ca", "hollywood"] },
+      { label: "Boston",        match: ["boston", "cambridge, ma", "somerville"] },
+      { label: "Seattle",       match: ["seattle", "bellevue, wa", "redmond"] },
+      { label: "Austin",        match: ["austin"] },
+      { label: "Chicago",       match: ["chicago"] },
+      { label: "Miami",         match: ["miami"] },
+      { label: "Denver",        match: ["denver", "boulder"] },
+      { label: "Washington DC", match: ["washington, dc", "washington dc", "arlington, va"] },
+      { label: "Toronto",       match: ["toronto"] },
+      // Europe
+      { label: "London",        match: ["london"] },
+      { label: "Paris",         match: ["paris"] },
+      { label: "Berlin",        match: ["berlin"] },
+      { label: "Amsterdam",     match: ["amsterdam"] },
+      { label: "Lisbon",        match: ["lisbon", "lisboa"] },
+      // Asia / Middle East / Pacific
+      { label: "Singapore",     match: ["singapore"] },
+      { label: "Tokyo",         match: ["tokyo", "東京"] },
+      { label: "Seoul",         match: ["seoul", "서울"] },
+      { label: "Bengaluru",     match: ["bengaluru", "bangalore"] },
+      { label: "Dubai",         match: ["dubai"] },
+      { label: "Sydney",        match: ["sydney"] },
+    ],
+    [],
+  )
+
+  // Show only chips that have at least one event matching them right now.
   const cities = useMemo(() => {
-    const citySet = new Set<string>()
-    events.forEach((e) => {
-      if (!e.isVirtual && e.location) citySet.add(extractCity(e.location))
-    })
-    return Array.from(citySet).sort()
-  }, [events])
+    return MAJOR_CITIES.filter((c) =>
+      events.some(
+        (e) =>
+          !e.isVirtual &&
+          e.location &&
+          c.match.some((m) => e.location!.toLowerCase().includes(m)),
+      ),
+    ).map((c) => c.label)
+  }, [events, MAJOR_CITIES])
 
   const filtered = events.filter((e) => {
     if (tab === "in-person" && e.isVirtual) return false
@@ -206,8 +245,15 @@ export default function EventsPage() {
       if (selectedCity === "virtual") {
         if (!e.isVirtual) return false
       } else {
-        if (e.isVirtual || !e.location?.toLowerCase().includes(selectedCity.toLowerCase()))
+        if (e.isVirtual || !e.location) return false
+        // Use the curated city matchers if we have them; fall back to substring
+        const city = MAJOR_CITIES.find((c) => c.label === selectedCity)
+        const loc = e.location.toLowerCase()
+        if (city) {
+          if (!city.match.some((m) => loc.includes(m))) return false
+        } else if (!loc.includes(selectedCity.toLowerCase())) {
           return false
+        }
       }
     }
 

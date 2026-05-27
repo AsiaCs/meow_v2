@@ -1,26 +1,16 @@
 import { redirect } from "next/navigation"
-import { unstable_cache } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
 import { ArrowRight, CalendarDays, Briefcase } from "lucide-react"
 import { EventCard } from "@/components/events/event-card"
 import { InternshipCard } from "@/components/internships/internship-card"
-import { scrapeCerebralValley, type ScrapedEvent } from "@/lib/scrapers/cerebralvalley"
-import { scrapeLuma } from "@/lib/scrapers/luma"
+import { getAllEvents, stableEventId } from "@/lib/events/source"
 import { filterReachable } from "@/lib/validators/links"
-import { isSpecificEventUrl, isSpecificApplyUrl } from "@/lib/validators/specific-urls"
+import { isSpecificApplyUrl } from "@/lib/validators/specific-urls"
 
 export const runtime = "nodejs"
 export const revalidate = 1800
 
-function stableId(s: string): string {
-  let h = 0
-  for (let i = 0; i < s.length; i++) {
-    h = ((h << 5) - h) + s.charCodeAt(i)
-    h |= 0
-  }
-  return `ev-${Math.abs(h).toString(36)}`
-}
 
 function getGreeting(): string {
   const hour = new Date().getHours()
@@ -81,21 +71,6 @@ type DashboardProfile = {
   location?: string | null
 }
 
-const getCachedScrapedEvents = unstable_cache(
-  async (city: string | null): Promise<ScrapedEvent[]> => {
-    const [cv, lu] = await Promise.allSettled([
-      scrapeCerebralValley(),
-      scrapeLuma("networking tech startup", city ?? undefined),
-    ])
-    const cvEvents = cv.status === "fulfilled" ? cv.value : []
-    const luEvents = lu.status === "fulfilled" ? lu.value : []
-    const specific = [...cvEvents, ...luEvents].filter((e) => isSpecificEventUrl(e.registrationUrl))
-    return await filterReachable(specific, (e) => e.registrationUrl)
-  },
-  ["dashboard-events-v3"],
-  { revalidate: 1800, tags: ["events"] },
-)
-
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -119,7 +94,7 @@ export default async function DashboardPage() {
   const userCity = userLocation?.split(",")[0]?.trim().toLowerCase() ?? null
 
   // Live-scrape events (cached 30 min) and validate URLs
-  const scrapedEvents = await getCachedScrapedEvents(userLocation)
+  const scrapedEvents = await getAllEvents()
   const now = new Date()
   const futureEvents = scrapedEvents.filter((e) => new Date(e.startDate) > now)
 
@@ -161,8 +136,8 @@ export default async function DashboardPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {events.map((event) => (
                 <EventCard
-                  key={stableId(event.registrationUrl)}
-                  id={stableId(event.registrationUrl)}
+                  key={stableEventId(event.registrationUrl)}
+                  id={stableEventId(event.registrationUrl)}
                   title={event.title}
                   description={event.description ?? undefined}
                   startDate={new Date(event.startDate).toISOString()}

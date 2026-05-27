@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
-import { getEventsForLocation, stableEventId, type ScrapedEvent } from "@/lib/events/source"
+import { getAllEvents, stableEventId, type ScrapedEvent } from "@/lib/events/source"
 import { isSpecificEventUrl } from "@/lib/validators/specific-urls"
 import { buildICS } from "@/lib/ics"
 
@@ -12,7 +12,7 @@ function slugifyFilename(s: string): string {
 }
 
 async function findEvent(id: string): Promise<ScrapedEvent | null> {
-  const scraped = await getEventsForLocation(null)
+  const scraped = await getAllEvents()
   const hit = scraped.find((e) => stableEventId(e.registrationUrl) === id)
   if (hit) return hit
 

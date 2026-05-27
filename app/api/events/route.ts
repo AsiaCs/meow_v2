@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { getEventsForLocation, stableEventId, type ScrapedEvent } from "@/lib/events/source"
+import { getAllEvents, stableEventId, type ScrapedEvent } from "@/lib/events/source"
 import { filterReachable, isLinkReachable } from "@/lib/validators/links"
 import { isSpecificEventUrl } from "@/lib/validators/specific-urls"
 
@@ -8,10 +8,6 @@ export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 export const maxDuration = 30
 export const revalidate = 1800
-
-type UserLocationRow = {
-  location?: string | null
-}
 
 type DbEventRow = {
   title: string
@@ -38,22 +34,8 @@ export async function GET(request: Request) {
       ? tagsParam.split(",").map((t) => t.trim()).filter(Boolean)
       : []
 
-    // Get the user's saved location to bias Luma scraping toward their city
-    let userCity: string | null = null
-    try {
-      const supabase = await createClient()
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const { data } = await supabase
-          .from("users")
-          .select("location")
-          .eq("id", user.id)
-          .single()
-        userCity = (data as UserLocationRow | null)?.location ?? null
-      }
-    } catch { /* anonymous viewers still get events */ }
-
-    let events = await getEventsForLocation(userCity)
+    // City-agnostic shared cache. Client does the city sort/filter UI-side.
+    let events = await getAllEvents()
 
     // Pull DB events too, validate their URLs the same way
     try {
