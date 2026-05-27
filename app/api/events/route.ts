@@ -96,7 +96,7 @@ export async function GET(request: Request) {
       (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
     )
 
-    // Shape for client (stable IDs from URL)
+    // Shape for client (stable IDs from URL) — now includes structured geo
     const shaped = events.map((e) => ({
       id: stableEventId(e.registrationUrl),
       title: e.title,
@@ -110,6 +110,14 @@ export async function GET(request: Request) {
       tags: e.tags ?? [],
       isFree: e.isFree,
       source: e.source,
+      // Structured location (populated by lib/geo/parse.ts in the shared cache)
+      venue:   e.venue   ?? null,
+      city:    e.city    ?? null,
+      region:  e.region  ?? null,
+      state:   e.state   ?? null,
+      country: e.country ?? null,
+      lat:     e.lat     ?? null,
+      lng:     e.lng     ?? null,
     }))
 
     return NextResponse.json(shaped)

@@ -3,10 +3,12 @@
 import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { Search, PlusCircle, MapPin, Globe } from "lucide-react"
+import { Search, PlusCircle, MapPin, Globe, Navigation, Loader2 } from "lucide-react"
 import { EventCard } from "@/components/events/event-card"
 import { CalendarSidebar } from "@/components/events/calendar-sidebar"
 import { cn } from "@/lib/utils"
+import { useUserLocation } from "@/hooks/use-user-location"
+import { distanceMiles } from "@/lib/geo/haversine"
 
 interface Event {
   id: string
@@ -20,7 +22,18 @@ interface Event {
   tags: string[]
   isFree: boolean
   source: string
+  // Structured geo (populated by lib/geo/parse.ts server-side)
+  venue?: string | null
+  city?: string | null
+  region?: string | null
+  state?: string | null
+  country?: string | null
+  lat?: number | null
+  lng?: number | null
 }
+
+const RADIUS_OPTIONS = [10, 25, 50, 100, 250] as const
+type RadiusMiles = (typeof RADIUS_OPTIONS)[number] | null
 
 type FilterTab = "all" | "in-person" | "virtual" | "free"
 
@@ -78,15 +91,17 @@ async function detectBrowserCity(timeoutMs = 6000): Promise<string | null> {
   }
 }
 
+type EventWithDistance = Event & { distanceMi?: number | null }
+
 interface DayGroup {
   key: string
   label: string
   sublabel: string
-  items: Event[]
+  items: EventWithDistance[]
 }
 
-function groupByDay(events: Event[]): DayGroup[] {
-  const groups = new Map<string, Event[]>()
+function groupByDay(events: EventWithDistance[]): DayGroup[] {
+  const groups = new Map<string, EventWithDistance[]>()
   for (const ev of events) {
     const d = new Date(ev.startDate)
     const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
@@ -146,6 +161,11 @@ export default function EventsPage() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     categoryParam ? [categoryParam] : []
   )
+
+  // Proximity engine state
+  const userLoc = useUserLocation()
+  const [sortByDistance, setSortByDistance] = useState(false)
+  const [radiusMiles, setRadiusMiles] = useState<RadiusMiles>(null)
 
   function toggleCategory(cat: string) {
     setSelectedCategories((prev) =>
@@ -287,6 +307,40 @@ export default function EventsPage() {
     return true
   })
 
+  // Attach distance + apply radius filter + optionally sort by distance.
+  // Virtual events skip the distance gate but stay in the list (they're location-less).
+  const decorated = useMemo(() => {
+    const me = userLoc.position
+    return filtered.map((e) => {
+      let mi: number | null = null
+      if (me && typeof e.lat === "number" && typeof e.lng === "number") {
+        mi = distanceMiles({ lat: me.lat, lng: me.lng }, { lat: e.lat, lng: e.lng })
+      }
+      return { ...e, distanceMi: mi }
+    })
+  }, [filtered, userLoc.position])
+
+  const proximityFiltered = useMemo(() => {
+    if (!radiusMiles || !userLoc.position) return decorated
+    return decorated.filter((e) => {
+      if (e.isVirtual) return true
+      if (e.distanceMi == null) return false
+      return e.distanceMi <= radiusMiles
+    })
+  }, [decorated, radiusMiles, userLoc.position])
+
+  const sorted = useMemo(() => {
+    if (!sortByDistance || !userLoc.position) return proximityFiltered
+    return [...proximityFiltered].sort((a, b) => {
+      // Virtual events sink to the bottom when sorting by distance
+      if (a.isVirtual && !b.isVirtual) return 1
+      if (!a.isVirtual && b.isVirtual) return -1
+      const da = a.distanceMi ?? Number.POSITIVE_INFINITY
+      const db = b.distanceMi ?? Number.POSITIVE_INFINITY
+      return da - db
+    })
+  }, [proximityFiltered, sortByDistance, userLoc.position])
+
   return (
     <div className="flex min-h-dvh">
       {/* Main content */}
@@ -419,6 +473,79 @@ export default function EventsPage() {
                 </button>
               )}
             </div>
+
+            {/* Proximity controls — "Use my location" / sort by distance / radius */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <Navigation
+                size={13}
+                strokeWidth={1.75}
+                className={cn(
+                  "flex-shrink-0 transition-colors",
+                  userLoc.position ? "text-purple-light" : "text-text-muted",
+                )}
+              />
+              {!userLoc.position ? (
+                <button
+                  onClick={userLoc.request}
+                  disabled={userLoc.status === "loading"}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150",
+                    "border-purple/40 text-purple-light hover:bg-purple/10 disabled:opacity-60",
+                  )}
+                >
+                  {userLoc.status === "loading" ? (
+                    <>
+                      <Loader2 size={11} className="animate-spin" />
+                      Locating…
+                    </>
+                  ) : (
+                    "Use my location"
+                  )}
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setSortByDistance((v) => !v)}
+                    aria-pressed={sortByDistance}
+                    className={cn(
+                      "px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150",
+                      sortByDistance
+                        ? "border-purple bg-purple/15 text-purple-light"
+                        : "border-border text-text-muted hover:border-border-strong hover:text-text-secondary",
+                    )}
+                  >
+                    Closest to me
+                  </button>
+                  {RADIUS_OPTIONS.map((mi) => (
+                    <button
+                      key={mi}
+                      onClick={() => setRadiusMiles((v) => (v === mi ? null : mi))}
+                      aria-pressed={radiusMiles === mi}
+                      className={cn(
+                        "px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150",
+                        radiusMiles === mi
+                          ? "border-purple bg-purple/15 text-purple-light"
+                          : "border-border text-text-muted hover:border-border-strong hover:text-text-secondary",
+                      )}
+                    >
+                      {mi} mi
+                    </button>
+                  ))}
+                  <button
+                    onClick={userLoc.clear}
+                    className="px-3 py-1 rounded-full text-xs font-medium text-text-muted hover:text-text-secondary transition-colors"
+                    title="Forget my location"
+                  >
+                    Clear
+                  </button>
+                </>
+              )}
+              {userLoc.status === "denied" && (
+                <span className="text-[11px] text-red-400">
+                  Permission denied — enable Location in your browser settings.
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
@@ -440,7 +567,7 @@ export default function EventsPage() {
                 </div>
               ))}
             </div>
-          ) : filtered.length === 0 ? (
+          ) : sorted.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-center">
               <div className="text-5xl mb-4">📅</div>
               <h3 className="text-text-primary font-semibold mb-2">No events found</h3>
@@ -457,7 +584,7 @@ export default function EventsPage() {
             </div>
           ) : (
             <div className="space-y-8">
-              {groupByDay(filtered).map(({ key, label, sublabel, items }) => (
+              {groupByDay(sorted).map(({ key, label, sublabel, items }) => (
                 <section key={key}>
                   <div className="flex items-baseline gap-3 mb-3 sticky top-[160px] bg-bg-base/90 backdrop-blur-sm py-2 z-10 -mx-3 px-3">
                     <h2 className="text-base font-bold text-text-primary font-display">
@@ -482,6 +609,7 @@ export default function EventsPage() {
                         tags={event.tags}
                         isFree={event.isFree}
                         source={event.source}
+                        distanceMi={(event as Event & { distanceMi?: number | null }).distanceMi ?? null}
                       />
                     ))}
                   </div>

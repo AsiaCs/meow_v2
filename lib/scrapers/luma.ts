@@ -21,6 +21,23 @@ interface LumaEventJson {
   timezone?: string
   visibility?: string
   event_type?: string
+  // Real address fields Luma embeds in its hydrated payload. Earlier versions
+  // of this scraper fell back to timezone as the location (which turned every
+  // Pacific-time event into "Los Angeles"). DO NOT do that — always prefer
+  // these structured fields when present.
+  geo_address_info?: {
+    city?: string | null
+    city_state?: string | null
+    region?: string | null
+    country?: string | null
+    address?: string | null
+    full_address?: string | null
+    place_id?: string | null
+    name?: string | null
+  } | null
+  city?: string | null
+  city_state?: string | null
+  address?: string | null
 }
 
 // Discoverable category taxonomy. Keep these short — they show up as filter chips.
@@ -103,6 +120,29 @@ function extractEventJson(html: string): LumaEventJson[] {
   return out
 }
 
+// Resolve the most accurate location string Luma gave us. Priority order:
+//   1. geo_address_info.city_state    "San Francisco, CA"
+//   2. geo_address_info.full_address  "995 Market Street, San Francisco, CA"
+//   3. city_state (top-level)         "Palo Alto, CA"
+//   4. city + (state from city_state) "Berkeley, CA"
+//   5. address (venue/street)         "473A Haight St"
+//   6. plain city                     "Stanford"
+// Returns null only when Luma exposes nothing usable — then we let the
+// parser leave the event unparsed rather than mis-bucket it by timezone.
+function resolveLumaLocation(raw: LumaEventJson): string | undefined {
+  const geo = raw.geo_address_info
+  if (geo?.city_state) return geo.city_state.trim()
+  if (geo?.full_address) return geo.full_address.trim()
+  if (raw.city_state) return raw.city_state.trim()
+  if (geo?.city) {
+    return geo.region ? `${geo.city}, ${geo.region}` : geo.city
+  }
+  if (raw.city) return raw.city.trim()
+  if (geo?.address) return geo.address.trim()
+  if (raw.address) return raw.address.trim()
+  return undefined
+}
+
 function toScrapedEvent(raw: LumaEventJson): ScrapedEvent | null {
   if (!raw.name || !raw.url || !raw.start_at) return null
   const startDate = new Date(raw.start_at)
@@ -115,7 +155,7 @@ function toScrapedEvent(raw: LumaEventJson): ScrapedEvent | null {
     title: raw.name,
     startDate,
     endDate: raw.end_at ? new Date(raw.end_at) : undefined,
-    location: isVirtual ? undefined : raw.timezone?.replace(/^America\//, "").replace(/_/g, " "),
+    location: isVirtual ? undefined : resolveLumaLocation(raw),
     isVirtual,
     registrationUrl: url,
     imageUrl: raw.cover_url,

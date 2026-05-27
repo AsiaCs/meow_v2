@@ -30,7 +30,7 @@ export interface ScrapedEvent {
   description?: string
   startDate: Date
   endDate?: Date
-  location?: string
+  location?: string                // free-form display string ("SHACK15, San Francisco")
   isVirtual: boolean
   registrationUrl: string
   imageUrl?: string
@@ -38,6 +38,15 @@ export interface ScrapedEvent {
   source: string
   sourceUrl: string
   isFree: boolean
+  // Structured location fields populated by lib/geo/parse.ts in the shared
+  // events source. Optional so existing scrapers don't need to fill them.
+  venue?: string | null
+  city?: string | null
+  region?: string | null
+  state?: string | null
+  country?: string | null
+  lat?: number | null
+  lng?: number | null
 }
 
 const SOURCE = "Cerebral Valley"

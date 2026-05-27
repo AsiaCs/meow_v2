@@ -2,8 +2,9 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { MapPin, Monitor, Clock } from "lucide-react"
+import { MapPin, Monitor, Clock, Navigation } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { formatMiles } from "@/lib/geo/haversine"
 
 interface EventCardProps {
   id: string
@@ -17,6 +18,8 @@ interface EventCardProps {
   tags: string[]
   isFree: boolean
   source: string
+  /** Distance from the viewing user in miles, if known. Rendered as "5.2 mi away". */
+  distanceMi?: number | null
 }
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -106,6 +109,7 @@ export function EventCard({
   isVirtual,
   imageUrl,
   source,
+  distanceMi,
 }: EventCardProps) {
   // Track image-load failure so a 404 cover URL also reveals the date block,
   // not just rows where imageUrl was null from the API.
@@ -159,6 +163,12 @@ export function EventCard({
               <span className="truncate">{location}</span>
             </span>
           ) : null}
+          {!isVirtual && typeof distanceMi === "number" && (
+            <span className="inline-flex items-center gap-1 text-purple-light font-medium">
+              <Navigation size={11} strokeWidth={1.75} />
+              {formatMiles(distanceMi)} away
+            </span>
+          )}
           <Badge variant="gray" className="text-[10px] uppercase tracking-wider">
             {getSourceLabel(source)}
           </Badge>

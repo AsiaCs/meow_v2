@@ -9,8 +9,27 @@ import { scrapeCerebralValley, type ScrapedEvent } from "@/lib/scrapers/cerebral
 import { scrapeLuma } from "@/lib/scrapers/luma"
 import { filterReachable } from "@/lib/validators/links"
 import { isSpecificEventUrl } from "@/lib/validators/specific-urls"
+import { parseLocation } from "@/lib/geo/parse"
 
 export type { ScrapedEvent }
+
+// Pipe a scraped event through parseLocation so it carries city/region/lat/lng.
+// Mutates safely — only writes into fields the scraper left empty.
+function enrichGeo(e: ScrapedEvent): ScrapedEvent {
+  const parsed = parseLocation(e.location ?? null)
+  if (!parsed) return e
+  return {
+    ...e,
+    isVirtual: e.isVirtual || parsed.isVirtual,
+    venue:   e.venue   ?? parsed.venue,
+    city:    e.city    ?? parsed.city,
+    region:  e.region  ?? parsed.region,
+    state:   e.state   ?? parsed.state,
+    country: e.country ?? parsed.country,
+    lat:     e.lat     ?? parsed.lat,
+    lng:     e.lng     ?? parsed.lng,
+  }
+}
 
 export function stableEventId(url: string): string {
   let h = 0
@@ -22,7 +41,7 @@ export function stableEventId(url: string): string {
 }
 
 // Bump the version suffix to invalidate when scraper output shape changes.
-const CACHE_KEY = "events-shared-v4-citiless"
+const CACHE_KEY = "events-shared-v6-luma-real-city"
 const CACHE_TTL_SECONDS = 1800
 
 // Cross-source dedupe: same event posted on CV + Luma should appear once.
@@ -66,7 +85,11 @@ export const getAllEvents = unstable_cache(
     const deduped = dedupeAcrossSources(specific)
 
     // Validate URLs are actually reachable
-    return await filterReachable(deduped, (e) => e.registrationUrl)
+    const reachable = await filterReachable(deduped, (e) => e.registrationUrl)
+
+    // Enrich with structured geo (city / region / lat / lng) so the listing
+    // API and the frontend proximity engine never need to re-parse strings.
+    return reachable.map(enrichGeo)
   },
   [CACHE_KEY],
   { revalidate: CACHE_TTL_SECONDS, tags: ["events"] },
