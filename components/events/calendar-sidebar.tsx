@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { DayPicker } from "react-day-picker"
 import { CalendarDays, MapPin, Monitor } from "lucide-react"
 import { cn, formatDate, formatDateShort } from "@/lib/utils"
@@ -117,38 +118,40 @@ export function CalendarSidebar({
           ) : (
             <ul className="space-y-3">
               {upcomingEvents.map((event) => (
-                <li
-                  key={event.id}
-                  className="flex items-start gap-3 group cursor-pointer"
-                >
-                  <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-bg-elevated border border-border flex items-center justify-center">
-                    <CalendarDays
-                      size={14}
-                      strokeWidth={1.5}
-                      className="text-purple"
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-text-primary truncate group-hover:text-purple transition-colors">
-                      {event.title}
-                    </p>
-                    <p className="text-[11px] text-text-muted mt-0.5">
-                      {formatDateShort(event.startDate)}
-                    </p>
-                    <div className="flex items-center gap-1 mt-0.5">
-                      {event.isVirtual ? (
-                        <span className="text-[11px] text-purple flex items-center gap-0.5">
-                          <Monitor size={10} strokeWidth={1.5} />
-                          Virtual
-                        </span>
-                      ) : event.location ? (
-                        <span className="text-[11px] text-text-muted flex items-center gap-0.5">
-                          <MapPin size={10} strokeWidth={1.5} />
-                          {event.location}
-                        </span>
-                      ) : null}
+                <li key={event.id}>
+                  <Link
+                    href={`/events/${event.id}`}
+                    className="flex items-start gap-3 group rounded-xl -mx-2 px-2 py-1.5 hover:bg-white/[0.03] transition-colors"
+                  >
+                    <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-bg-elevated border border-border flex items-center justify-center group-hover:border-purple/40 transition-colors">
+                      <CalendarDays
+                        size={14}
+                        strokeWidth={1.5}
+                        className="text-purple"
+                      />
                     </div>
-                  </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium text-text-primary truncate group-hover:text-purple-light transition-colors">
+                        {event.title}
+                      </p>
+                      <p className="text-[11px] text-text-muted mt-0.5">
+                        {formatDateShort(event.startDate)}
+                      </p>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        {event.isVirtual ? (
+                          <span className="text-[11px] text-purple flex items-center gap-0.5">
+                            <Monitor size={10} strokeWidth={1.5} />
+                            Virtual
+                          </span>
+                        ) : event.location ? (
+                          <span className="text-[11px] text-text-muted flex items-center gap-0.5 truncate">
+                            <MapPin size={10} strokeWidth={1.5} className="flex-shrink-0" />
+                            <span className="truncate">{event.location}</span>
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                  </Link>
                 </li>
               ))}
             </ul>

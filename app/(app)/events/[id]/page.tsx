@@ -4,9 +4,10 @@ import { createClient } from "@/lib/supabase/server"
 import { getEventsForLocation, stableEventId, type ScrapedEvent } from "@/lib/events/source"
 import { isSpecificEventUrl } from "@/lib/validators/specific-urls"
 import { safeExternalUrl } from "@/lib/url-helpers"
-import { ArrowLeft, MapPin, Monitor, CalendarDays, ExternalLink, Clock, Tag, CalendarPlus } from "lucide-react"
+import { ArrowLeft, MapPin, Monitor, CalendarDays, ExternalLink, Clock, Tag } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { CoordinatePanel } from "@/components/events/coordinate-panel"
+import { AddToCalendar } from "@/components/events/add-to-calendar"
 
 export const runtime = "nodejs"
 export const revalidate = 1800
@@ -211,14 +212,16 @@ export default async function EventDetailPage({
               RSVP unavailable
             </button>
           )}
-          <a
-            href={`/api/events/${id}/ics`}
-            className="sm:w-auto flex items-center justify-center gap-2 py-4 sm:px-6 rounded-2xl border border-white/[0.08] bg-white/[0.02] text-text-secondary hover:bg-white/[0.04] hover:text-text-primary font-medium text-sm transition-all"
-            aria-label="Download calendar invite"
-          >
-            <CalendarPlus size={16} strokeWidth={1.5} />
-            Add to Calendar
-          </a>
+          <AddToCalendar
+            eventId={id}
+            title={event.title}
+            description={event.description ?? null}
+            startDate={event.startDate}
+            endDate={event.endDate ?? null}
+            location={event.location ?? null}
+            isVirtual={event.isVirtual}
+            registrationUrl={event.registrationUrl}
+          />
         </div>
 
         {/* Event Logistics Matcher — share rides + housing with other attendees */}

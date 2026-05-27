@@ -40,6 +40,44 @@ function extractCity(location: string): string {
   return location.split(",")[0].trim()
 }
 
+// Ask the browser for the user's coordinates and reverse-geocode them via
+// OpenStreetMap Nominatim. Returns the city string (or null if anything
+// goes wrong — permission denied, no support, no result). Silent — no UI.
+async function detectBrowserCity(timeoutMs = 6000): Promise<string | null> {
+  if (typeof navigator === "undefined" || !navigator.geolocation) return null
+  const coords = await new Promise<GeolocationPosition | null>((resolve) => {
+    let resolved = false
+    const finish = (v: GeolocationPosition | null) => {
+      if (!resolved) {
+        resolved = true
+        resolve(v)
+      }
+    }
+    setTimeout(() => finish(null), timeoutMs)
+    navigator.geolocation.getCurrentPosition(
+      (p) => finish(p),
+      () => finish(null),
+      { enableHighAccuracy: false, timeout: timeoutMs, maximumAge: 60 * 60 * 1000 },
+    )
+  })
+  if (!coords) return null
+  try {
+    const { latitude, longitude } = coords.coords
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&zoom=10`,
+      { headers: { "Accept-Language": "en" } },
+    )
+    if (!res.ok) return null
+    const data = (await res.json()) as {
+      address?: { city?: string; town?: string; village?: string }
+    }
+    const a = data.address ?? {}
+    return a.city ?? a.town ?? a.village ?? null
+  } catch {
+    return null
+  }
+}
+
 interface DayGroup {
   key: string
   label: string
@@ -120,19 +158,34 @@ export default function EventsPage() {
     Promise.all([
       fetch("/api/events").then((r) => r.json()),
       fetch("/api/me").then((r) => r.json()),
-    ]).then(([eventsData, meData]) => {
-      const rawEvents = Array.isArray(eventsData) ? eventsData : eventsData.events ?? []
-      setEvents(rawEvents.map((event: Event) => ({
-        ...event,
-        tags: Array.isArray(event.tags) ? event.tags : [],
-      })))
-      // Auto-select user's city ONLY if no city was explicitly set via query string
-      if (!cityParam && meData?.location) {
-        const city = (meData.location as string).split(",")[0].trim()
-        setSelectedCity(city)
-      }
-      setLoading(false)
-    }).catch(() => setLoading(false))
+    ])
+      .then(async ([eventsData, meData]) => {
+        const rawEvents = Array.isArray(eventsData) ? eventsData : eventsData.events ?? []
+        setEvents(
+          rawEvents.map((event: Event) => ({
+            ...event,
+            tags: Array.isArray(event.tags) ? event.tags : [],
+          })),
+        )
+
+        // Priority: explicit ?city= → saved profile location → browser geolocation
+        if (cityParam) {
+          // already initialized from cityParam
+        } else if (meData?.location) {
+          const city = (meData.location as string).split(",")[0].trim()
+          if (city) setSelectedCity(city)
+        } else {
+          // No saved location: ask the browser for geolocation, reverse-geocode
+          // via free OpenStreetMap Nominatim, set city chip silently.
+          try {
+            const city = await detectBrowserCity()
+            if (city) setSelectedCity(city)
+          } catch { /* user denied or no support — leave on All */ }
+        }
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Build city list from in-person events
