@@ -20,7 +20,7 @@ const schema = z
     location: z.string().optional(),
     virtualLink: z.string().url("Must be a valid URL").optional().or(z.literal("")),
     registrationUrl: z.string().url("Must be a valid URL"),
-    tags: z.array(z.string()).min(1, "Select at least one tag"),
+    tags: z.array(z.string()).min(1, "Pick at least one interest").max(5, "Max 5 interests"),
     isFree: z.boolean(),
     imageUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   })
@@ -33,6 +33,26 @@ const schema = z
   )
 
 type FormValues = z.infer<typeof schema>
+
+// Backend issue → human-friendly field label for the error banner.
+const FIELD_LABELS: Record<string, string> = {
+  title: "Title",
+  description: "Description",
+  startDate: "Start Date",
+  endDate: "End Date",
+  location: "Location",
+  virtualLink: "Virtual Meeting Link",
+  registrationUrl: "Registration / RSVP URL",
+  imageUrl: "Image URL",
+  tags: "Interest Areas",
+  isVirtual: "Virtual toggle",
+  isFree: "Free toggle",
+}
+
+interface ServerIssue {
+  path?: string
+  message?: string
+}
 
 export default function SubmitEventPage() {
   const [submitted, setSubmitted] = useState(false)
@@ -58,12 +78,44 @@ export default function SubmitEventPage() {
   const isFree = watch("isFree")
   const selectedTags = watch("tags")
 
+  const MAX_TAGS = 5
+
   function toggleTag(tag: string) {
     const current = selectedTags ?? []
     if (current.includes(tag)) {
       setValue("tags", current.filter((t) => t !== tag), { shouldValidate: true })
     } else {
+      if (current.length >= MAX_TAGS) return
       setValue("tags", [...current, tag], { shouldValidate: true })
+    }
+  }
+
+  function buildPayload(data: FormValues) {
+    // Combine date + optional time into an ISO 8601 string the backend can
+    // round-trip through Postgres timestamptz. Local time → UTC.
+    const time = data.startTime?.trim() || "00:00"
+    const localDt = new Date(`${data.startDate}T${time}`)
+    const startIso = isNaN(localDt.getTime())
+      ? new Date(`${data.startDate}T00:00:00`).toISOString()
+      : localDt.toISOString()
+
+    // Strip empty strings from optional URL fields so they don't trip URL
+    // validation server-side. This was the second cause of the old
+    // "Validation failed" red banner.
+    const clean = <T,>(v: T | undefined | "" | null): T | undefined =>
+      v === "" || v == null ? undefined : v
+
+    return {
+      title: data.title.trim(),
+      description: clean(data.description?.trim()),
+      startDate: startIso,
+      isVirtual: data.isVirtual,
+      location: clean(data.location?.trim()),
+      virtualLink: clean(data.virtualLink?.trim()),
+      registrationUrl: data.registrationUrl.trim(),
+      tags: data.tags,
+      isFree: data.isFree,
+      imageUrl: clean(data.imageUrl?.trim()),
     }
   }
 
@@ -73,16 +125,36 @@ export default function SubmitEventPage() {
       const res = await fetch("/api/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(buildPayload(data)),
       })
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Submission failed" }))
-        setServerError(err.error ?? "Something went wrong")
+        let text = ""
+        let issues: ServerIssue[] = []
+        let topError = "Submission failed"
+        try {
+          const body = (await res.json()) as { error?: string; issues?: ServerIssue[] }
+          if (body.error) topError = body.error
+          if (Array.isArray(body.issues)) issues = body.issues
+        } catch {
+          text = await res.text().catch(() => "")
+        }
+        if (issues.length > 0) {
+          const formatted = issues
+            .map((i) => {
+              const label = i.path ? FIELD_LABELS[i.path] ?? i.path : "Field"
+              return `${label}: ${i.message ?? "invalid"}`
+            })
+            .slice(0, 4)
+            .join("  •  ")
+          setServerError(`${topError} — ${formatted}`)
+        } else {
+          setServerError(text ? `${topError}: ${text.slice(0, 200)}` : topError)
+        }
         return
       }
       setSubmitted(true)
-    } catch {
-      setServerError("Network error. Please try again.")
+    } catch (e) {
+      setServerError(`Network error: ${e instanceof Error ? e.message : "try again"}`)
     }
   }
 
@@ -212,8 +284,11 @@ export default function SubmitEventPage() {
 
             {/* Tags */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-text-secondary">
-                Interest Areas
+              <label className="text-sm font-medium text-text-secondary flex items-center justify-between">
+                <span>Interest Areas</span>
+                <span className="text-[11px] text-text-muted font-normal">
+                  {(selectedTags?.length ?? 0)}/{MAX_TAGS}
+                </span>
               </label>
               {errors.tags && (
                 <p className="text-xs text-red-400">{errors.tags.message}</p>
