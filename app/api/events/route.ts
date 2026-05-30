@@ -40,12 +40,18 @@ export async function GET(request: Request) {
     // Pull DB events too, validate their URLs the same way
     try {
       const supabase = await createClient()
-      const { data: dbEvents } = await supabase
+      const dbRes = await supabase
         .from("events")
         .select("title, description, startDate, endDate, location, isVirtual, registrationUrl, imageUrl, tags, source, isFree")
         .eq("status", "APPROVED")
         .gte("startDate", new Date().toISOString())
         .order("startDate")
+      if (dbRes.error) {
+        // Loud — this used to silently swallow and the dashboard would
+        // mysteriously not include user-submitted events. Surface it.
+        console.error("[events/GET] DB read failed:", dbRes.error.message, dbRes.error)
+      }
+      const dbEvents = dbRes.data
       if (Array.isArray(dbEvents) && dbEvents.length > 0) {
         // isSpecificEventUrl is a strict whitelist of lu.ma/eventbrite/meetup/CV/
         // partiful slug shapes — it was meant to gate noisy SCRAPER output. It
@@ -73,7 +79,9 @@ export async function GET(request: Request) {
           }
         }
       }
-    } catch { /* skip DB on error */ }
+    } catch (dbErr) {
+      console.error("[events/GET] DB merge threw:", dbErr)
+    }
 
     // Only future events
     const now = new Date()
