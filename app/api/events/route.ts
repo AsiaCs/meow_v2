@@ -47,8 +47,20 @@ export async function GET(request: Request) {
         .gte("startDate", new Date().toISOString())
         .order("startDate")
       if (Array.isArray(dbEvents) && dbEvents.length > 0) {
-        const dbSpecific = (dbEvents as DbEventRow[]).filter((e) => isSpecificEventUrl(e.registrationUrl))
-        const validDb = await filterReachable(dbSpecific, (e) => e.registrationUrl)
+        // isSpecificEventUrl is a strict whitelist of lu.ma/eventbrite/meetup/CV/
+        // partiful slug shapes — it was meant to gate noisy SCRAPER output. It
+        // should never police real user submissions, where the user picked the
+        // URL themselves. Skip it for source === "user".
+        const dbSpecific = (dbEvents as DbEventRow[]).filter(
+          (e) => e.source === "user" || isSpecificEventUrl(e.registrationUrl),
+        )
+        // Same logic for reachability: don't HEAD-check user-supplied URLs.
+        // The user is on the hook for their own link.
+        const userRows  = dbSpecific.filter((e) => e.source === "user")
+        const otherRows = dbSpecific.filter((e) => e.source !== "user")
+        const validOther = await filterReachable(otherRows, (e) => e.registrationUrl)
+        const validDb = [...userRows, ...validOther]
+
         const seenUrls = new Set(events.map((e) => e.registrationUrl))
         for (const e of validDb) {
           if (!seenUrls.has(e.registrationUrl)) {

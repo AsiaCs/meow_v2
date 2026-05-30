@@ -68,7 +68,11 @@ async function findEvent(id: string): Promise<ScrapedEvent | null> {
       .eq("status", "APPROVED")
     if (Array.isArray(dbEvents)) {
       const match = (dbEvents as EventRow[]).find(
-        (e) => stableEventId(e.registrationUrl) === id && isSpecificEventUrl(e.registrationUrl),
+        // Allow user-submitted events through even if their URL isn't on
+        // the strict scraper whitelist (lu.ma/eventbrite/meetup/etc).
+        (e) =>
+          stableEventId(e.registrationUrl) === id &&
+          (e.source === "user" || isSpecificEventUrl(e.registrationUrl)),
       )
       if (match) {
         return {
@@ -99,7 +103,12 @@ export default async function EventDetailPage({
   const start = new Date(event.startDate)
   const { dateStr, timeStr } = formatEventDate(start)
   const safeRegistrationUrl = safeExternalUrl(event.registrationUrl)
-  const canRegister = Boolean(safeRegistrationUrl && isSpecificEventUrl(safeRegistrationUrl))
+  // User-submitted events are always RSVP-able — the user picked the URL.
+  // Scraped events still go through the strict whitelist.
+  const canRegister = Boolean(
+    safeRegistrationUrl &&
+      (event.source === "user" || isSpecificEventUrl(safeRegistrationUrl)),
+  )
 
   return (
     <div className="min-h-dvh bg-bg-base">

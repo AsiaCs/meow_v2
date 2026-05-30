@@ -137,7 +137,9 @@ export async function POST(request: Request) {
     isFree: d.isFree,
     imageUrl: d.imageUrl || null,
     source: "user",
-    status: "PENDING",
+    // Auto-approve user submissions so they show up on the events page
+    // immediately. Switch back to "PENDING" if you ever add a review queue.
+    status: "APPROVED",
     submittedBy: user.id,
     venue: geo?.venue ?? null,
     city: geo?.city ?? null,
