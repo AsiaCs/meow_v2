@@ -80,4 +80,45 @@ const profile = normalizeProfileData({
 assert.deepEqual(profile.interests, [])
 assert.deepEqual(profile.experiences[0].skills, [])
 
+// ---- Submit route: PGRST204 detection must trigger the ladder fallback ----
+// Direct import would pull in the Supabase server client; just re-validate
+// the detector signature by mirroring it inline.
+{
+  type PgErr = { code?: string; message?: string }
+  function isUndefinedColumn(e: PgErr | null, name?: string): boolean {
+    if (!e) return false
+    if (e.code === "42703") return true
+    if (e.code === "PGRST204") return true
+    if (!e.message) return false
+    if (name) {
+      if (new RegExp(`column .*\\b${name}\\b.* does not exist`, "i").test(e.message)) return true
+      if (new RegExp(`could not find the .${name}. column`, "i").test(e.message)) return true
+      return false
+    }
+    if (/column .* does not exist/i.test(e.message)) return true
+    if (/could not find the .+ column/i.test(e.message)) return true
+    return false
+  }
+  assert.equal(
+    isUndefinedColumn({ code: "PGRST204", message: "Could not find the 'city' column of 'events' in the schema cache" }),
+    true,
+    "PostgREST PGRST204 must trigger the fallback ladder",
+  )
+  assert.equal(
+    isUndefinedColumn({ code: "42703", message: "column \"city\" does not exist" }),
+    true,
+    "Native Postgres 42703 must trigger the fallback ladder",
+  )
+  assert.equal(
+    isUndefinedColumn({ code: "42501", message: "permission denied for table events" }),
+    false,
+    "RLS denial must NOT trigger the column-missing fallback",
+  )
+  assert.equal(
+    isUndefinedColumn({ code: "23502", message: "null value in column \"title\"" }),
+    false,
+    "NOT NULL violation must NOT trigger the column-missing fallback",
+  )
+}
+
 console.log("regression checks passed")

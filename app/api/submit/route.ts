@@ -53,10 +53,21 @@ const META_KEYS = ["status", "source", "submittedBy"]
 
 function isUndefinedColumn(e: PgErrorLike | null | undefined, name?: string): boolean {
   if (!e) return false
+  // Native Postgres: 42703 = undefined_column
   if (e.code === "42703") return true
+  // PostgREST: PGRST204 = "Could not find the 'X' column of 'Y' in the schema cache"
+  // This is what Supabase returns when the SDK calls in via the REST layer.
+  if (e.code === "PGRST204") return true
   if (!e.message) return false
-  if (name) return new RegExp(`column .*${name}.* does not exist`, "i").test(e.message)
-  return /column .* does not exist/i.test(e.message)
+  const msg = e.message
+  if (name) {
+    if (new RegExp(`column .*\\b${name}\\b.* does not exist`, "i").test(msg)) return true
+    if (new RegExp(`could not find the .${name}. column`, "i").test(msg)) return true
+    return false
+  }
+  if (/column .* does not exist/i.test(msg)) return true
+  if (/could not find the .+ column/i.test(msg)) return true
+  return false
 }
 
 function isNotNullViolation(e: PgErrorLike | null | undefined): boolean {
