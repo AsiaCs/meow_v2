@@ -124,6 +124,9 @@ export default function SubmitEventPage() {
     try {
       const res = await fetch("/api/submit", {
         method: "POST",
+        // NOTE: do NOT add Authorization: Bearer here. We use Supabase SSR
+        // which authenticates via the sb-* cookies set during sign-in.
+        // Fetch with same-origin credentials automatically — no header needed.
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(buildPayload(data)),
       })
@@ -131,13 +134,25 @@ export default function SubmitEventPage() {
         let text = ""
         let issues: ServerIssue[] = []
         let topError = "Submission failed"
+        let dbCode: string | null = null
+        let dbMessage: string | null = null
+        let dbHint: string | null = null
         try {
-          const body = (await res.json()) as { error?: string; issues?: ServerIssue[] }
+          const body = (await res.json()) as {
+            error?: string
+            issues?: ServerIssue[]
+            db?: { code?: string | null; message?: string | null; hint?: string | null }
+            hint?: string
+          }
           if (body.error) topError = body.error
           if (Array.isArray(body.issues)) issues = body.issues
+          dbCode = body.db?.code ?? null
+          dbMessage = body.db?.message ?? null
+          dbHint = body.hint ?? body.db?.hint ?? null
         } catch {
           text = await res.text().catch(() => "")
         }
+
         if (issues.length > 0) {
           const formatted = issues
             .map((i) => {
@@ -147,6 +162,15 @@ export default function SubmitEventPage() {
             .slice(0, 4)
             .join("  •  ")
           setServerError(`${topError} — ${formatted}`)
+        } else if (dbCode || dbMessage || dbHint) {
+          // 500 from the DB layer — surface the actual Postgres code + message
+          // so we can fix the schema/RLS without guessing.
+          const parts: string[] = [topError]
+          if (dbHint) parts.push(dbHint)
+          if (dbCode || dbMessage) {
+            parts.push(`[${dbCode ?? "?"}] ${dbMessage ?? ""}`.trim())
+          }
+          setServerError(parts.filter(Boolean).join("  •  "))
         } else {
           setServerError(text ? `${topError}: ${text.slice(0, 200)}` : topError)
         }
