@@ -289,12 +289,23 @@ export default function EventsPage() {
 
     if (search.trim()) {
       const q = search.toLowerCase()
-      if (
-        !e.title.toLowerCase().includes(q) &&
-        !(e.description ?? "").toLowerCase().includes(q) &&
-        !e.tags.some((t) => t.toLowerCase().includes(q))
-      )
-        return false
+      // Wide-match: name / description / category / location / venue / city / source.
+      // Anything visible on the card should be a search target — typing "san
+      // francisco" finds SF events, typing "hackathon" finds hackathons,
+      // typing "Dinner" finds the literal title.
+      const haystack = [
+        e.title,
+        e.description ?? "",
+        e.location ?? "",
+        e.venue ?? "",
+        e.city ?? "",
+        e.region ?? "",
+        e.source ?? "",
+        ...e.tags,
+      ]
+        .join(" ")
+        .toLowerCase()
+      if (!haystack.includes(q)) return false
     }
 
     if (selectedCategories.length > 0) {
@@ -368,7 +379,7 @@ export default function EventsPage() {
               />
               <input
                 type="text"
-                placeholder="Search events..."
+                placeholder="Search by name, category, or city…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full bg-bg-base border border-border rounded-xl pl-9 pr-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple/20 transition-all"
