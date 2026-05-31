@@ -161,6 +161,11 @@ export default function EventsPage() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     categoryParam ? [categoryParam] : []
   )
+  // The city the auto-detect set on first load, even if we later widen the
+  // filter to "all". Used to render a small "showing all — none in {Sacramento}"
+  // banner so the widen behavior isn't invisible.
+  const [autoSelectedCity, setAutoSelectedCity] = useState<string | null>(null)
+  const [autoWidened, setAutoWidened] = useState(false)
 
   // Proximity engine state
   const userLoc = useUserLocation()
@@ -190,16 +195,22 @@ export default function EventsPage() {
 
         // Priority: explicit ?city= → saved profile location → browser geolocation
         if (cityParam) {
-          // already initialized from cityParam
+          // already initialized from cityParam — user explicitly asked for this
         } else if (meData?.location) {
           const city = (meData.location as string).split(",")[0].trim()
-          if (city) setSelectedCity(city)
+          if (city) {
+            setSelectedCity(city)
+            setAutoSelectedCity(city)
+          }
         } else {
           // No saved location: ask the browser for geolocation, reverse-geocode
           // via free OpenStreetMap Nominatim, set city chip silently.
           try {
             const city = await detectBrowserCity()
-            if (city) setSelectedCity(city)
+            if (city) {
+              setSelectedCity(city)
+              setAutoSelectedCity(city)
+            }
           } catch { /* user denied or no support — leave on All */ }
         }
         setLoading(false)
@@ -352,6 +363,20 @@ export default function EventsPage() {
     })
   }, [proximityFiltered, sortByDistance, userLoc.position])
 
+  // Never show the user an empty events page on first load just because
+  // their auto-detected city has zero matches. If the auto-pick produced no
+  // events AND we haven't already widened, fall back to "Everywhere" once.
+  useEffect(() => {
+    if (loading) return
+    if (autoWidened) return
+    if (!autoSelectedCity) return
+    if (selectedCity !== autoSelectedCity) return  // user manually changed it
+    if (events.length === 0) return                 // no data at all, nothing to widen to
+    if (sorted.length > 0) return                   // current filter already has matches
+    setSelectedCity("all")
+    setAutoWidened(true)
+  }, [loading, autoWidened, autoSelectedCity, selectedCity, events.length, sorted.length])
+
   return (
     <div className="flex min-h-dvh">
       {/* Main content */}
@@ -414,7 +439,7 @@ export default function EventsPage() {
               <div className="flex items-center gap-2 flex-wrap">
                 <MapPin size={13} strokeWidth={1.5} className="text-text-muted flex-shrink-0" />
                 <button
-                  onClick={() => setSelectedCity("all")}
+                  onClick={() => { setSelectedCity("all"); setAutoWidened(false) }}
                   className={cn(
                     "flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150",
                     selectedCity === "all"
@@ -426,7 +451,7 @@ export default function EventsPage() {
                   Everywhere
                 </button>
                 <button
-                  onClick={() => setSelectedCity("virtual")}
+                  onClick={() => { setSelectedCity("virtual"); setAutoWidened(false) }}
                   className={cn(
                     "px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150",
                     selectedCity === "virtual"
@@ -439,7 +464,7 @@ export default function EventsPage() {
                 {cities.map((city) => (
                   <button
                     key={city}
-                    onClick={() => setSelectedCity(city)}
+                    onClick={() => { setSelectedCity(city); setAutoWidened(false) }}
                     className={cn(
                       "px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150",
                       selectedCity === city
@@ -559,6 +584,19 @@ export default function EventsPage() {
             </div>
           </div>
         </div>
+
+        {/* "We widened your filter because your city had no events" notice */}
+        {autoWidened && autoSelectedCity && (
+          <div className="px-6 pt-4 max-w-3xl">
+            <div className="flex items-start gap-2 rounded-xl border border-purple/25 bg-purple/5 px-3 py-2 text-xs text-text-secondary">
+              <MapPin size={12} strokeWidth={1.75} className="mt-0.5 flex-shrink-0 text-purple-light" />
+              <span>
+                No events in <span className="text-text-primary font-medium">{autoSelectedCity}</span> right now —
+                showing all events instead. Tap a city chip above to narrow down.
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Vertical list grouped by day — Luma / Cerebral Valley pattern */}
         <div className="px-6 py-6 max-w-3xl">
