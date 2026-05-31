@@ -181,7 +181,10 @@ export default function EventsPage() {
   useEffect(() => {
     // Load events and user location in parallel
     Promise.all([
-      fetch("/api/events").then((r) => r.json()),
+      // cache: 'no-store' = always go to the server. Without this, the browser
+      // can serve a memoized copy from before the user submitted their event,
+      // making fresh submissions appear "missing" until manual hard-reload.
+      fetch("/api/events", { cache: "no-store" }).then((r) => r.json()),
       fetch("/api/me").then((r) => r.json()),
     ])
       .then(async ([eventsData, meData]) => {

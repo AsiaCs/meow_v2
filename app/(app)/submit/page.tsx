@@ -193,12 +193,24 @@ export default function SubmitEventPage() {
             Event Submitted!
           </h2>
           <p className="text-text-secondary text-sm leading-relaxed mb-8">
-            Thanks for contributing to the community. Your event is under review and
-            will appear on the events page once approved.
+            Your event is live on the Events page right now. Tap below to see it.
           </p>
-          <Button variant="primary" onClick={() => setSubmitted(false)}>
-            Submit another event
-          </Button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Button
+              variant="primary"
+              onClick={() => {
+                // Hard navigation (not router.push) forces the events page to
+                // re-mount with a fresh fetch — bypasses any stale React state
+                // or browser HTTP cache from a previous visit.
+                window.location.href = "/events"
+              }}
+            >
+              See it on the Events page →
+            </Button>
+            <Button variant="ghost" onClick={() => setSubmitted(false)}>
+              Submit another event
+            </Button>
+          </div>
         </div>
       </div>
     )
