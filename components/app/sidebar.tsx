@@ -12,6 +12,7 @@ import {
   User,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { MeowLockup } from "@/components/brand/meow-lockup"
 
 interface SidebarProps {
   user: {
@@ -76,10 +77,8 @@ export default function Sidebar({ user }: SidebarProps) {
       <aside className="hidden md:flex fixed left-0 top-0 h-full w-60 flex-col bg-bg-surface border-r border-border z-40">
         {/* Logo */}
         <div className="px-5 py-6">
-          <Link href="/dashboard">
-            <span className="gradient-text font-display text-2xl font-bold tracking-tight">
-              meow
-            </span>
+          <Link href="/dashboard" className="inline-flex items-center">
+            <MeowLockup iconSize={28} wordmarkSize={22} gap={10} />
           </Link>
         </div>
 

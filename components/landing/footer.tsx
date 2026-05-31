@@ -3,6 +3,7 @@
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { X } from "lucide-react"
+import { MeowLockup } from "@/components/brand/meow-lockup"
 
 const navLinks = [
   { label: "Events", href: "/events" },
@@ -44,12 +45,8 @@ export default function Footer() {
         >
           {/* Logo + tagline */}
           <div className="flex flex-col gap-3">
-            <Link href="/" className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center"
-                style={{ background: "var(--gradient-brand)" }}>
-                <span className="text-white text-sm font-bold leading-none">M</span>
-              </div>
-              <span className="font-display text-xl font-bold text-text-primary tracking-tight">meow</span>
+            <Link href="/" className="inline-flex items-center">
+              <MeowLockup iconSize={32} wordmarkSize={24} gap={10} />
             </Link>
             <p className="text-sm text-text-muted max-w-xs leading-relaxed">
               Find your next opportunity. Make connections that matter.

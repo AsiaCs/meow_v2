@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Menu, X } from "lucide-react"
 import Link from "next/link"
+import { MeowLockup } from "@/components/brand/meow-lockup"
 
 const links = [
   { label: "Home", href: "/" },
@@ -56,13 +57,8 @@ export default function LandingNav() {
           className="pointer-events-auto flex items-center gap-2 px-3 py-2 rounded-full backdrop-blur-xl bg-white/[0.04] border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
         >
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 px-3 py-1.5 mr-1">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple to-pink flex items-center justify-center">
-              <span className="text-white text-xs font-bold leading-none">M</span>
-            </div>
-            <span className="font-display font-semibold text-sm text-text-primary tracking-tight">
-              meow
-            </span>
+          <Link href="/" className="flex items-center px-3 py-1.5 mr-1">
+            <MeowLockup iconSize={22} wordmarkSize={18} gap={8} />
           </Link>
 
           {/* Desktop links */}

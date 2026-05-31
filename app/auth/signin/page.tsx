@@ -4,6 +4,8 @@ import { useState } from "react"
 import { motion } from "framer-motion"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { MeowLogo } from "@/components/brand/meow-logo"
+import { MeowWordmark } from "@/components/brand/meow-wordmark"
 
 function GoogleIcon() {
   return (
@@ -99,15 +101,10 @@ export default function SignInPage() {
         <div className="rounded-3xl border border-white/[0.06] p-2 bg-white/[0.02]">
           <div className="bg-bg-card rounded-[calc(1.5rem-0.375rem)] p-8">
             {/* Logo */}
-            <div className="text-center mb-8">
-              <div
-                className="w-12 h-12 rounded-2xl mx-auto mb-4 flex items-center justify-center"
-                style={{ background: "linear-gradient(135deg, #7c3aed, #ec4899)" }}
-              >
-                <span className="text-white font-bold text-lg font-display">m</span>
-              </div>
+            <div className="text-center mb-8 flex flex-col items-center">
+              <MeowLogo size={64} tone="dark" className="mb-4" />
               <h1 className="text-2xl font-bold text-text-primary mb-2 font-display">
-                Welcome to Meow
+                Welcome to <MeowWordmark size={26} />
               </h1>
               <p className="text-text-secondary text-sm">
                 {mode === "signin"

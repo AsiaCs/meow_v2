@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import { MapPin, CheckCircle, ArrowRight, Wifi } from "lucide-react"
+import { MeowLockup } from "@/components/brand/meow-lockup"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { INTEREST_AREAS, cn } from "@/lib/utils"
@@ -109,11 +110,9 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-dvh bg-bg-base flex flex-col items-center justify-center px-6 py-12">
       {/* Logo */}
-      <div className="mb-10 text-center">
-        <span className="gradient-text font-display text-3xl font-bold tracking-tight">
-          meow
-        </span>
-        <p className="text-text-muted text-sm mt-2">Let&apos;s personalize your experience</p>
+      <div className="mb-10 flex flex-col items-center text-center">
+        <MeowLockup iconSize={56} wordmarkSize={36} gap={14} stacked />
+        <p className="text-text-muted text-sm mt-4">Let&apos;s personalize your experience</p>
       </div>
 
       {/* Progress */}
