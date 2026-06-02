@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { Search, PlusCircle, MapPin, Globe, Navigation, Loader2 } from "lucide-react"
 import { EventCard } from "@/components/events/event-card"
 import { CalendarSidebar } from "@/components/events/calendar-sidebar"
-import { cn } from "@/lib/utils"
+import { cn, isOnLocalDay } from "@/lib/utils"
 import { useUserLocation } from "@/hooks/use-user-location"
 import { distanceMiles } from "@/lib/geo/haversine"
 
@@ -270,35 +270,36 @@ export default function EventsPage() {
     ).map((c) => c.label)
   }, [events, MAJOR_CITIES])
 
+  // ---- City matcher, extracted so both the main feed AND the Coming Up
+  // sidebar use the exact same predicate. Previously the sidebar showed
+  // global events even when "San Francisco" was selected.
+  const matchesSelectedCity = useCallback(
+    (e: Event): boolean => {
+      if (selectedCity === "all") return true
+      if (selectedCity === "virtual") return e.isVirtual
+      if (e.isVirtual || !e.location) return false
+      const city = MAJOR_CITIES.find((c) => c.label === selectedCity)
+      const loc = e.location.toLowerCase()
+      if (city) return city.match.some((m) => loc.includes(m))
+      return loc.includes(selectedCity.toLowerCase())
+    },
+    [selectedCity, MAJOR_CITIES],
+  )
+
   const filtered = events.filter((e) => {
     if (tab === "in-person" && e.isVirtual) return false
     if (tab === "virtual" && !e.isVirtual) return false
     if (tab === "free" && !e.isFree) return false
 
-    if (selectedCity !== "all") {
-      if (selectedCity === "virtual") {
-        if (!e.isVirtual) return false
-      } else {
-        if (e.isVirtual || !e.location) return false
-        // Use the curated city matchers if we have them; fall back to substring
-        const city = MAJOR_CITIES.find((c) => c.label === selectedCity)
-        const loc = e.location.toLowerCase()
-        if (city) {
-          if (!city.match.some((m) => loc.includes(m))) return false
-        } else if (!loc.includes(selectedCity.toLowerCase())) {
-          return false
-        }
-      }
-    }
+    if (!matchesSelectedCity(e)) return false
 
     if (selectedDate) {
-      const eDate = new Date(e.startDate)
-      if (
-        eDate.getFullYear() !== selectedDate.getFullYear() ||
-        eDate.getMonth() !== selectedDate.getMonth() ||
-        eDate.getDate() !== selectedDate.getDate()
-      )
-        return false
+      // Timezone-safe day window: an event passes if its UTC instant falls
+      // anywhere between local 00:00 and 23:59:59.999 of the selected day.
+      // Replaces the previous getDate/getMonth/getYear comparison which can
+      // drift across DST boundaries and on rows stored under a different
+      // server-time offset.
+      if (!isOnLocalDay(e.startDate, selectedDate)) return false
     }
 
     if (search.trim()) {
@@ -672,15 +673,20 @@ export default function EventsPage() {
         </div>
       </div>
 
-      {/* Calendar sidebar */}
+      {/* Calendar sidebar — Coming Up panel uses the SAME city predicate as
+          the main feed. When "San Francisco" is selected, Coming Up only
+          shows SF events; on "Everywhere" / no city, it shows all events. */}
       <CalendarSidebar
-        events={events.map((e) => ({
-          ...e,
-          startDate: new Date(e.startDate),
-          location: e.location ?? undefined,
-        }))}
+        events={events
+          .filter(matchesSelectedCity)
+          .map((e) => ({
+            ...e,
+            startDate: new Date(e.startDate),
+            location: e.location ?? undefined,
+          }))}
         selectedDate={selectedDate}
         onDateChange={setSelectedDate}
+        cityLabel={selectedCity === "all" || selectedCity === "virtual" ? null : selectedCity}
       />
     </div>
   )

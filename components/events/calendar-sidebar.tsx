@@ -20,12 +20,16 @@ interface CalendarSidebarProps {
   events: EventItem[]
   selectedDate: Date | null
   onDateChange: (date: Date | null) => void
+  /** Active city pill from the parent. Surfaced in the "Coming Up" heading
+   *  so users see why only certain events are listed. null = Everywhere. */
+  cityLabel?: string | null
 }
 
 export function CalendarSidebar({
   events,
   selectedDate,
   onDateChange,
+  cityLabel = null,
 }: CalendarSidebarProps) {
   const [month, setMonth] = useState<Date>(new Date())
 
@@ -110,11 +114,22 @@ export function CalendarSidebar({
 
         {/* Upcoming events mini list */}
         <div>
-          <h3 className="text-sm font-semibold text-text-secondary mb-3 uppercase tracking-wide">
-            Coming Up
-          </h3>
+          <div className="flex items-baseline justify-between mb-3">
+            <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wide">
+              Coming Up
+            </h3>
+            {cityLabel && (
+              <span className="text-[10px] text-purple-light uppercase tracking-wider">
+                in {cityLabel}
+              </span>
+            )}
+          </div>
           {upcomingEvents.length === 0 ? (
-            <p className="text-xs text-text-muted">No upcoming events</p>
+            <p className="text-xs text-text-muted">
+              {cityLabel
+                ? `No upcoming events in ${cityLabel}.`
+                : "No upcoming events."}
+            </p>
           ) : (
             <ul className="space-y-3">
               {upcomingEvents.map((event) => (
