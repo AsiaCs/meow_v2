@@ -346,14 +346,21 @@ export default function EventsPage() {
     })
   }, [filtered, userLoc.position])
 
+  // When "Closest to me" is on with no explicit radius, default to a 50-mile
+  // cap so the feed actually filters by proximity instead of just sorting.
+  // The radius pills (10/25/50/100/250) override this default when picked.
+  const DEFAULT_CLOSEST_RADIUS_MI = 50
+  const effectiveRadiusMi: number | null =
+    radiusMiles ?? (sortByDistance && userLoc.position ? DEFAULT_CLOSEST_RADIUS_MI : null)
+
   const proximityFiltered = useMemo(() => {
-    if (!radiusMiles || !userLoc.position) return decorated
+    if (!effectiveRadiusMi || !userLoc.position) return decorated
     return decorated.filter((e) => {
-      if (e.isVirtual) return true
-      if (e.distanceMi == null) return false
-      return e.distanceMi <= radiusMiles
+      if (e.isVirtual) return true   // virtual events bypass the geo gate
+      if (e.distanceMi == null) return false   // unlocated event → cut when radius is on
+      return e.distanceMi <= effectiveRadiusMi
     })
-  }, [decorated, radiusMiles, userLoc.position])
+  }, [decorated, effectiveRadiusMi, userLoc.position])
 
   const sorted = useMemo(() => {
     if (!sortByDistance || !userLoc.position) return proximityFiltered
@@ -547,6 +554,11 @@ export default function EventsPage() {
                   <button
                     onClick={() => setSortByDistance((v) => !v)}
                     aria-pressed={sortByDistance}
+                    title={
+                      sortByDistance
+                        ? `Showing events within ${effectiveRadiusMi ?? DEFAULT_CLOSEST_RADIUS_MI} miles`
+                        : "Sort and cap by distance from your location"
+                    }
                     className={cn(
                       "px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150",
                       sortByDistance
@@ -555,6 +567,9 @@ export default function EventsPage() {
                     )}
                   >
                     Closest to me
+                    {sortByDistance && !radiusMiles && (
+                      <span className="ml-1 text-text-muted/80">· {DEFAULT_CLOSEST_RADIUS_MI} mi</span>
+                    )}
                   </button>
                   {RADIUS_OPTIONS.map((mi) => (
                     <button
