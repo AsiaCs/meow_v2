@@ -26,6 +26,9 @@
 //   }
 
 export interface ScrapedEvent {
+  /** DB UUID for events that came out of public.events. Scraper events leave
+   *  this null and fall back to the URL-hash ID in the listing route. */
+  dbId?: string | null
   title: string
   description?: string
   startDate: Date

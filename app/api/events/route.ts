@@ -10,6 +10,7 @@ export const maxDuration = 30
 export const revalidate = 1800
 
 type DbEventRow = {
+  id: string                      // real Postgres UUID — used as the React key for user events
   title: string
   description: string | null
   startDate: string
@@ -42,7 +43,7 @@ export async function GET(request: Request) {
       const supabase = await createClient()
       const dbRes = await supabase
         .from("events")
-        .select("title, description, startDate, endDate, location, isVirtual, registrationUrl, imageUrl, tags, source, isFree")
+        .select("id, title, description, startDate, endDate, location, isVirtual, registrationUrl, imageUrl, tags, source, isFree")
         .eq("status", "APPROVED")
         .gte("startDate", new Date().toISOString())
         .order("startDate")
@@ -69,14 +70,20 @@ export async function GET(request: Request) {
 
         const seenUrls = new Set(events.map((e) => e.registrationUrl))
         for (const e of validDb) {
-          if (!seenUrls.has(e.registrationUrl)) {
-            events.push({
-              ...e,
-              startDate: new Date(e.startDate),
-              endDate: e.endDate ? new Date(e.endDate) : undefined,
-              sourceUrl: e.registrationUrl,
-            } as ScrapedEvent)
-          }
+          // User events ALWAYS pass through — two people submitting events that
+          // happen to share a registration URL (a workshop with multiple
+          // sessions, an RSVP link reused across a series) must both render.
+          // Scraper-sourced events still get URL-deduped to avoid CV+Luma
+          // collisions on the same event.
+          if (e.source !== "user" && seenUrls.has(e.registrationUrl)) continue
+          if (e.source !== "user") seenUrls.add(e.registrationUrl)
+          events.push({
+            ...e,
+            dbId: e.id,                    // ← real UUID so React keys are unique even when URLs collide
+            startDate: new Date(e.startDate),
+            endDate: e.endDate ? new Date(e.endDate) : undefined,
+            sourceUrl: e.registrationUrl,
+          } as ScrapedEvent)
         }
       }
     } catch (dbErr) {
@@ -116,9 +123,12 @@ export async function GET(request: Request) {
       (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
     )
 
-    // Shape for client (stable IDs from URL) — now includes structured geo
+    // Shape for client. DB-sourced events use their real UUID as the id so
+    // multiple user submissions sharing a registration URL stay distinct
+    // (each row gets its own React key, its own detail-page link).
+    // Scraper events have no DB row, so we fall back to a hash of the URL.
     const shaped = events.map((e) => ({
-      id: stableEventId(e.registrationUrl),
+      id: e.dbId ?? stableEventId(e.registrationUrl),
       title: e.title,
       description: e.description ?? null,
       startDate: new Date(e.startDate).toISOString(),

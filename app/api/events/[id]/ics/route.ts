@@ -20,16 +20,21 @@ async function findEvent(id: string): Promise<ScrapedEvent | null> {
     const supabase = await createClient()
     const { data: dbEvents } = await supabase
       .from("events")
-      .select("title, description, startDate, endDate, location, isVirtual, registrationUrl, imageUrl, tags, source, isFree")
+      .select("id, title, description, startDate, endDate, location, isVirtual, registrationUrl, imageUrl, tags, source, isFree")
       .eq("status", "APPROVED")
     if (Array.isArray(dbEvents)) {
       type Row = {
+        id: string;
         title: string; description: string | null; startDate: string; endDate: string | null
         location: string | null; isVirtual: boolean; registrationUrl: string
         imageUrl: string | null; tags: string[]; source: string; isFree: boolean
       }
       const match = (dbEvents as Row[]).find(
-        (e) => stableEventId(e.registrationUrl) === id && isSpecificEventUrl(e.registrationUrl),
+        // Match by real UUID (user events) OR URL hash (older scraped rows).
+        // User events bypass the strict URL whitelist.
+        (e) =>
+          (e.id === id || stableEventId(e.registrationUrl) === id) &&
+          (e.source === "user" || isSpecificEventUrl(e.registrationUrl)),
       )
       if (match) {
         return {

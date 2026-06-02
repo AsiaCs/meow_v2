@@ -29,6 +29,7 @@ function getSourceLabel(source: string) {
 }
 
 type EventRow = {
+  id: string                       // real Postgres UUID — primary lookup key for user events
   title: string
   description: string | null
   startDate: string
@@ -64,14 +65,16 @@ async function findEvent(id: string): Promise<ScrapedEvent | null> {
     const supabase = await createClient()
     const { data: dbEvents } = await supabase
       .from("events")
-      .select("title, description, startDate, endDate, location, isVirtual, registrationUrl, imageUrl, tags, source, isFree")
+      .select("id, title, description, startDate, endDate, location, isVirtual, registrationUrl, imageUrl, tags, source, isFree")
       .eq("status", "APPROVED")
     if (Array.isArray(dbEvents)) {
       const match = (dbEvents as EventRow[]).find(
+        // Match by either real UUID (used for user submissions) OR URL hash
+        // (used for older scraper rows that hadn't yet adopted the DB id).
         // Allow user-submitted events through even if their URL isn't on
         // the strict scraper whitelist (lu.ma/eventbrite/meetup/etc).
         (e) =>
-          stableEventId(e.registrationUrl) === id &&
+          (e.id === id || stableEventId(e.registrationUrl) === id) &&
           (e.source === "user" || isSpecificEventUrl(e.registrationUrl)),
       )
       if (match) {
