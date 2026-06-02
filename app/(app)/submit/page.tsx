@@ -8,6 +8,7 @@ import { CheckCircle, X } from "lucide-react"
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { TimePicker } from "@/components/ui/time-picker"
 import { INTEREST_AREAS, cn } from "@/lib/utils"
 
 const schema = z
@@ -15,7 +16,10 @@ const schema = z
     title: z.string().min(3, "Title must be at least 3 characters"),
     description: z.string().optional(),
     startDate: z.string().min(1, "Start date is required"),
-    startTime: z.string().optional(),
+    // Time is now mandatory — was the source of the "stored a day earlier"
+    // bug when users left it blank and we defaulted to 00:00 local, which
+    // crossed midnight in UTC.
+    startTime: z.string().regex(/^\d{2}:\d{2}$/, "Pick a start time"),
     isVirtual: z.boolean(),
     location: z.string().optional(),
     virtualLink: z.string().url("Must be a valid URL").optional().or(z.literal("")),
@@ -39,6 +43,7 @@ const FIELD_LABELS: Record<string, string> = {
   title: "Title",
   description: "Description",
   startDate: "Start Date",
+  startTime: "Start Time",
   endDate: "End Date",
   location: "Location",
   virtualLink: "Virtual Meeting Link",
@@ -91,12 +96,13 @@ export default function SubmitEventPage() {
   }
 
   function buildPayload(data: FormValues) {
-    // Combine date + optional time into an ISO 8601 string the backend can
-    // round-trip through Postgres timestamptz. Local time → UTC.
-    const time = data.startTime?.trim() || "00:00"
+    // Combine date + REQUIRED time into an ISO 8601 string. Zod guarantees
+    // startTime matches /^\d{2}:\d{2}$/ before we get here so the bare
+    // fallback only fires if a malformed payload sneaks past validation.
+    const time = data.startTime?.trim() || "12:00"
     const localDt = new Date(`${data.startDate}T${time}`)
     const startIso = isNaN(localDt.getTime())
-      ? new Date(`${data.startDate}T00:00:00`).toISOString()
+      ? new Date(`${data.startDate}T12:00:00`).toISOString()
       : localDt.toISOString()
 
     // Strip empty strings from optional URL fields so they don't trip URL
@@ -257,10 +263,19 @@ export default function SubmitEventPage() {
                 error={errors.startDate?.message}
                 {...register("startDate")}
               />
-              <Input
-                label="Start Time (optional)"
-                type="time"
-                {...register("startTime")}
+              <Controller
+                name="startTime"
+                control={control}
+                defaultValue=""
+                render={({ field }) => (
+                  <TimePicker
+                    label="Start Time"
+                    required
+                    value={field.value ?? ""}
+                    onChange={field.onChange}
+                    error={errors.startTime?.message}
+                  />
+                )}
               />
             </div>
 
