@@ -131,16 +131,21 @@ function NativeSelect(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
       {...rest}
+      // color-scheme: dark tells the OS / browser to render the popup
+      // dropdown in dark mode (white text on dark surface) instead of the
+      // default light theme that gave us white-on-white invisible numbers.
+      style={{ colorScheme: "dark" }}
       className={cn(
-        // Reset and style to match the rest of the form. Native arrow is
-        // hidden — we draw our own subtle caret via background-image to
-        // keep three side-by-side selects visually consistent.
+        // Closed-state styling. Options inherit color from the select.
         "appearance-none bg-transparent text-text-primary text-sm",
         "px-4 py-2.5 cursor-pointer outline-none",
         "pr-7 bg-no-repeat",
         "[background-image:url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M2 4l3 3 3-3' fill='none' stroke='%239b8fb1' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>\")]",
         "[background-position:right_8px_center]",
         "min-w-[60px] text-center",
+        // Open-state options: belt-and-suspenders for browsers that ignore
+        // color-scheme on options. Forces visible dark bg + light text.
+        "[&_option]:bg-bg-card [&_option]:text-text-primary",
         className,
       )}
     >

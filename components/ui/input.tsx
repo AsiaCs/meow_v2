@@ -4,10 +4,14 @@ import { forwardRef } from "react"
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string
   error?: string
+  /** Render a red asterisk next to the label. Does NOT add HTML5 `required`
+   *  on its own — set the prop separately on the input via `required` if you
+   *  want browser-native validation. */
+  requiredMark?: boolean
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, className, id, ...props }, ref) => {
+  ({ label, error, className, id, requiredMark, ...props }, ref) => {
     const inputId = id ?? label?.toLowerCase().replace(/\s+/g, "-")
 
     return (
@@ -18,6 +22,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             className="text-sm font-medium text-text-secondary"
           >
             {label}
+            {requiredMark && (
+              <span className="text-red-400 ml-1" aria-hidden="true">*</span>
+            )}
           </label>
         )}
         <input

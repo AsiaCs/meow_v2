@@ -237,6 +237,7 @@ export default function SubmitEventPage() {
             {/* Title */}
             <Input
               label="Event Title"
+              requiredMark
               placeholder="e.g. SF AI Founders Dinner"
               error={errors.title?.message}
               {...register("title")}
@@ -259,6 +260,7 @@ export default function SubmitEventPage() {
             <div className="grid grid-cols-2 gap-4">
               <Input
                 label="Start Date"
+                requiredMark
                 type="date"
                 error={errors.startDate?.message}
                 {...register("startDate")}
@@ -319,6 +321,7 @@ export default function SubmitEventPage() {
             ) : (
               <Input
                 label="Location"
+                requiredMark
                 placeholder="e.g. San Francisco, CA"
                 error={errors.location?.message}
                 {...register("location")}
@@ -328,6 +331,7 @@ export default function SubmitEventPage() {
             {/* Registration URL */}
             <Input
               label="Registration / RSVP URL"
+              requiredMark
               placeholder="https://lu.ma/..."
               error={errors.registrationUrl?.message}
               {...register("registrationUrl")}
@@ -336,7 +340,10 @@ export default function SubmitEventPage() {
             {/* Tags */}
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium text-text-secondary flex items-center justify-between">
-                <span>Interest Areas</span>
+                <span>
+                  Interest Areas
+                  <span className="text-red-400 ml-1" aria-hidden="true">*</span>
+                </span>
                 <span className="text-[11px] text-text-muted font-normal">
                   {(selectedTags?.length ?? 0)}/{MAX_TAGS}
                 </span>
