@@ -13,7 +13,7 @@ export async function GET() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
-    const WIDE = "id, name, email, image, location, interests, onboarded, digestEnabled, githubUrl, portfolioUrl, telegramHandle, discordHandle, experiences(*)"
+    const WIDE = "id, name, email, image, location, interests, onboarded, digestEnabled, githubUrl, portfolioUrl, experiences(*)"
     const NARROW = "id, name, email, image, location, interests, onboarded, experiences(*)"
     let { data, error } = await supabase
       .from("users")
@@ -102,8 +102,6 @@ const profileSchema = z.object({
   githubUrl: z.string().max(200).optional().nullable(),
   portfolioUrl: z.string().max(200).optional().nullable(),
   // Coordination handles. Plain text — users enter @handles or emails directly.
-  telegramHandle: z.string().max(64).optional().nullable(),
-  discordHandle: z.string().max(64).optional().nullable(),
 })
 
 export async function PATCH(request: Request) {
@@ -131,8 +129,6 @@ export async function PATCH(request: Request) {
     if (result.data.digestEnabled !== undefined) updateData.digestEnabled = result.data.digestEnabled
     if (result.data.githubUrl !== undefined) updateData.githubUrl = result.data.githubUrl || null
     if (result.data.portfolioUrl !== undefined) updateData.portfolioUrl = result.data.portfolioUrl || null
-    if (result.data.telegramHandle !== undefined) updateData.telegramHandle = result.data.telegramHandle || null
-    if (result.data.discordHandle !== undefined) updateData.discordHandle = result.data.discordHandle || null
 
     const updateRes = await supabase
       .from("users")

@@ -21,8 +21,6 @@ export interface NormalizedProfileData {
   digestEnabled: boolean
   githubUrl: string | null
   portfolioUrl: string | null
-  telegramHandle: string | null
-  discordHandle: string | null
   interests: string[]
   experiences: NormalizedExperience[]
 }
@@ -68,8 +66,6 @@ export function normalizeProfileData(input: unknown): NormalizedProfileData {
     digestEnabled: data.digestEnabled !== false,
     githubUrl: typeof data.githubUrl === "string" ? data.githubUrl : null,
     portfolioUrl: typeof data.portfolioUrl === "string" ? data.portfolioUrl : null,
-    telegramHandle: typeof data.telegramHandle === "string" ? data.telegramHandle : null,
-    discordHandle: typeof data.discordHandle === "string" ? data.discordHandle : null,
     interests: normalizeStringArray(data.interests),
     experiences: Array.isArray(data.experiences)
       ? data.experiences.map(normalizeExperience)

@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { TimePicker } from "@/components/ui/time-picker"
+import { ImageUploader } from "@/components/events/image-uploader"
 import { INTEREST_AREAS, cn } from "@/lib/utils"
 
 const schema = z
@@ -402,12 +403,18 @@ export default function SubmitEventPage() {
               />
             </div>
 
-            {/* Image URL */}
-            <Input
-              label="Image URL (optional)"
-              placeholder="https://..."
-              error={errors.imageUrl?.message}
-              {...register("imageUrl")}
+            {/* Cover image — file upload to Supabase Storage. Falls back to
+                the neon date thumbnail on the feed card when left blank. */}
+            <Controller
+              name="imageUrl"
+              control={control}
+              defaultValue=""
+              render={({ field }) => (
+                <ImageUploader
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                />
+              )}
             />
 
             {serverError && (

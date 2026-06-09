@@ -31,7 +31,7 @@ export default function InternshipsPage() {
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<FilterTab>("all")
   const [search, setSearch] = useState("")
-  const [selectedArea, setSelectedArea] = useState<string>("All Areas")
+  const [selectedArea, setSelectedArea] = useState<string>("All Categories")
 
   useEffect(() => {
     fetch("/api/internships")
@@ -51,7 +51,7 @@ export default function InternshipsPage() {
     if (tab === "remote" && !item.isRemote) return false
     if (tab === "paid" && !item.isPaid) return false
 
-    if (selectedArea !== "All Areas") {
+    if (selectedArea !== "All Categories") {
       if (!item.tags.includes(selectedArea)) return false
     }
 
@@ -99,7 +99,7 @@ export default function InternshipsPage() {
                 onChange={(e) => setSelectedArea(e.target.value)}
                 className="appearance-none bg-bg-base border border-border rounded-xl pl-4 pr-9 py-2.5 text-sm text-text-secondary focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple/20 transition-all cursor-pointer"
               >
-                <option value="All Areas">All Areas</option>
+                <option value="All Categories">All Categories</option>
                 {INTEREST_AREAS.map((area) => (
                   <option key={area} value={area}>
                     {area}

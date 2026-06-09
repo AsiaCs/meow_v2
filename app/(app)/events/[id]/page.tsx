@@ -6,7 +6,6 @@ import { isSpecificEventUrl } from "@/lib/validators/specific-urls"
 import { safeExternalUrl } from "@/lib/url-helpers"
 import { ArrowLeft, MapPin, Monitor, CalendarDays, ExternalLink, Clock, Tag } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { CoordinatePanel } from "@/components/events/coordinate-panel"
 import { AddToCalendar } from "@/components/events/add-to-calendar"
 
 export const runtime = "nodejs"
@@ -234,11 +233,6 @@ export default async function EventDetailPage({
             isVirtual={event.isVirtual}
             registrationUrl={event.registrationUrl}
           />
-        </div>
-
-        {/* Event Logistics Matcher — share rides + housing with other attendees */}
-        <div className="mt-6">
-          <CoordinatePanel eventId={id} />
         </div>
       </div>
     </div>

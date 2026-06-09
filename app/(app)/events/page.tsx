@@ -533,7 +533,13 @@ export default function EventsPage() {
               />
               {!userLoc.position ? (
                 <button
-                  onClick={userLoc.request}
+                  onClick={() => {
+                    // One-click: requesting permission AND opting into the
+                    // Closest-to-me proximity filter happen together. The
+                    // user no longer has to click two buttons in sequence.
+                    setSortByDistance(true)
+                    userLoc.request()
+                  }}
                   disabled={userLoc.status === "loading"}
                   className={cn(
                     "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150",
