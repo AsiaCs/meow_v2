@@ -67,14 +67,14 @@ async function findEvent(id: string): Promise<ScrapedEvent | null> {
       .select("id, title, description, startDate, endDate, location, isVirtual, registrationUrl, imageUrl, tags, source, isFree")
       .eq("status", "APPROVED")
     if (Array.isArray(dbEvents)) {
+      // Match by real UUID OR URL hash. NO URL whitelist filter here — the
+      // whitelist gates which SCRAPED rows enter the listing; if a row is
+      // already in the DB with a matching ID, the user is entitled to its
+      // detail page regardless of what the URL looks like. Previously this
+      // line silently dropped legitimate hits (Partiful, custom domains)
+      // and the user landed on a 404.
       const match = (dbEvents as EventRow[]).find(
-        // Match by either real UUID (used for user submissions) OR URL hash
-        // (used for older scraper rows that hadn't yet adopted the DB id).
-        // Allow user-submitted events through even if their URL isn't on
-        // the strict scraper whitelist (lu.ma/eventbrite/meetup/etc).
-        (e) =>
-          (e.id === id || stableEventId(e.registrationUrl) === id) &&
-          (e.source === "user" || isSpecificEventUrl(e.registrationUrl)),
+        (e) => e.id === id || stableEventId(e.registrationUrl) === id,
       )
       if (match) {
         return {
