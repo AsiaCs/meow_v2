@@ -373,10 +373,7 @@ export default function ProfilePage() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div
-                  className="w-full h-full flex items-center justify-center text-xl font-bold text-white"
-                  style={{ background: "var(--gradient-brand)" }}
-                >
+                <div className="w-full h-full flex items-center justify-center font-display text-xl font-bold text-text-primary bg-bg-elevated border border-border-subtle">
                   {initial}
                 </div>
               )}
@@ -535,16 +532,11 @@ export default function ProfilePage() {
                   setShowAddForm(false)
                 }}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150",
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]",
                   activeTab === value
-                    ? "text-white"
-                    : "text-text-secondary hover:text-text-primary hover:bg-white/[0.04]"
+                    ? "bg-text-primary text-bg-base"
+                    : "text-text-secondary hover:text-text-primary hover:bg-white/[0.04]",
                 )}
-                style={
-                  activeTab === value
-                    ? { background: "var(--gradient-brand)" }
-                    : undefined
-                }
               >
                 <Icon size={14} strokeWidth={1.5} />
                 {label}

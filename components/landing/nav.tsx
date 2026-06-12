@@ -74,19 +74,20 @@ export default function LandingNav() {
             ))}
           </div>
 
-          {/* CTA */}
+          {/* CTA — Mobbin pattern: solid monochrome pill, no gradient, no glow. */}
           <div className="hidden md:flex ml-2">
             <Link
               href="/auth/signin"
-              className="relative inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-medium text-white overflow-hidden group"
-              style={{ background: "var(--gradient-brand)" }}
+              className="
+                inline-flex items-center gap-1.5 px-4 py-2 rounded-full
+                text-sm font-semibold
+                bg-text-primary text-bg-base
+                hover:bg-text-primary/90
+                transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]
+              "
             >
-              <motion.span
-                className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                style={{ background: "linear-gradient(135deg, #9d5af5, #f472b6)" }}
-              />
-              <span className="relative">Get Started</span>
-              <span className="relative text-white/80">→</span>
+              Get Started
+              <span aria-hidden>→</span>
             </Link>
           </div>
 
@@ -155,10 +156,9 @@ export default function LandingNav() {
                 <Link
                   href="/auth/signin"
                   onClick={() => setOpen(false)}
-                  className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-lg font-medium text-white"
-                  style={{ background: "var(--gradient-brand)" }}
+                  className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-lg font-semibold bg-text-primary text-bg-base hover:bg-text-primary/90 transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]"
                 >
-                  Get Started →
+                  Get Started <span aria-hidden>→</span>
                 </Link>
               </motion.div>
             </motion.div>

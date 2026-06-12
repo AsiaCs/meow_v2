@@ -70,26 +70,22 @@ function FeatureCard({ feature, index }: { feature: typeof features[0]; index: n
     <motion.div
       custom={index}
       variants={itemVariants}
-      whileHover={{ y: -4, transition: { type: "spring", stiffness: 300 } }}
-      className="rounded-3xl border border-white/[0.06] p-2 bg-white/[0.02] flex-1 min-w-0"
+      whileHover={{ y: -4, transition: { type: "spring", stiffness: 280, damping: 22 } }}
+      className="rounded-2xl border border-border-subtle bg-bg-card p-6 flex-1 min-w-0 shadow-[var(--shadow-card)] transition-[border-color,box-shadow] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:border-border-strong hover:shadow-[var(--shadow-card-hover)]"
     >
-      <div className="bg-bg-card rounded-[calc(1.5rem-0.5rem)] p-6 h-full flex flex-col">
-        {/* Icon + tag */}
+      <div className="h-full flex flex-col">
+        {/* Icon + tag — monochrome. Color-coded swatches replaced with a
+            hairline outlined glyph holder, and the tag becomes a tracked
+            uppercase eyebrow with no fill. */}
         <div className="flex items-start gap-4 mb-5">
-          <div
-            className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
-            style={{ background: feature.iconBg, border: `1px solid ${feature.borderGlow}` }}
-          >
-            <Icon size={20} strokeWidth={1.5} className={feature.iconColor} />
+          <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 border border-border-subtle bg-bg-elevated">
+            <Icon size={18} strokeWidth={1.5} className="text-text-primary" />
           </div>
-          <div>
-            <span
-              className="inline-block text-[10px] font-semibold tracking-widest uppercase px-2.5 py-1 rounded-full mb-1"
-              style={{ color: feature.tagColor, background: feature.iconBg }}
-            >
+          <div className="min-w-0">
+            <span className="inline-block text-[10px] font-semibold tracking-[0.22em] uppercase text-text-muted mb-1.5">
               {feature.tag}
             </span>
-            <h3 className="font-display text-lg font-semibold text-text-primary leading-snug">
+            <h3 className="font-display text-[18px] font-semibold text-text-primary leading-snug" style={{ letterSpacing: "-0.015em" }}>
               {feature.title}
             </h3>
           </div>
@@ -106,11 +102,10 @@ function FeatureCard({ feature, index }: { feature: typeof features[0]; index: n
             const BulletIcon = bullet.icon
             return (
               <li key={i} className="flex items-center gap-3">
-                <div className="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
-                  style={{ background: feature.iconBg }}>
-                  <BulletIcon size={12} strokeWidth={1.5} className={feature.iconColor} />
+                <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 border border-border-subtle">
+                  <BulletIcon size={11} strokeWidth={1.5} className="text-text-secondary" />
                 </div>
-                <span className="text-sm text-text-secondary">{bullet.text}</span>
+                <span className="text-[13px] text-text-secondary">{bullet.text}</span>
               </li>
             )
           })}
@@ -138,8 +133,7 @@ export default function Features() {
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
           >
-            <span className="inline-block text-xs font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full border border-purple/40 text-purple-light mb-5"
-              style={{ background: "rgba(124,58,237,0.1)" }}>
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-semibold tracking-[0.22em] uppercase border border-border-subtle text-text-secondary mb-6">
               Everything in one place
             </span>
           </motion.div>
@@ -149,10 +143,13 @@ export default function Features() {
             whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.7, delay: 0.08, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
-            className="font-display text-4xl md:text-5xl font-bold text-text-primary mb-5 tracking-tight"
+            className="font-display font-bold text-text-primary mb-5"
+            style={{ fontSize: "clamp(2rem, 4.5vw, 3.25rem)", lineHeight: 1.05, letterSpacing: "-0.03em" }}
           >
             Three ways to grow.{" "}
-            <span className="gradient-text">One platform.</span>
+            <span className="text-text-secondary font-light italic" style={{ letterSpacing: "-0.035em" }}>
+              One platform.
+            </span>
           </motion.h2>
 
           <motion.p

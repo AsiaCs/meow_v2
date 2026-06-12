@@ -145,8 +145,7 @@ export default function OnboardingPage() {
         </div>
         <div className="h-1.5 rounded-full bg-bg-elevated overflow-hidden">
           <motion.div
-            className="h-full rounded-full"
-            style={{ background: "var(--gradient-brand)" }}
+            className="h-full rounded-full bg-text-primary"
             animate={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
           />
@@ -181,12 +180,11 @@ export default function OnboardingPage() {
                       key={area}
                       onClick={() => toggleInterest(area)}
                       className={cn(
-                        "px-4 py-2 rounded-full text-sm font-medium border transition-all duration-150",
+                        "px-3 py-1.5 rounded-full text-[13px] font-medium border transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]",
                         active
-                          ? "text-white border-transparent"
-                          : "border-border text-text-secondary hover:border-border-strong hover:text-text-primary"
+                          ? "bg-text-primary text-bg-base border-transparent"
+                          : "border-border-subtle text-text-secondary hover:border-border-strong hover:text-text-primary",
                       )}
-                      style={active ? { background: "var(--gradient-brand)" } : undefined}
                     >
                       {area}
                     </button>

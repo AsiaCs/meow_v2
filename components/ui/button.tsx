@@ -21,24 +21,26 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
+    // Mobbin pattern: primary is solid monochrome (white on base), not a
+    // gradient brand wash. Symmetric padding scales across all sizes.
     const base =
-      "inline-flex items-center justify-center gap-2 font-medium rounded-full transition-all duration-150 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple/40"
+      "inline-flex items-center justify-center gap-2 font-semibold rounded-full transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
 
     const variants = {
       primary:
-        "text-white shadow-lg shadow-purple/20",
+        "bg-text-primary text-bg-base hover:bg-text-primary/90",
       ghost:
         "bg-transparent text-text-secondary hover:text-text-primary hover:bg-white/[0.04]",
       outline:
-        "border border-border-strong text-text-primary hover:bg-white/[0.04] bg-transparent",
+        "border border-border-subtle text-text-primary hover:border-border-strong bg-transparent",
       danger:
         "bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20",
     }
 
     const sizes = {
       sm: "px-3 py-1.5 text-xs",
-      md: "px-5 py-2.5 text-sm",
-      lg: "px-7 py-3.5 text-base",
+      md: "px-5 py-2.5 text-[13px]",
+      lg: "px-6 py-3 text-[14px]",
     }
 
     return (
@@ -46,11 +48,6 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || loading}
         className={cn(base, variants[variant], sizes[size], className)}
-        style={
-          variant === "primary"
-            ? { background: "var(--gradient-brand)" }
-            : undefined
-        }
         {...props}
       >
         {loading && <Loader2 size={14} className="animate-spin" />}

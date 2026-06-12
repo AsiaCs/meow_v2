@@ -45,16 +45,11 @@ function NavLink({
     <Link
       href={href}
       className={cn(
-        "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150",
+        "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]",
         active
-          ? "text-white"
-          : "text-text-secondary hover:text-text-primary hover:bg-white/[0.04]"
+          ? "bg-text-primary text-bg-base"
+          : "text-text-secondary hover:text-text-primary hover:bg-white/[0.04]",
       )}
-      style={
-        active
-          ? { background: "var(--gradient-brand)" }
-          : undefined
-      }
     >
       <Icon size={18} strokeWidth={1.5} />
       {label}

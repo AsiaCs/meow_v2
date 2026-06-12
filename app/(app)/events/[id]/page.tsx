@@ -208,8 +208,7 @@ export default async function EventDetailPage({
               href={safeRegistrationUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl text-white font-semibold text-base hover:opacity-90 active:scale-[0.98] transition-all"
-              style={{ background: "var(--gradient-brand)" }}
+              className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl bg-text-primary text-bg-base font-semibold text-base hover:bg-text-primary/90 active:scale-[0.98] transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]"
             >
               RSVP / Register
               <ExternalLink size={16} strokeWidth={1.5} />

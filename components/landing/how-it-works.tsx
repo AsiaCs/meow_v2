@@ -69,8 +69,7 @@ export default function HowItWorks() {
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
           >
-            <span className="inline-block text-xs font-semibold tracking-widest uppercase px-4 py-1.5 rounded-full border border-purple/40 text-purple-light mb-5"
-              style={{ background: "rgba(124,58,237,0.1)" }}>
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-semibold tracking-[0.22em] uppercase border border-border-subtle text-text-secondary mb-6">
               How it works
             </span>
           </motion.div>
@@ -80,10 +79,13 @@ export default function HowItWorks() {
             whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.7, delay: 0.08, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
-            className="font-display text-4xl md:text-5xl font-bold text-text-primary mb-5 tracking-tight"
+            className="font-display font-bold text-text-primary mb-5"
+            style={{ fontSize: "clamp(2rem, 4.5vw, 3.25rem)", lineHeight: 1.05, letterSpacing: "-0.03em" }}
           >
             Up and running in{" "}
-            <span className="gradient-text">three steps.</span>
+            <span className="text-text-secondary font-light italic" style={{ letterSpacing: "-0.035em" }}>
+              three steps.
+            </span>
           </motion.h2>
 
           <motion.p
@@ -184,15 +186,17 @@ export default function HowItWorks() {
         >
           <motion.a
             href="/auth/signin"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
-            className="inline-flex items-center gap-3 px-8 py-4 rounded-full text-base font-semibold text-white shadow-[0_0_40px_rgba(124,58,237,0.3)]"
-            style={{ background: "var(--gradient-brand)" }}
+            whileTap={{ scale: 0.98 }}
+            className="
+              inline-flex items-center gap-2 px-6 py-3 rounded-full
+              text-[14px] font-semibold
+              bg-text-primary text-bg-base
+              hover:bg-text-primary/90
+              transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]
+            "
           >
             Get started for free
-            <span className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center">
-              <ExternalLink size={13} strokeWidth={2} />
-            </span>
+            <ExternalLink size={14} strokeWidth={2} />
           </motion.a>
         </motion.div>
       </div>

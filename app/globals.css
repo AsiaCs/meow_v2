@@ -149,11 +149,13 @@ h1, h2, h3 {
   letter-spacing: -0.02em;
 }
 
+/* The gradient-text utility is intentionally neutralized. The Mobbin pass
+   demands flat type contrast — any straggler usage now renders as plain
+   secondary text instead of a violet/pink wash. */
 .gradient-text {
-  background: var(--gradient-brand);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--color-text-secondary);
+  font-weight: 300;
+  font-style: italic;
 }
 
 /* Focus rings — accent border + diffuse glow, never the OS default */

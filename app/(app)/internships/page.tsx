@@ -121,16 +121,11 @@ export default function InternshipsPage() {
                 key={t.value}
                 onClick={() => setTab(t.value)}
                 className={cn(
-                  "px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-150",
+                  "px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]",
                   tab === t.value
-                    ? "text-white"
-                    : "text-text-secondary hover:text-text-primary hover:bg-white/[0.04]"
+                    ? "bg-text-primary text-bg-base"
+                    : "text-text-secondary hover:text-text-primary hover:bg-white/[0.04]",
                 )}
-                style={
-                  tab === t.value
-                    ? { background: "var(--gradient-brand)" }
-                    : undefined
-                }
               >
                 {t.label}
               </button>
