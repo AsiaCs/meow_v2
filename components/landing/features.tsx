@@ -126,7 +126,7 @@ export default function Features() {
       {/* Subtle background glow */}
       <div
         className="absolute inset-0 pointer-events-none"
-        style={{ background: "radial-gradient(ellipse 70% 40% at 50% 50%, rgba(124,58,237,0.06), transparent)" }}
+        style={{ background: "transparent" }}
       />
 
       <div className="max-w-6xl mx-auto relative z-10">

@@ -90,27 +90,10 @@ function InternshipCard() {
 export default function Hero() {
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center pt-32 pb-24 px-4 overflow-hidden">
-      {/* Background radial glow */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{ background: "radial-gradient(ellipse 60% 50% at 50% 0%, rgba(124,58,237,0.25), transparent)" }}
-      />
-
-      {/* Animated orb */}
-      <motion.div
-        animate={{ y: [0, -20, 0], scale: [1, 1.04, 1] }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-[-10%] left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full pointer-events-none opacity-30"
-        style={{ background: "radial-gradient(circle, rgba(124,58,237,0.5) 0%, rgba(236,72,153,0.3) 50%, transparent 70%)", filter: "blur(30px)" }}
-      />
-
-      {/* Second subtle orb */}
-      <motion.div
-        animate={{ y: [0, 16, 0], x: [0, 12, 0] }}
-        transition={{ duration: 11, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-        className="absolute top-[20%] right-[10%] w-72 h-72 rounded-full pointer-events-none opacity-15"
-        style={{ background: "radial-gradient(circle, rgba(236,72,153,0.6), transparent 70%)", filter: "blur(48px)" }}
-      />
+      {/* Mobbin-grade hero: structure carries the section, not decoration.
+          The decorative violet/pink blobs and animated orbs have been removed
+          deliberately — Mobbin establishes premium quality with composition
+          and typography, never with floating ambient lights. */}
 
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center text-center max-w-4xl mx-auto">

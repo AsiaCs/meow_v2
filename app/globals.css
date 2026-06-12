@@ -47,7 +47,7 @@
      for headings only — body uses Jakarta everywhere.
      ─────────────────────────────────────────────────────────────── */
   --font-sans: var(--font-jakarta), "Plus Jakarta Sans", system-ui, sans-serif;
-  --font-display: var(--font-sora), "Sora", system-ui, sans-serif;
+  --font-display: var(--font-urbanist), "Urbanist", system-ui, sans-serif;
 }
 
 :root {
@@ -70,7 +70,7 @@
   --shadow-card-hover:
     0 1px 0 rgba(255, 255, 255, 0.06) inset,
     0 18px 40px -16px rgba(0, 0, 0, 0.7),
-    0 0 0 1px rgba(168, 132, 255, 0.18);
+    0 0 0 1px rgba(255, 255, 255, 0.10);
   --shadow-elevated:
     0 1px 0 rgba(255, 255, 255, 0.04) inset,
     0 30px 60px -20px rgba(0, 0, 0, 0.75);

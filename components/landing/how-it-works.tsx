@@ -60,12 +60,6 @@ const itemVariants = {
 export default function HowItWorks() {
   return (
     <section id="how-it-works" className="py-32 px-4 relative">
-      {/* Background */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{ background: "radial-gradient(ellipse 60% 50% at 50% 100%, rgba(124,58,237,0.07), transparent)" }}
-      />
-
       <div className="max-w-6xl mx-auto relative z-10">
         {/* Header */}
         <div className="text-center mb-20">

@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { Plus_Jakarta_Sans, Sora, Poppins } from "next/font/google"
+import { Plus_Jakarta_Sans, Urbanist, Poppins } from "next/font/google"
 import "./globals.css"
 
 const jakarta = Plus_Jakarta_Sans({
@@ -8,9 +8,14 @@ const jakarta = Plus_Jakarta_Sans({
   display: "swap",
 })
 
-const sora = Sora({
+// Urbanist replaces Sora as the display face — same geometric grotesk family,
+// tighter apertures, the Mobbin-style high-contrast look. Loaded across the
+// weights actually used (regular through extrabold) so the date-thumb glyph
+// and h1/h2 headings render correctly at production weight.
+const urbanist = Urbanist({
   subsets: ["latin"],
-  variable: "--font-sora",
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-urbanist",
   display: "swap",
 })
 
@@ -57,7 +62,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${jakarta.variable} ${sora.variable} ${poppins.variable}`}>
+    <html lang="en" className={`${jakarta.variable} ${urbanist.variable} ${poppins.variable}`}>
       <body className="min-h-dvh bg-bg-base text-text-primary antialiased">
         {children}
       </body>

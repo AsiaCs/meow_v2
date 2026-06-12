@@ -422,23 +422,20 @@ export default function EventsPage() {
               />
             </div>
 
-            {/* Tabs */}
+            {/* Tabs — Mobbin pattern: solid monochrome highlight, no gradient.
+                Active state is a sharp white pill that reads as a hard
+                state change, not a vibe shift. */}
             <div className="flex gap-1">
               {TABS.map((t) => (
                 <button
                   key={t.value}
                   onClick={() => setTab(t.value)}
                   className={cn(
-                    "px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-150",
+                    "px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors duration-150 ease-[cubic-bezier(0.16,1,0.3,1)]",
                     tab === t.value
-                      ? "text-white"
-                      : "text-text-secondary hover:text-text-primary hover:bg-white/[0.04]"
+                      ? "bg-text-primary text-bg-base"
+                      : "text-text-secondary hover:text-text-primary hover:bg-white/[0.04]",
                   )}
-                  style={
-                    tab === t.value
-                      ? { background: "var(--gradient-brand)" }
-                      : undefined
-                  }
                 >
                   {t.label}
                 </button>
@@ -454,8 +451,8 @@ export default function EventsPage() {
                   className={cn(
                     "flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150",
                     selectedCity === "all"
-                      ? "border-purple bg-purple/15 text-purple-light"
-                      : "border-border text-text-muted hover:border-border-strong hover:text-text-secondary"
+                      ? "border-transparent bg-text-primary text-bg-base"
+                      : "border-border-subtle text-text-secondary hover:border-border-strong hover:text-text-primary"
                   )}
                 >
                   <Globe size={11} strokeWidth={1.5} />
@@ -464,10 +461,10 @@ export default function EventsPage() {
                 <button
                   onClick={() => { setSelectedCity("virtual"); setAutoWidened(false) }}
                   className={cn(
-                    "px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150",
+                    "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors duration-150 ease-[cubic-bezier(0.16,1,0.3,1)]",
                     selectedCity === "virtual"
-                      ? "border-purple bg-purple/15 text-purple-light"
-                      : "border-border text-text-muted hover:border-border-strong hover:text-text-secondary"
+                      ? "border-transparent bg-text-primary text-bg-base"
+                      : "border-border-subtle text-text-secondary hover:border-border-strong hover:text-text-primary"
                   )}
                 >
                   Online
@@ -477,7 +474,7 @@ export default function EventsPage() {
                     key={city}
                     onClick={() => { setSelectedCity(city); setAutoWidened(false) }}
                     className={cn(
-                      "px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150",
+                      "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors duration-150 ease-[cubic-bezier(0.16,1,0.3,1)]",
                       selectedCity === city
                         ? "border-purple bg-purple/15 text-purple-light"
                         : "border-border text-text-muted hover:border-border-strong hover:text-text-secondary"
@@ -501,7 +498,7 @@ export default function EventsPage() {
                     key={cat}
                     onClick={() => toggleCategory(cat)}
                     className={cn(
-                      "px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150",
+                      "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors duration-150 ease-[cubic-bezier(0.16,1,0.3,1)]",
                       active
                         ? "border-purple bg-purple/15 text-purple-light"
                         : "border-border text-text-muted hover:border-border-strong hover:text-text-secondary"
@@ -542,8 +539,9 @@ export default function EventsPage() {
                   }}
                   disabled={userLoc.status === "loading"}
                   className={cn(
-                    "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150",
-                    "border-purple/40 text-purple-light hover:bg-purple/10 disabled:opacity-60",
+                    "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium",
+                    "bg-text-primary text-bg-base hover:bg-text-primary/90 disabled:opacity-60",
+                    "transition-colors duration-150 ease-[cubic-bezier(0.16,1,0.3,1)]",
                   )}
                 >
                   {userLoc.status === "loading" ? (
@@ -566,10 +564,10 @@ export default function EventsPage() {
                         : "Sort and cap by distance from your location"
                     }
                     className={cn(
-                      "px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150",
+                      "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors duration-150 ease-[cubic-bezier(0.16,1,0.3,1)]",
                       sortByDistance
-                        ? "border-purple bg-purple/15 text-purple-light"
-                        : "border-border text-text-muted hover:border-border-strong hover:text-text-secondary",
+                        ? "border-transparent bg-text-primary text-bg-base"
+                        : "border-border-subtle text-text-secondary hover:border-border-strong hover:text-text-primary",
                     )}
                   >
                     Closest to me
@@ -583,7 +581,7 @@ export default function EventsPage() {
                       onClick={() => setRadiusMiles((v) => (v === mi ? null : mi))}
                       aria-pressed={radiusMiles === mi}
                       className={cn(
-                        "px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150",
+                        "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors duration-150 ease-[cubic-bezier(0.16,1,0.3,1)]",
                         radiusMiles === mi
                           ? "border-purple bg-purple/15 text-purple-light"
                           : "border-border text-text-muted hover:border-border-strong hover:text-text-secondary",
