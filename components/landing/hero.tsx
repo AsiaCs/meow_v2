@@ -64,10 +64,19 @@ function MockInternshipCard() {
   return (
     <div className="w-[280px] rounded-2xl border border-border-subtle bg-bg-card p-4 shadow-[var(--shadow-card)]">
       <div className="flex items-start gap-3">
-        {/* Monogram mark instead of a colored swatch. Reads as a placeholder
-            for a real company logo without flashing a brand color. */}
-        <div className="w-[64px] h-[64px] rounded-xl border border-border-subtle bg-bg-elevated flex items-center justify-center flex-shrink-0">
-          <span className="font-display text-[22px] font-bold text-text-secondary tracking-tight">S</span>
+        {/* Refined company mark — display-font monogram set in negative
+            space, sized like a real wordmark capital, on a quietly
+            engineered plate. Hairline ring inset hints at depth. */}
+        <div
+          className="w-[64px] h-[64px] rounded-xl bg-bg-elevated flex items-center justify-center flex-shrink-0"
+          style={{ boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06), inset 0 1px 0 rgba(255,255,255,0.04)" }}
+        >
+          <span
+            className="font-display font-bold text-text-primary"
+            style={{ fontSize: "26px", letterSpacing: "-0.05em", lineHeight: 1 }}
+          >
+            S
+          </span>
         </div>
         <div className="min-w-0 flex flex-col justify-center gap-1">
           <p className="text-[10px] uppercase tracking-[0.16em] text-text-muted font-medium">Summer 2026 · Remote</p>
@@ -87,7 +96,7 @@ function MockInternshipCard() {
 
 export default function Hero() {
   return (
-    <section className="relative min-h-[88vh] flex flex-col items-center justify-center pt-32 pb-24 px-4 overflow-hidden">
+    <section className="hero-grid relative min-h-[88vh] flex flex-col items-center justify-center pt-32 pb-24 px-4 overflow-hidden">
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center text-center max-w-[920px] mx-auto">
         {/* Eyebrow — monochrome, tracked, no pulse dot, no violet halo. */}
@@ -141,19 +150,24 @@ export default function Hero() {
         >
           <Link
             href="/auth/signin"
+            style={{
+              boxShadow:
+                "inset 0 1px 0 rgba(255,255,255,0.5), inset 0 0 0 1px rgba(255,255,255,0.06), 0 1px 0 rgba(0,0,0,0.25), 0 8px 24px -10px rgba(0,0,0,0.4)",
+            }}
             className="
               group inline-flex items-center gap-2 px-6 py-3 rounded-full
               text-[14px] font-semibold
               bg-text-primary text-bg-base
-              hover:bg-text-primary/90
-              transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]
+              hover:bg-text-primary/95
+              active:scale-[0.98]
+              transition-[transform,background-color] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]
             "
           >
             Start for free
             <ArrowRight
               size={15}
-              strokeWidth={2}
-              className="transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-0.5"
+              strokeWidth={2.25}
+              className="transition-transform duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-0.5"
             />
           </Link>
 
@@ -171,16 +185,21 @@ export default function Hero() {
           </Link>
         </motion.div>
 
-        {/* Quiet social proof — one line. No rainbow avatar stack. */}
-        <motion.p
+        {/* Quiet social proof — a keyline + tracked-uppercase line.
+            Reads as editorial colophon, not as decoration. */}
+        <motion.div
           custom={4}
           variants={fadeUp}
           initial="hidden"
           animate="visible"
-          className="mt-12 text-[11px] uppercase tracking-[0.22em] text-text-muted"
+          className="mt-14 flex items-center gap-4 text-text-muted"
         >
-          Trusted by 500+ students at top campuses
-        </motion.p>
+          <span className="h-px w-10 bg-border-strong" />
+          <span className="text-[11px] uppercase tracking-[0.24em] font-medium">
+            Trusted by 500+ students at top campuses
+          </span>
+          <span className="h-px w-10 bg-border-strong" />
+        </motion.div>
       </div>
 
       {/* Honest preview cards — same shape as the real product, monochrome. */}

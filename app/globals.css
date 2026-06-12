@@ -100,7 +100,13 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  font-feature-settings: "ss01", "cv11";
+  font-feature-settings: "ss01", "cv11", "ss02", "calt";
+  font-variant-ligatures: common-ligatures;
+}
+
+/* Numbers everywhere align to the grid — no jitter between rows. */
+:where(time, .tabular-nums, [data-numeric]) {
+  font-variant-numeric: tabular-nums lining-nums;
 }
 
 /* ─────────────────────────────────────────────────────────────────
@@ -156,6 +162,70 @@ h1, h2, h3 {
   color: var(--color-text-secondary);
   font-weight: 300;
   font-style: italic;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   Editorial hairline grid — vertical rules every 88px at 2.5% alpha.
+   Sits fixed behind the content like printed-page guides. Costs zero
+   layout, GPU-composited, and almost invisible — you feel structure
+   without seeing decoration. The hero opts in via .hero-grid.
+   ───────────────────────────────────────────────────────────────── */
+.hero-grid {
+  position: relative;
+  isolation: isolate;
+}
+.hero-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 88px 100%;
+  mask-image: radial-gradient(ellipse 70% 80% at 50% 40%, #000 40%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 80% at 50% 40%, #000 40%, transparent 100%);
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   Section divider — Mobbin signature: a hairline rule with a single
+   centered dot. Reads as editorial typesetting, not a CSS shape.
+   ───────────────────────────────────────────────────────────────── */
+.rule-dot {
+  position: relative;
+  height: 1px;
+  background: var(--color-border-subtle);
+}
+.rule-dot::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--color-text-faint);
+  transform: translate(-50%, -50%);
+}
+
+/* Subtle text-link underline that draws in on hover */
+.link-underline {
+  position: relative;
+}
+.link-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 1px;
+  background: currentColor;
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 360ms var(--ease-out-expo);
+}
+.link-underline:hover::after {
+  transform: scaleX(1);
 }
 
 /* Focus rings — accent border + diffuse glow, never the OS default */
