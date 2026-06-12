@@ -1,38 +1,85 @@
 @import "tailwindcss";
 
 @theme {
-  /* Brand colors */
+  /* ───────────────────────────────────────────────────────────────
+     BRAND — jewel-toned violet, never default Tailwind purple.
+     The dim and ink tones widen the palette so we can tint without
+     reaching for the loud `--color-purple` on every surface.
+     ─────────────────────────────────────────────────────────────── */
   --color-purple: #7c3aed;
-  --color-purple-light: #9d5af5;
+  --color-purple-light: #a884ff;
   --color-purple-dim: #4c1d95;
+  --color-purple-ink: #2a1854;
   --color-pink: #ec4899;
   --color-pink-light: #f472b6;
 
-  /* Background scale */
-  --color-bg-base: #080810;
-  --color-bg-surface: #0f0f1a;
-  --color-bg-card: #13131f;
-  --color-bg-elevated: #1a1a2e;
+  /* ───────────────────────────────────────────────────────────────
+     DEPTH SCALE — five tiers of midnight obsidian → slate ink, each
+     with a barely-perceptible violet undertone so the whole UI reads
+     as one continuous material instead of stacked gray rectangles.
+     ─────────────────────────────────────────────────────────────── */
+  --color-bg-base: #070713;          /* master canvas */
+  --color-bg-surface: #0c0c1a;       /* sticky nav, sidebars, search blocks */
+  --color-bg-card: #11111f;          /* content cards */
+  --color-bg-elevated: #16162a;      /* modals, dropdowns, popovers */
+  --color-bg-veil: rgba(12, 12, 26, 0.78); /* glass nav over content */
 
-  /* Text scale */
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #8b8ba7;
-  --color-text-muted: #4a4a6a;
+  /* ───────────────────────────────────────────────────────────────
+     TEXT SCALE — only four tiers, deliberately. More tiers = mush.
+     ─────────────────────────────────────────────────────────────── */
+  --color-text-primary: #f5f5fa;
+  --color-text-secondary: #9a9ab5;
+  --color-text-muted: #5a5a78;
+  --color-text-faint: #3b3b54;
 
-  /* Border */
-  --color-border: rgba(255, 255, 255, 0.06);
-  --color-border-strong: rgba(255, 255, 255, 0.12);
+  /* ───────────────────────────────────────────────────────────────
+     BORDERS — every line is alpha-on-white. Solid hex borders are
+     banned; they create the "AI slop" boxiness the user called out.
+     ─────────────────────────────────────────────────────────────── */
+  --color-border: rgba(255, 255, 255, 0.05);          /* default hairline */
+  --color-border-subtle: rgba(255, 255, 255, 0.07);   /* card edges */
+  --color-border-strong: rgba(255, 255, 255, 0.12);   /* hover lift */
+  --color-border-accent: rgba(168, 132, 255, 0.22);   /* focus / selected */
 
-  /* Fonts */
-  --font-sans: var(--font-jakarta), "Plus Jakarta Sans", sans-serif;
-  --font-display: var(--font-sora), "Sora", sans-serif;
+  /* ───────────────────────────────────────────────────────────────
+     TYPOGRAPHY — Sora for display, Jakarta for body. Already an
+     elegant high-contrast pair; we keep it but reserve `display`
+     for headings only — body uses Jakarta everywhere.
+     ─────────────────────────────────────────────────────────────── */
+  --font-sans: var(--font-jakarta), "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-display: var(--font-sora), "Sora", system-ui, sans-serif;
 }
 
 :root {
-  --gradient-brand: linear-gradient(135deg, #7c3aed, #ec4899);
-  --gradient-glow: radial-gradient(ellipse 80% 80% at 50% -20%, rgba(124, 58, 237, 0.3), transparent);
-  --ease-premium: cubic-bezier(0.32, 0.72, 0, 1);
+  /* Gradients reserved for hero/marketing surfaces. Never used on cards. */
+  --gradient-brand: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+  --gradient-glow: radial-gradient(ellipse 80% 80% at 50% -20%, rgba(124, 58, 237, 0.28), transparent 70%);
+
+  /* Metallic stroke — used by DateThumb and any "engineered" surface. */
+  --gradient-metal: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.22) 0%,
+    rgba(168, 132, 255, 0.18) 45%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+
+  /* Ambient shadows — soft, diffused, low-saturation. No drop-shadow harshness. */
+  --shadow-card:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 6px 18px -10px rgba(0, 0, 0, 0.55);
+  --shadow-card-hover:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 18px 40px -16px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(168, 132, 255, 0.18);
+  --shadow-elevated:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 30px 60px -20px rgba(0, 0, 0, 0.75);
+
+  /* Easings — strong, intentional. The default CSS `ease` is banned in components. */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quart: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out-quart: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -42,51 +89,78 @@
 
 html {
   scroll-behavior: smooth;
+  /* Prevent iOS Safari rubber-band from showing the wrong color behind safe areas */
+  background-color: #070713;
 }
 
 body {
-  background-color: #080810;
-  color: #ffffff;
+  background-color: #070713;
+  color: var(--color-text-primary);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "ss01", "cv11";
 }
 
-/* Grain overlay */
+/* ─────────────────────────────────────────────────────────────────
+   Fixed micro-grain overlay — gives the entire UI a textured, filmic
+   surface so flat dark rectangles never look like flat dark rectangles.
+   Critical: `position: fixed` keeps this on the GPU compositor layer,
+   not the scrolling content (per the perf rules in our skills).
+   ───────────────────────────────────────────────────────────────── */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: 9999;
   pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
   background-repeat: repeat;
   background-size: 128px 128px;
-  opacity: 0.4;
+  opacity: 0.38;
+  mix-blend-mode: overlay;
 }
 
-/* Scrollbar */
+/* Scrollbar — narrow, low-contrast, matches surface depth */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0f0f1a;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #4a4a6a;
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 3px;
 }
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
 
-/* Selection */
 ::selection {
-  background: rgba(124, 58, 237, 0.3);
+  background: rgba(168, 132, 255, 0.32);
   color: white;
 }
 
-/* Gradient text utility */
+/* Headings always pick up display font without per-element typing */
+h1, h2, h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
 .gradient-text {
   background: var(--gradient-brand);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* Focus rings — accent border + diffuse glow, never the OS default */
+:where(button, a, [role="button"], input, select, textarea):focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 1px var(--color-bg-base),
+    0 0 0 3px var(--color-border-accent);
+  border-radius: 8px;
 }

@@ -3,8 +3,8 @@
 import { useState } from "react"
 import Link from "next/link"
 import { MapPin, Monitor, Clock, Navigation } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 import { formatMiles } from "@/lib/geo/haversine"
+import { DateThumb } from "./date-thumb"
 
 interface EventCardProps {
   id: string
@@ -41,66 +41,6 @@ function formatTime(date: Date | string): string {
   return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
 }
 
-// Stylized date-block fallback for events with no cover image. Matches the
-// app's dark-purple neon aesthetic: deep-violet base, glowing inner border,
-// month abbreviation up top, day glyph below in a large heavy display font.
-function DateThumb({ startDate, title }: { startDate: Date | string; title: string }) {
-  const d = typeof startDate === "string" ? new Date(startDate) : startDate
-  const valid = !isNaN(d.getTime())
-  const month = valid ? d.toLocaleDateString("en-US", { month: "short" }).toUpperCase() : ""
-  const day = valid ? d.getDate() : ""
-
-  if (!valid) {
-    // No date and no image — deterministic gradient based on title so each
-    // event still gets a distinct visual fingerprint.
-    let h = 0
-    for (let i = 0; i < title.length; i++) h = ((h << 5) - h) + title.charCodeAt(i)
-    const hue = Math.abs(h) % 360
-    return (
-      <div
-        className="w-full h-full"
-        style={{
-          background: `linear-gradient(135deg, hsl(${hue},70%,55%) 0%, hsl(${(hue + 60) % 360},70%,45%) 100%)`,
-        }}
-      />
-    )
-  }
-
-  return (
-    <div
-      className="relative w-full h-full flex flex-col items-center justify-center select-none"
-      style={{
-        background: "linear-gradient(160deg, #1A102F 0%, #0C0820 70%, #050310 100%)",
-        // Inner neon-purple border for the glow rim
-        boxShadow:
-          "inset 0 0 0 1px rgba(168,85,247,0.45), inset 0 0 18px rgba(168,85,247,0.18), 0 0 24px rgba(168,85,247,0.08)",
-      }}
-    >
-      {/* Subtle radial glow behind the numerals */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        aria-hidden="true"
-        style={{
-          background:
-            "radial-gradient(60% 50% at 50% 55%, rgba(168,85,247,0.22), transparent 70%)",
-        }}
-      />
-      <div className="relative font-display font-bold text-[10px] tracking-[0.18em] text-purple-light/85">
-        {month}
-      </div>
-      <div
-        className="relative font-display font-extrabold text-white leading-none mt-1"
-        style={{
-          fontSize: "2.25rem",
-          textShadow: "0 0 14px rgba(168,85,247,0.55)",
-        }}
-      >
-        {day}
-      </div>
-    </div>
-  )
-}
-
 export function EventCard({
   id,
   title,
@@ -111,67 +51,99 @@ export function EventCard({
   source,
   distanceMi,
 }: EventCardProps) {
-  // Track image-load failure so a 404 cover URL also reveals the date block,
-  // not just rows where imageUrl was null from the API.
   const [imgFailed, setImgFailed] = useState(false)
   const showImage = imageUrl && !imgFailed
 
   return (
     <Link
       href={`/events/${id}`}
-      className="group flex items-stretch gap-4 p-3 rounded-2xl hover:bg-white/[0.03] transition-colors"
+      className="
+        group relative flex items-stretch gap-4 p-4
+        rounded-2xl border border-border-subtle bg-bg-card
+        shadow-[var(--shadow-card)]
+        transition-[transform,box-shadow,border-color] duration-300
+        ease-[cubic-bezier(0.16,1,0.3,1)]
+        hover:-translate-y-0.5 hover:border-border-strong
+        hover:shadow-[var(--shadow-card-hover)]
+        focus-visible:-translate-y-0.5
+      "
     >
-      {/* Thumbnail (left) — Luma uses a square thumb, so we do too */}
-      <div className="w-[88px] h-[88px] sm:w-[112px] sm:h-[112px] rounded-xl overflow-hidden flex-shrink-0 border border-white/[0.06]">
+      {/* Thumbnail */}
+      <div
+        className={`
+          w-[88px] h-[88px] sm:w-[112px] sm:h-[112px]
+          rounded-xl overflow-hidden flex-shrink-0
+          ${showImage ? "border border-border-subtle" : ""}
+        `}
+      >
         {showImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={imageUrl}
             alt={title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.04]"
             onError={() => setImgFailed(true)}
             loading="lazy"
           />
         ) : (
-          <DateThumb startDate={startDate} title={title} />
+          <DateThumb startDate={startDate} title={title} className="rounded-xl" />
         )}
       </div>
 
-      {/* Content (right) */}
+      {/* Content */}
       <div className="flex-1 min-w-0 flex flex-col justify-center gap-1.5">
-        {/* Time */}
-        <div className="flex items-center gap-1.5 text-xs text-text-muted">
-          <Clock size={12} strokeWidth={1.5} />
+        {/* Time eyebrow */}
+        <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.16em] text-text-muted font-medium">
+          <Clock size={11} strokeWidth={1.75} />
           {formatTime(startDate)}
         </div>
 
         {/* Title */}
-        <h3 className="text-text-primary font-semibold text-[15px] leading-snug line-clamp-2 group-hover:text-purple-light transition-colors">
+        <h3
+          className="
+            font-display text-text-primary font-semibold
+            text-[15px] sm:text-[16px] leading-snug line-clamp-2
+            transition-colors duration-300
+            group-hover:text-purple-light
+          "
+          style={{ letterSpacing: "-0.01em" }}
+        >
           {title}
         </h3>
 
-        {/* Meta row */}
-        <div className="flex items-center gap-3 text-xs text-text-secondary flex-wrap">
+        {/* Meta row — monochrome by default, distance is the only accent */}
+        <div className="flex items-center gap-x-3 gap-y-1 text-xs text-text-secondary flex-wrap mt-0.5">
           {isVirtual ? (
-            <span className="inline-flex items-center gap-1">
+            <span className="inline-flex items-center gap-1.5">
               <Monitor size={12} strokeWidth={1.5} />
               Virtual
             </span>
           ) : location ? (
-            <span className="inline-flex items-center gap-1 truncate max-w-[200px]">
+            <span className="inline-flex items-center gap-1.5 truncate max-w-[220px]">
               <MapPin size={12} strokeWidth={1.5} className="flex-shrink-0" />
               <span className="truncate">{location}</span>
             </span>
           ) : null}
+
           {!isVirtual && typeof distanceMi === "number" && (
-            <span className="inline-flex items-center gap-1 text-purple-light font-medium">
+            <span className="inline-flex items-center gap-1.5 text-purple-light/90">
               <Navigation size={11} strokeWidth={1.75} />
               {formatMiles(distanceMi)} away
             </span>
           )}
-          <Badge variant="gray" className="text-[10px] uppercase tracking-wider">
+
+          {/* Source — uniform monochrome pill outline, no colored fill */}
+          <span
+            className="
+              inline-flex items-center rounded-full
+              px-2 py-[2px] text-[10px] font-medium uppercase tracking-[0.14em]
+              text-text-muted border border-border-subtle
+              transition-colors duration-300
+              group-hover:text-text-secondary group-hover:border-border-strong
+            "
+          >
             {getSourceLabel(source)}
-          </Badge>
+          </span>
         </div>
       </div>
     </Link>
