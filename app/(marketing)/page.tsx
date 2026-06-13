@@ -2,6 +2,7 @@ import LandingNav from "@/components/landing/nav"
 import Hero from "@/components/landing/hero"
 import Features from "@/components/landing/features"
 import HowItWorks from "@/components/landing/how-it-works"
+import ClosingCta from "@/components/landing/closing-cta"
 import Footer from "@/components/landing/footer"
 
 // Section divider — Mobbin signature hairline with a centered dot.
@@ -24,6 +25,8 @@ export default function LandingPage() {
       <Features />
       <RuleDot />
       <HowItWorks />
+      <RuleDot />
+      <ClosingCta />
       <Footer />
     </main>
   )

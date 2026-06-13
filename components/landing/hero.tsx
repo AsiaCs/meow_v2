@@ -96,33 +96,56 @@ function MockInternshipCard() {
 
 export default function Hero() {
   return (
-    <section className="hero-grid relative min-h-[88vh] flex flex-col items-center justify-center pt-32 pb-24 px-4 overflow-hidden">
+    <section className="hero-grid relative min-h-[94vh] flex flex-col items-center justify-center pt-32 pb-20 px-4 overflow-hidden">
+      {/* Archive/dossier spine — second-read moment.
+          Top-left index reads as editorial slug, anchoring the page in a
+          documentary register instead of a sales-y register. */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1, duration: 0.8 }}
+        className="absolute top-28 left-6 sm:left-10 hidden md:flex flex-col gap-1 text-text-faint pointer-events-none select-none z-10"
+      >
+        <span className="text-[10px] tracking-[0.32em] uppercase font-medium tabular-nums">№ 001 / Index</span>
+        <span className="text-[10px] tracking-[0.24em] uppercase tabular-nums">Vol. 06 · 2026</span>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1, duration: 0.8 }}
+        className="absolute top-28 right-6 sm:right-10 hidden md:block text-text-faint pointer-events-none select-none z-10 text-right"
+      >
+        <span className="text-[10px] tracking-[0.32em] uppercase font-medium">Discover · Connect · Apply</span>
+      </motion.div>
+
       {/* Content */}
-      <div className="relative z-10 flex flex-col items-center text-center max-w-[920px] mx-auto">
+      <div className="relative z-10 flex flex-col items-center text-center max-w-[1100px] mx-auto">
         {/* Eyebrow — monochrome, tracked, no pulse dot, no violet halo. */}
         <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible">
-          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-semibold tracking-[0.22em] uppercase border border-border-subtle text-text-secondary mb-10">
+          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-semibold tracking-[0.24em] uppercase border border-border-subtle text-text-secondary mb-12">
             Early Access · Free to Join
           </span>
         </motion.div>
 
-        {/* H1 — flat white, weight + italic contrast carries the emphasis,
-            no gradient wash, no purple/pink anything. */}
+        {/* H1 — Giant Statement scale. Type does the work — bigger, tighter,
+            more dominant first viewport. Mobbin-grade weight contrast carries
+            the emphasis. No gradient, no purple, no pink. */}
         <motion.h1
           custom={1}
           variants={fadeUp}
           initial="hidden"
           animate="visible"
-          className="font-display font-bold text-text-primary mb-7"
+          className="font-display font-bold text-text-primary mb-8"
           style={{
-            fontSize: "clamp(2.5rem, 6.5vw, 5.25rem)",
-            lineHeight: "1.02",
-            letterSpacing: "-0.035em",
+            fontSize: "clamp(3rem, 9vw, 7.5rem)",
+            lineHeight: "0.96",
+            letterSpacing: "-0.045em",
           }}
         >
           Find your next opportunity.
           <br />
-          <span className="text-text-secondary font-light italic" style={{ letterSpacing: "-0.04em" }}>
+          <span className="text-text-secondary font-light italic" style={{ letterSpacing: "-0.05em" }}>
             Make connections that matter.
           </span>
         </motion.h1>
