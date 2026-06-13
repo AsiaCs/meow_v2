@@ -74,19 +74,15 @@ export default function LandingNav() {
             ))}
           </div>
 
-          {/* CTA — Mobbin pattern: solid monochrome pill, no gradient, no glow. */}
+          {/* CTA — meow brand: light pink → light purple gradient with dark ink.
+              This is the deliberate brand color (per meow-ds handoff), not the
+              generic AI purple-slop. The CTA pulses the wordmark gradient. */}
           <div className="hidden md:flex ml-2">
             <Link
               href="/auth/signin"
-              className="
-                inline-flex items-center gap-1.5 px-4 py-2 rounded-full
-                text-sm font-semibold
-                bg-text-primary text-bg-base
-                hover:bg-text-primary/90
-                transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]
-              "
+              className="btn-brand !px-5 !py-2.5 !text-[14px] !rounded-full"
             >
-              Get Started
+              Get the app
               <span aria-hidden>→</span>
             </Link>
           </div>
@@ -156,9 +152,9 @@ export default function LandingNav() {
                 <Link
                   href="/auth/signin"
                   onClick={() => setOpen(false)}
-                  className="inline-flex items-center gap-2 px-8 py-4 rounded-full text-lg font-semibold bg-text-primary text-bg-base hover:bg-text-primary/90 transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                  className="btn-brand !px-8 !py-4 !text-[17px] !rounded-full"
                 >
-                  Get Started <span aria-hidden>→</span>
+                  Get the app <span aria-hidden>→</span>
                 </Link>
               </motion.div>
             </motion.div>

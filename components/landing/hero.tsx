@@ -2,12 +2,18 @@
 
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { ArrowRight, ChevronDown } from "lucide-react"
+import { ArrowRight, Search, Navigation, Calendar, Briefcase, Sparkles } from "lucide-react"
+import { Aurora, Room } from "./aurora"
 import { DateThumb } from "@/components/events/date-thumb"
 
-// Mobbin-grade hero. No gradient text, no violet CTA glow, no rainbow
-// avatar stacks, no colored icon swatches. The section earns its weight
-// through composition, typographic contrast, and restraint.
+// Hero — meow UI.html canonical landing.
+//
+// Composition: centered statement over an aurora + bg-room background, with
+// the Perplexity-style tinted-glass search bar as the centerpiece and three
+// perspective-tilted event cards peeking up from the bottom.
+//
+// Brand gradient is restored on a single H1 accent line and the primary CTA —
+// that's the deliberate brand color (chat1.md), not generic AI purple slop.
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -15,80 +21,91 @@ const fadeUp = {
     opacity: 1,
     y: 0,
     transition: {
-      delay: i * 0.06,
-      duration: 0.7,
+      delay: i * 0.07,
+      duration: 0.75,
       ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
     },
   }),
 }
 
 const cardVariants = {
-  hidden: { opacity: 0, y: 32 },
+  hidden: { opacity: 0, y: 40 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
     transition: {
-      delay: 0.5 + i * 0.1,
-      duration: 0.9,
+      delay: 0.7 + i * 0.12,
+      duration: 0.95,
       ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
     },
   }),
 }
 
-function MockEventCard() {
-  // Shape mirrors the real EventCard pattern — keeps the landing honest.
-  const startDate = new Date(Date.now() + 1000 * 60 * 60 * 12)
-  return (
-    <div className="w-[280px] rounded-2xl border border-border-subtle bg-bg-card p-4 shadow-[var(--shadow-card)]">
-      <div className="flex items-stretch gap-3">
-        <div className="w-[64px] h-[64px] rounded-xl overflow-hidden flex-shrink-0">
-          <DateThumb startDate={startDate} title="Founders Mixer" className="rounded-xl" />
-        </div>
-        <div className="min-w-0 flex flex-col justify-center gap-1">
-          <p className="text-[10px] uppercase tracking-[0.16em] text-text-muted font-medium">Tonight · 7:00 PM</p>
-          <p className="text-[14px] font-semibold text-text-primary leading-snug">AI Founders Mixer</p>
-          <p className="text-[11px] text-text-secondary">San Francisco</p>
-        </div>
-      </div>
-      <div className="mt-3 pt-3 border-t border-border-subtle flex items-center justify-between">
-        <span className="text-[10px] uppercase tracking-[0.14em] text-text-muted">Cerebral Valley</span>
-        <span className="inline-flex items-center rounded-full px-2 py-[2px] text-[10px] font-medium uppercase tracking-[0.14em] text-text-muted border border-border-subtle">
-          Networking
-        </span>
-      </div>
-    </div>
-  )
-}
+const FILTER_PILLS = [
+  { icon: Navigation, label: "Near me", active: true },
+  { icon: Calendar, label: "This week", active: false },
+  { icon: Briefcase, label: "Internships", active: false },
+  { icon: Sparkles, label: "For you", active: false },
+]
 
-function MockInternshipCard() {
+// Mock cards mirror the meow-kit.jsx EVENTS shape so the peek-cards
+// feel like the real product, not stock placeholders.
+const PEEK_EVENTS = [
+  {
+    title: "Cerebral Valley AI Summit",
+    host: "Cerebral Valley",
+    when: "Thu · 9:00 AM",
+    place: "Pier 27 · San Francisco",
+    dist: "1.2 mi",
+    going: 480,
+    tag: "Summit",
+    startDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 4),
+  },
+  {
+    title: "Latent Space — Paper Club",
+    host: "Latent.Space",
+    when: "Sat · 11:00 AM",
+    place: "Notion HQ · San Francisco",
+    dist: "0.8 mi",
+    going: 120,
+    tag: "Meetup",
+    startDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 2),
+  },
+  {
+    title: "Anthropic Builder Day",
+    host: "Anthropic",
+    when: "Wed · 10:00 AM",
+    place: "SoMa · San Francisco",
+    dist: "1.9 mi",
+    going: 300,
+    tag: "Workshop",
+    startDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+  },
+]
+
+function PeekCard({ ev }: { ev: typeof PEEK_EVENTS[number] }) {
   return (
-    <div className="w-[280px] rounded-2xl border border-border-subtle bg-bg-card p-4 shadow-[var(--shadow-card)]">
-      <div className="flex items-start gap-3">
-        {/* Refined company mark — display-font monogram set in negative
-            space, sized like a real wordmark capital, on a quietly
-            engineered plate. Hairline ring inset hints at depth. */}
-        <div
-          className="w-[64px] h-[64px] rounded-xl bg-bg-elevated flex items-center justify-center flex-shrink-0"
-          style={{ boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06), inset 0 1px 0 rgba(255,255,255,0.04)" }}
-        >
-          <span
-            className="font-display font-bold text-text-primary"
-            style={{ fontSize: "26px", letterSpacing: "-0.05em", lineHeight: 1 }}
-          >
-            S
+    <div className="glass rounded-[20px] p-2.5 flex flex-col gap-2.5 w-[320px]">
+      <div className="h-[132px] rounded-[13px] overflow-hidden">
+        <DateThumb startDate={ev.startDate} title={ev.title} className="rounded-[13px]" />
+      </div>
+      <div className="px-1 pb-1">
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold text-text-secondary bg-white/[0.06] border border-white/[0.11]">
+            {ev.tag}
+          </span>
+          <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-purple-light">
+            <Navigation size={12} strokeWidth={1.8} />
+            {ev.dist}
           </span>
         </div>
-        <div className="min-w-0 flex flex-col justify-center gap-1">
-          <p className="text-[10px] uppercase tracking-[0.16em] text-text-muted font-medium">Summer 2026 · Remote</p>
-          <p className="text-[14px] font-semibold text-text-primary leading-snug">Software Engineering Intern</p>
-          <p className="text-[11px] text-text-secondary">Stripe</p>
+        <div className="font-display font-bold text-[16px] leading-snug text-text-primary" style={{ letterSpacing: "-0.01em" }}>
+          {ev.title}
         </div>
-      </div>
-      <div className="mt-3 pt-3 border-t border-border-subtle flex items-center justify-between">
-        <span className="text-[10px] uppercase tracking-[0.14em] text-text-muted">Posted 2h ago</span>
-        <span className="inline-flex items-center rounded-full px-2 py-[2px] text-[10px] font-medium uppercase tracking-[0.14em] text-text-muted border border-border-subtle">
-          Apply
-        </span>
+        <div className="flex items-center justify-between mt-2 text-[12px]">
+          <span className="text-text-muted font-medium">{ev.host}</span>
+          <span className="text-text-secondary font-semibold">{ev.going}</span>
+        </div>
       </div>
     </div>
   )
@@ -96,58 +113,57 @@ function MockInternshipCard() {
 
 export default function Hero() {
   return (
-    <section className="hero-grid relative min-h-[94vh] flex flex-col items-center justify-center pt-32 pb-20 px-4 overflow-hidden">
-      {/* Archive/dossier spine — second-read moment.
-          Top-left index reads as editorial slug, anchoring the page in a
-          documentary register instead of a sales-y register. */}
+    <section className="relative min-h-[100dvh] flex flex-col items-center pt-32 pb-48 px-4 overflow-hidden">
+      {/* Background stack — Room → Aurora → subtle hairline grid */}
+      <Room />
+      <Aurora />
+      <div className="hero-grid absolute inset-0 pointer-events-none" />
+
+      {/* Archival index — second-read motif preserved from prior pass */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1, duration: 0.8 }}
+        transition={{ delay: 1.1, duration: 0.8 }}
         className="absolute top-28 left-6 sm:left-10 hidden md:flex flex-col gap-1 text-text-faint pointer-events-none select-none z-10"
       >
         <span className="text-[10px] tracking-[0.32em] uppercase font-medium tabular-nums">№ 001 / Index</span>
         <span className="text-[10px] tracking-[0.24em] uppercase tabular-nums">Vol. 06 · 2026</span>
       </motion.div>
-
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1, duration: 0.8 }}
+        transition={{ delay: 1.1, duration: 0.8 }}
         className="absolute top-28 right-6 sm:right-10 hidden md:block text-text-faint pointer-events-none select-none z-10 text-right"
       >
         <span className="text-[10px] tracking-[0.32em] uppercase font-medium">Discover · Connect · Apply</span>
       </motion.div>
 
       {/* Content */}
-      <div className="relative z-10 flex flex-col items-center text-center max-w-[1100px] mx-auto">
-        {/* Eyebrow — monochrome, tracked, no pulse dot, no violet halo. */}
+      <div className="relative z-10 flex flex-col items-center text-center max-w-[980px] mx-auto">
+        {/* Eyebrow */}
         <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible">
-          <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-semibold tracking-[0.24em] uppercase border border-border-subtle text-text-secondary mb-12">
-            Early Access · Free to Join
+          <span className="inline-block text-[13px] font-semibold tracking-[0.18em] uppercase text-text-secondary mb-7">
+            Curiosity, organized
           </span>
         </motion.div>
 
-        {/* H1 — Giant Statement scale. Type does the work — bigger, tighter,
-            more dominant first viewport. Mobbin-grade weight contrast carries
-            the emphasis. No gradient, no purple, no pink. */}
+        {/* H1 — Urbanist ExtraBold, single line with the brand gradient
+            applied to the closing phrase only. NO white text on top. */}
         <motion.h1
           custom={1}
           variants={fadeUp}
           initial="hidden"
           animate="visible"
-          className="font-display font-bold text-text-primary mb-8"
+          className="font-display font-extrabold text-text-primary mb-8"
           style={{
-            fontSize: "clamp(3rem, 9vw, 7.5rem)",
-            lineHeight: "0.96",
-            letterSpacing: "-0.045em",
+            fontSize: "clamp(2.75rem, 7.5vw, 5rem)",
+            lineHeight: 1.0,
+            letterSpacing: "-0.03em",
           }}
         >
-          Find your next opportunity.
+          Every AI event & internship,
           <br />
-          <span className="text-text-secondary font-light italic" style={{ letterSpacing: "-0.05em" }}>
-            Make connections that matter.
-          </span>
+          <span className="u-cool">in one place.</span>
         </motion.h1>
 
         {/* Subtitle */}
@@ -156,60 +172,60 @@ export default function Hero() {
           variants={fadeUp}
           initial="hidden"
           animate="visible"
-          className="text-[16px] sm:text-[17px] text-text-secondary max-w-[560px] leading-[1.55] mb-10"
+          className="text-[18px] sm:text-[20px] text-text-secondary font-medium max-w-[600px] mx-auto leading-[1.5] mb-10"
         >
-          Internships and networking events tailored to you — all in one place.
-          Stop scrolling five platforms.
+          Talks, hackathons, mixers and open roles from the people building the future —
+          near you, updated in real time.
         </motion.p>
 
-        {/* CTAs — solid monochrome primary, hairline outline secondary.
-            Identical px/py rhythm, no gradient, no drop-shadow halo. */}
+        {/* Perplexity tinted-glass search — dark glass outer panel holding
+            a light frosted inner field. Below it sit four filter pills + a
+            primary brand CTA. */}
         <motion.div
           custom={3}
           variants={fadeUp}
           initial="hidden"
           animate="visible"
-          className="flex flex-col sm:flex-row items-center gap-3"
+          className="glass rounded-[24px] p-3.5 w-full max-w-[680px] mx-auto"
         >
-          <Link
-            href="/auth/signin"
-            style={{
-              boxShadow:
-                "inset 0 1px 0 rgba(255,255,255,0.5), inset 0 0 0 1px rgba(255,255,255,0.06), 0 1px 0 rgba(0,0,0,0.25), 0 8px 24px -10px rgba(0,0,0,0.4)",
-            }}
-            className="
-              group inline-flex items-center gap-2 px-6 py-3 rounded-full
-              text-[14px] font-semibold
-              bg-text-primary text-bg-base
-              hover:bg-text-primary/95
-              active:scale-[0.98]
-              transition-[transform,background-color] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]
-            "
-          >
-            Start for free
-            <ArrowRight
-              size={15}
-              strokeWidth={2.25}
-              className="transition-transform duration-400 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-0.5"
+          {/* Light frosted inner field */}
+          <div className="field-light rounded-2xl px-4 py-4 flex items-center gap-3">
+            <Search size={20} strokeWidth={1.8} className="text-[#5d666f] flex-shrink-0" />
+            <span className="ph text-[16px] font-medium">Search events near you…</span>
+            {/* Blinking caret */}
+            <motion.span
+              animate={{ opacity: [1, 0.2, 1] }}
+              transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
+              className="ml-auto inline-block w-[2.5px] h-[22px] rounded-[2px] bg-[#0c1116]"
             />
-          </Link>
+          </div>
 
-          <Link
-            href="#how-it-works"
-            className="
-              inline-flex items-center gap-2 px-6 py-3 rounded-full
-              text-[14px] font-medium text-text-secondary
-              border border-border-subtle
-              hover:border-border-strong hover:text-text-primary
-              transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]
-            "
-          >
-            See how it works
-          </Link>
+          {/* Pill row + primary action */}
+          <div className="flex items-center gap-2 flex-wrap pt-3.5 pb-1 px-1.5">
+            {FILTER_PILLS.map(({ icon: Icon, label, active }) => (
+              <span
+                key={label}
+                className={
+                  active
+                    ? "pill-on inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[12.5px] font-semibold"
+                    : "inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[12.5px] font-semibold text-text-secondary bg-white/[0.055] border border-white/[0.11]"
+                }
+              >
+                <Icon size={14} strokeWidth={1.8} className={active ? "text-purple" : "text-text-muted"} />
+                {label}
+              </span>
+            ))}
+            <Link
+              href="/events"
+              className="btn-brand !rounded-full !py-2.5 !px-5 ml-auto !text-[13.5px]"
+            >
+              Explore
+              <ArrowRight size={14} strokeWidth={2.2} />
+            </Link>
+          </div>
         </motion.div>
 
-        {/* Quiet social proof — a keyline + tracked-uppercase line.
-            Reads as editorial colophon, not as decoration. */}
+        {/* Quiet social proof keyline */}
         <motion.div
           custom={4}
           variants={fadeUp}
@@ -225,52 +241,31 @@ export default function Hero() {
         </motion.div>
       </div>
 
-      {/* Honest preview cards — same shape as the real product, monochrome. */}
-      <div className="relative z-10 mt-24 w-full max-w-5xl mx-auto">
-        <div className="flex flex-col md:flex-row items-center justify-center gap-5 md:items-end">
-          <motion.div
-            custom={0}
-            variants={cardVariants}
-            initial="hidden"
-            animate="visible"
-            whileHover={{ y: -6, transition: { type: "spring", stiffness: 280, damping: 22 } }}
-            className="md:mb-10"
-          >
-            <MockEventCard />
-          </motion.div>
-
-          <motion.div
-            custom={1}
-            variants={cardVariants}
-            initial="hidden"
-            animate="visible"
-            whileHover={{ y: -6, transition: { type: "spring", stiffness: 280, damping: 22 } }}
-          >
-            <MockInternshipCard />
-          </motion.div>
-        </div>
-
-        {/* Bottom fade — pure base color, no violet undertone */}
-        <div
-          className="absolute bottom-0 left-0 right-0 h-24 pointer-events-none"
-          style={{ background: "linear-gradient(to bottom, transparent, #070713)" }}
-        />
-      </div>
-
-      {/* Restrained scroll indicator */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.4, duration: 0.6 }}
-        className="absolute bottom-6 left-1/2 -translate-x-1/2"
+      {/* Floating event cards peeking up from the bottom with perspective tilt */}
+      <div
+        className="absolute bottom-[-40px] left-1/2 -translate-x-1/2 w-[min(1080px,94%)] hidden md:flex gap-5 justify-center"
+        style={{
+          perspective: 1400,
+          WebkitMaskImage: "linear-gradient(180deg, #000 60%, transparent)",
+          maskImage: "linear-gradient(180deg, #000 60%, transparent)",
+        }}
       >
-        <motion.div
-          animate={{ y: [0, 4, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        >
-          <ChevronDown size={18} strokeWidth={1.5} className="text-text-faint" />
-        </motion.div>
-      </motion.div>
+        {PEEK_EVENTS.map((ev, i) => (
+          <motion.div
+            key={ev.title}
+            custom={i}
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+            style={{
+              transform: `rotateX(14deg) translateY(${i === 1 ? -14 : 0}px)`,
+            }}
+            whileHover={{ y: -6, transition: { type: "spring", stiffness: 280, damping: 22 } }}
+          >
+            <PeekCard ev={ev} />
+          </motion.div>
+        ))}
+      </div>
     </section>
   )
 }

@@ -1,0 +1,157 @@
+/* ============================================================
+   meow — design system  ·  v3
+   original type + palette · aurora (logo colors) · tinted glass
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800;900&family=Poppins:wght@700;800&display=swap');
+
+:root {
+  /* depth layers */
+  --bg:        #07050d;
+  --bg-2:      #0b0717;
+  --surface:   #120b22;
+  --panel:     #1a102f;   /* fallback cover panel */
+  --raise:     #1f1636;
+
+  /* glass */
+  --glass:     rgba(255,255,255,0.055);
+  --glass-2:   rgba(255,255,255,0.085);
+  --glass-brd: rgba(255,255,255,0.11);
+  --glass-hi:  rgba(255,255,255,0.16);
+
+  /* ink */
+  --ink:   #f5f2fc;
+  --muted: #a99fc4;
+  --faint: #6d6488;
+
+  /* brand spectrum (logo) */
+  --mint:#34d399; --cyan:#22d3ee; --indigo:#6366f1; --purple:#a855f7; --fuchsia:#d946ef; --pink:#f472b6;
+  --wm: linear-gradient(95deg,#f472b6 0%,#d946ef 46%,#a855f7 100%);
+
+  /* accent (mapped back to brand purple/pink) */
+  --accent:      #a855f7;
+  --accent-ink:  #14071f;
+  --accent-line: #a855f7;
+  --accent-soft: rgba(168,85,247,0.16);
+  --accent-grad: var(--wm);
+
+  --r-lg: 26px; --r-md: 18px; --r-sm: 13px;
+  font-family: 'Urbanist', system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+
+/* ---- type (original sans system) ---- */
+.u-serif { font-family:'Urbanist',sans-serif; font-weight:800; letter-spacing:-0.02em; line-height:1.0; }
+.u-display { font-family:'Urbanist',sans-serif; font-weight:800; letter-spacing:-0.03em; line-height:0.98; }
+.u-h1 { font-family:'Urbanist',sans-serif; font-weight:800; letter-spacing:-0.025em; line-height:1.04; }
+.u-eyebrow { font-weight:600; font-size:13px; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); }
+.u-wm { font-family:'Poppins',sans-serif; font-weight:800; letter-spacing:-0.02em;
+  background:var(--wm); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.u-cool { background:var(--wm); -webkit-background-clip:text; background-clip:text; color:transparent; }
+
+/* ---- glass ---- */
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(28px) saturate(150%);
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
+  border: 1px solid var(--glass-brd);
+  box-shadow: inset 0 1px 0 var(--glass-hi), 0 26px 64px -30px rgba(0,0,0,0.8);
+}
+.glass-2 {
+  background: var(--glass-2);
+  backdrop-filter: blur(22px) saturate(140%);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+  border: 1px solid var(--glass-brd);
+  box-shadow: inset 0 1px 0 var(--glass-hi);
+}
+/* light frosted inner field — perplexity tinted-glass signature */
+.field-light {
+  background: rgba(247,249,250,0.93);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.65);
+  box-shadow: 0 14px 36px -16px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.9);
+  color: #0c1116;
+}
+.field-light .ph { color: #5d666f; }
+
+/* ---- pills / chips ---- */
+.pill {
+  display:inline-flex; align-items:center; gap:8px; padding:10px 16px; border-radius:999px;
+  font-weight:600; font-size:14px; color:var(--muted);
+  background:var(--glass); border:1px solid var(--glass-brd); white-space:nowrap;
+}
+.pill--on {
+  color:#3a1163; background:linear-gradient(180deg,#fbe8ff,#e9c5ff); border-color:transparent;
+  box-shadow:0 6px 20px -8px rgba(168,85,247,.7), inset 0 1px 0 rgba(255,255,255,.6);
+}
+
+/* ---- buttons ---- */
+.btn {
+  display:inline-flex; align-items:center; justify-content:center; gap:9px;
+  font-family:inherit; font-weight:700; font-size:15px; cursor:pointer;
+  border:1px solid var(--glass-brd); border-radius:14px; padding:13px 22px; color:var(--ink);
+  background:var(--glass-2);
+}
+.btn--primary {
+  color:#14071f; border-color:transparent;
+  background:linear-gradient(180deg,#f6b8e6,#c98bf6);
+  box-shadow:0 10px 30px -10px rgba(217,70,239,.6), inset 0 1px 0 rgba(255,255,255,.55);
+}
+.btn--ghost { background:transparent; }
+
+/* ---- backgrounds ---- */
+.bg-room {
+  position:absolute; inset:0; overflow:hidden;
+  background:
+    radial-gradient(120% 80% at 50% 6%, #160d2b 0%, rgba(11,7,23,0) 60%),
+    linear-gradient(180deg,#0a0613 0%,#07050d 55%,#050309 100%);
+}
+
+/* motion aurora — logo-colored ribbons (green→cyan→purple→pink) */
+.aurora { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+.aurora::after {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(180deg, rgba(7,5,13,0) 34%, var(--bg) 90%);
+}
+.au {
+  position:absolute; border-radius:46% 54% 58% 42%;
+  filter:blur(64px); opacity:0.46; mix-blend-mode:screen; will-change:transform,opacity;
+}
+.au1 { width:56%; height:50%; left:-8%; top:-16%; background:radial-gradient(closest-side, #34d399, transparent); }
+.au2 { width:52%; height:54%; right:-10%; top:-18%; background:radial-gradient(closest-side, #a855f7, transparent); }
+.au3 { width:64%; height:44%; left:16%; top:-12%; background:radial-gradient(closest-side, #22d3ee, transparent); }
+.au4 { width:44%; height:42%; left:40%; top:-8%;  background:radial-gradient(closest-side, #f472b6, transparent); opacity:0.34; }
+@media (prefers-reduced-motion: no-preference) {
+  .au1 { animation: auA 24s ease-in-out infinite; }
+  .au2 { animation: auB 29s ease-in-out infinite; }
+  .au3 { animation: auC 33s ease-in-out infinite; }
+  .au4 { animation: auD 27s ease-in-out infinite; }
+}
+@keyframes auA { 0%,100%{transform:translate(0,0) scale(1) rotate(0)} 50%{transform:translate(16%,9%) scale(1.18) rotate(8deg)} }
+@keyframes auB { 0%,100%{transform:translate(0,0) scale(1.06)} 50%{transform:translate(-15%,11%) scale(1.26) rotate(-6deg)} }
+@keyframes auC { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(11%,15%) scale(1.2) rotate(5deg)} }
+@keyframes auD { 0%,100%{transform:translate(0,0) scale(1); opacity:.34} 50%{transform:translate(-9%,7%) scale(1.32); opacity:.18} }
+
+.bg-grid {
+  position:absolute; inset:0; pointer-events:none; opacity:.45;
+  background-image:
+    linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+  background-size:64px 64px;
+  -webkit-mask-image:radial-gradient(110% 80% at 50% 0%, #000 28%, transparent 72%);
+          mask-image:radial-gradient(110% 80% at 50% 0%, #000 28%, transparent 72%);
+}
+
+/* scrollbars */
+.noscroll::-webkit-scrollbar { display:none; }
+.noscroll { scrollbar-width:none; }
+
+/* fallback event cover */
+.cover-fallback {
+  background:
+    radial-gradient(120% 90% at 80% 0%, rgba(168,85,247,.28), rgba(26,16,47,0) 60%),
+    var(--panel);
+  position:relative; overflow:hidden;
+}
+.cover-fallback .cf-month { font-weight:700; font-size:13px; letter-spacing:0.34em; text-transform:uppercase; color:rgba(245,242,252,.62); }
+.cover-fallback .cf-day { font-family:'Urbanist',sans-serif; font-weight:800; letter-spacing:-0.04em; line-height:0.86; color:var(--ink); }

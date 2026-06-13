@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>meow — Product UI</title>
+<link rel="stylesheet" href="meow-ds.css" />
+<style>
+  html, body { margin: 0; background: #07050d; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="meow-logos.jsx"></script>
+<script type="text/babel" src="meow-icons.jsx"></script>
+<script type="text/babel" src="meow-kit.jsx"></script>
+<script type="text/babel" src="meow-web.jsx"></script>
+<script type="text/babel" src="meow-mobile.jsx"></script>
+
+<script type="text/babel">
+const DARK = { background: '#07050d' };
+
+function Phone({ children }) {
+  return (
+    <div style={{ width:'100%', height:'100%', display:'grid', placeItems:'center', ...DARK }}>
+      <window.PhoneShell>{children}</window.PhoneShell>
+    </div>
+  );
+}
+
+function App() {
+  const { Landing, Dashboard, FeedScreen, NearMeScreen, DetailScreen, InternScreen, CreateScreen } = window;
+  return (
+    <React.Fragment>
+      <window.MeowDefs />
+      <DesignCanvas>
+        <DCSection id="web" title="meow · website + web app" subtitle="Desktop — aurora + tinted-glass landing and the events dashboard">
+          <DCArtboard id="landing" label="Landing page" width={1440} height={940} style={DARK}>
+            <Landing />
+          </DCArtboard>
+          <DCArtboard id="dashboard" label="Events dashboard" width={1440} height={940} style={DARK}>
+            <Dashboard />
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="mobile" title="meow · mobile app" subtitle="iOS — discover, near-me, detail, internships, create">
+          <DCArtboard id="feed" label="Discover feed" width={420} height={880} style={DARK}>
+            <Phone><FeedScreen /></Phone>
+          </DCArtboard>
+          <DCArtboard id="nearme" label="Near me · single-tap geo" width={420} height={880} style={DARK}>
+            <Phone><NearMeScreen /></Phone>
+          </DCArtboard>
+          <DCArtboard id="detail" label="Event detail" width={420} height={880} style={DARK}>
+            <Phone><DetailScreen /></Phone>
+          </DCArtboard>
+          <DCArtboard id="interns" label="Internships" width={420} height={880} style={DARK}>
+            <Phone><InternScreen /></Phone>
+          </DCArtboard>
+          <DCArtboard id="create" label="Create event · image upload" width={420} height={880} style={DARK}>
+            <Phone><CreateScreen /></Phone>
+          </DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+    </React.Fragment>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

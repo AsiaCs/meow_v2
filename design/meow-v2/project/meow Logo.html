@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>meow — Logo Exploration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  html, body { margin: 0; height: 100%; background: #e9e7e2; }
+  * { box-sizing: border-box; }
+  .iconwrap { width: 100%; display: flex; align-items: center; justify-content: center; padding: 26px; }
+  .note { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #6b6660;
+    text-align: center; line-height: 1.5; padding: 0 16px 18px; }
+  .lockup { display: flex; align-items: center; gap: 22px; justify-content: center; padding: 30px; }
+  .lockup-dark { background: radial-gradient(120% 120% at 50% 30%, #14101f, #07060b); border-radius: 18px; }
+  .lockup-light { background: #f4f2ee; border-radius: 18px; }
+  .lk-icon { width: 96px; height: 96px; filter: drop-shadow(0 14px 30px rgba(90,40,170,.4)); }
+  .stack { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 34px 30px; }
+  .stack .lk-icon { width: 120px; height: 120px; }
+  .tag { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: .12em;
+    text-transform: uppercase; color: #8a857d; padding: 4px 0 0; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="meow-logos.jsx"></script>
+<script type="text/babel">
+const { useState } = React;
+
+function Icon({ children, note }) {
+  return (
+    <div>
+      <div className="iconwrap"><IconBox>{children}</IconBox></div>
+      <div className="note">{note}</div>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <React.Fragment>
+      <MeowDefs />
+      <DesignCanvas>
+        <DCSection id="icons" title="meow · app icon" subtitle="Dark glassy squircle · rainbow accent outline · purple→blue→pink glow">
+          <DCArtboard id="catface" label="01 · Cat face" width={340} height={420}>
+            <Icon note="Clean cat-head silhouette — colored glass fill. The koala move, sleeker.">
+              <MarkCatFace />
+            </Icon>
+          </DCArtboard>
+          <DCArtboard id="ghost" label="02 · Cat-ghost" width={340} height={420}>
+            <Icon note="Ghost-icon homage: white glass silhouette + scalloped base, cat ears.">
+              <MarkGhost />
+            </Icon>
+          </DCArtboard>
+          <DCArtboard id="chat" label="03 · Chat-cat" width={340} height={420}>
+            <Icon note="Speech bubble with ears — leans into the networking/events angle.">
+              <MarkChat />
+            </Icon>
+          </DCArtboard>
+          <DCArtboard id="glyph" label="04 · Ear glyph" width={340} height={420}>
+            <Icon note="Most minimal & premium: pure rainbow ear line, reads as 'm'.">
+              <MarkGlyph />
+            </Icon>
+          </DCArtboard>
+          <DCArtboard id="blob" label="05 · Glass blob" width={340} height={420}>
+            <Icon note="Most 3D — volumetric glow like the cloud icon, thin rainbow rim.">
+              <MarkBlob />
+            </Icon>
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="lockups" title="Wordmark lockups" subtitle="Icon + 'meow' wordmark — gradient matched to your app's wordmark">
+          <DCArtboard id="lk-dark-face" label="Horizontal · dark" width={420} height={180}>
+            <div className="lockup lockup-dark" style={{ height: '100%' }}>
+              <div className="lk-icon"><MarkCatFace /></div>
+              <Wordmark size={62} />
+            </div>
+          </DCArtboard>
+          <DCArtboard id="lk-dark-ghost" label="Horizontal · dark · ghost" width={420} height={180}>
+            <div className="lockup lockup-dark" style={{ height: '100%' }}>
+              <div className="lk-icon"><MarkGhost /></div>
+              <Wordmark size={62} />
+            </div>
+          </DCArtboard>
+          <DCArtboard id="lk-light" label="Horizontal · light · glyph" width={420} height={180}>
+            <div className="lockup lockup-light" style={{ height: '100%' }}>
+              <div className="lk-icon"><MarkGlyph /></div>
+              <Wordmark size={62} />
+            </div>
+          </DCArtboard>
+          <DCArtboard id="lk-stack" label="Stacked" width={300} height={260}>
+            <div className="stack lockup-dark" style={{ height: '100%' }}>
+              <div className="lk-icon"><MarkBlob /></div>
+              <Wordmark size={48} />
+              <div className="tag">discover · connect</div>
+            </div>
+          </DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+    </React.Fragment>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

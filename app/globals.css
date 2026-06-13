@@ -2,35 +2,39 @@
 
 @theme {
   /* ───────────────────────────────────────────────────────────────
-     BRAND — jewel-toned violet, never default Tailwind purple.
-     The dim and ink tones widen the palette so we can tint without
-     reaching for the loud `--color-purple` on every surface.
+     BRAND SPECTRUM — meow design system handoff (chats/chat1.md).
+     The aurora pulls from these tones; the wordmark + primary CTA
+     ride pink → fuchsia → purple. Default-Tailwind purple is banned.
      ─────────────────────────────────────────────────────────────── */
-  --color-purple: #7c3aed;
-  --color-purple-light: #a884ff;
+  --color-purple: #a855f7;
+  --color-purple-light: #c98bf6;
   --color-purple-dim: #4c1d95;
-  --color-purple-ink: #2a1854;
-  --color-pink: #ec4899;
-  --color-pink-light: #f472b6;
+  --color-purple-ink: #14071f;
+  --color-fuchsia: #d946ef;
+  --color-pink: #f472b6;
+  --color-pink-light: #f6b8e6;
+  --color-mint: #34d399;
+  --color-cyan: #22d3ee;
+  --color-indigo: #6366f1;
 
   /* ───────────────────────────────────────────────────────────────
-     DEPTH SCALE — five tiers of midnight obsidian → slate ink, each
-     with a barely-perceptible violet undertone so the whole UI reads
-     as one continuous material instead of stacked gray rectangles.
+     DEPTH SCALE — meow-ds.css canonical layers. Base is #07050d so
+     the aurora reads as glowing light, not a faded purple bleed.
      ─────────────────────────────────────────────────────────────── */
-  --color-bg-base: #070713;          /* master canvas */
-  --color-bg-surface: #0c0c1a;       /* sticky nav, sidebars, search blocks */
-  --color-bg-card: #11111f;          /* content cards */
-  --color-bg-elevated: #16162a;      /* modals, dropdowns, popovers */
-  --color-bg-veil: rgba(12, 12, 26, 0.78); /* glass nav over content */
+  --color-bg-base: #07050d;          /* master canvas (meow-ds --bg) */
+  --color-bg-surface: #0b0717;       /* sticky nav / sidebar (meow-ds --bg-2) */
+  --color-bg-card: #120b22;          /* content cards (meow-ds --surface) */
+  --color-bg-elevated: #1f1636;      /* modals (meow-ds --raise) */
+  --color-bg-panel: #1a102f;         /* fallback event cover (meow-ds --panel) */
+  --color-bg-veil: rgba(11, 7, 23, 0.78); /* glass nav over content */
 
   /* ───────────────────────────────────────────────────────────────
-     TEXT SCALE — only four tiers, deliberately. More tiers = mush.
+     TEXT SCALE — meow-ds canonical ink/muted/faint, four tiers.
      ─────────────────────────────────────────────────────────────── */
-  --color-text-primary: #f5f5fa;
-  --color-text-secondary: #9a9ab5;
-  --color-text-muted: #5a5a78;
-  --color-text-faint: #3b3b54;
+  --color-text-primary: #f5f2fc;     /* meow-ds --ink */
+  --color-text-secondary: #a99fc4;   /* meow-ds --muted */
+  --color-text-muted: #6d6488;       /* meow-ds --faint */
+  --color-text-faint: #4a4360;       /* deeper, for archive slugs */
 
   /* ───────────────────────────────────────────────────────────────
      BORDERS — every line is alpha-on-white. Solid hex borders are
@@ -42,18 +46,22 @@
   --color-border-accent: rgba(168, 132, 255, 0.22);   /* focus / selected */
 
   /* ───────────────────────────────────────────────────────────────
-     TYPOGRAPHY — Sora for display, Jakarta for body. Already an
-     elegant high-contrast pair; we keep it but reserve `display`
-     for headings only — body uses Jakarta everywhere.
+     TYPOGRAPHY — Urbanist for display + body (per meow-ds handoff).
+     Jakarta stays loaded as a UI fallback; Poppins ExtraBold powers
+     the wordmark only.
      ─────────────────────────────────────────────────────────────── */
-  --font-sans: var(--font-jakarta), "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-sans: var(--font-urbanist), "Urbanist", system-ui, sans-serif;
   --font-display: var(--font-urbanist), "Urbanist", system-ui, sans-serif;
+  --font-wordmark: var(--font-poppins), "Poppins", system-ui, sans-serif;
 }
 
 :root {
-  /* Gradients reserved for hero/marketing surfaces. Never used on cards. */
-  --gradient-brand: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
-  --gradient-glow: radial-gradient(ellipse 80% 80% at 50% -20%, rgba(124, 58, 237, 0.28), transparent 70%);
+  /* meow brand wordmark gradient — pink → fuchsia → purple, 95deg.
+     Used on the wordmark, H1 accent line, primary CTA, active pills. */
+  --gradient-brand: linear-gradient(95deg, #f472b6 0%, #d946ef 46%, #a855f7 100%);
+  --gradient-cta: linear-gradient(180deg, #f6b8e6 0%, #c98bf6 100%);
+  --gradient-pill-on: linear-gradient(180deg, #fbe8ff 0%, #e9c5ff 100%);
+  --gradient-glow: radial-gradient(ellipse 80% 80% at 50% -20%, rgba(168, 85, 247, 0.28), transparent 70%);
 
   /* Metallic stroke — used by DateThumb and any "engineered" surface. */
   --gradient-metal: linear-gradient(
@@ -155,13 +163,151 @@ h1, h2, h3 {
   letter-spacing: -0.02em;
 }
 
-/* The gradient-text utility is intentionally neutralized. The Mobbin pass
-   demands flat type contrast — any straggler usage now renders as plain
-   secondary text instead of a violet/pink wash. */
-.gradient-text {
-  color: var(--color-text-secondary);
-  font-weight: 300;
-  font-style: italic;
+/* Brand gradient text — pink → fuchsia → purple. Used ONLY on the meow
+   wordmark and the single H1 accent line per the meow-ds spec; never
+   on body text, never on default headings. */
+.gradient-text,
+.u-cool {
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-style: normal;
+}
+
+/* Wordmark — Poppins ExtraBold, pink → fuchsia → purple gradient */
+.u-wm {
+  font-family: var(--font-wordmark);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   AURORA — northern-lights ribbons in the logo spectrum (mint,
+   cyan, purple, pink). Four soft-blurred radial blobs drifting on
+   long loops. Sits behind the landing only; transparency-fades into
+   the base color at the bottom so it never fights cards below.
+   ───────────────────────────────────────────────────────────────── */
+.aurora {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.aurora::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(7, 5, 13, 0) 34%, var(--color-bg-base) 90%);
+}
+.au {
+  position: absolute;
+  border-radius: 46% 54% 58% 42%;
+  filter: blur(64px);
+  opacity: 0.46;
+  mix-blend-mode: screen;
+  will-change: transform, opacity;
+}
+.au1 { width: 56%; height: 50%; left: -8%;  top: -16%; background: radial-gradient(closest-side, #34d399, transparent); }
+.au2 { width: 52%; height: 54%; right: -10%; top: -18%; background: radial-gradient(closest-side, #a855f7, transparent); }
+.au3 { width: 64%; height: 44%; left: 16%;  top: -12%; background: radial-gradient(closest-side, #22d3ee, transparent); }
+.au4 { width: 44%; height: 42%; left: 40%;  top: -8%;  background: radial-gradient(closest-side, #f472b6, transparent); opacity: 0.34; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .au1 { animation: auA 24s ease-in-out infinite; }
+  .au2 { animation: auB 29s ease-in-out infinite; }
+  .au3 { animation: auC 33s ease-in-out infinite; }
+  .au4 { animation: auD 27s ease-in-out infinite; }
+}
+@keyframes auA { 0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); } 50% { transform: translate(16%, 9%) scale(1.18) rotate(8deg); } }
+@keyframes auB { 0%, 100% { transform: translate(0, 0) scale(1.06); } 50% { transform: translate(-15%, 11%) scale(1.26) rotate(-6deg); } }
+@keyframes auC { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(11%, 15%) scale(1.2) rotate(5deg); } }
+@keyframes auD { 0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.34; } 50% { transform: translate(-9%, 7%) scale(1.32); opacity: 0.18; } }
+
+/* ─────────────────────────────────────────────────────────────────
+   GLASS surfaces — meow-ds canonical frosted panels. Real
+   backdrop-blur + inset top highlight + soft outer drop.
+   ───────────────────────────────────────────────────────────────── */
+.glass {
+  background: rgba(255, 255, 255, 0.055);
+  backdrop-filter: blur(28px) saturate(150%);
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 26px 64px -30px rgba(0, 0, 0, 0.8);
+}
+.glass-2 {
+  background: rgba(255, 255, 255, 0.085);
+  backdrop-filter: blur(22px) saturate(140%);
+  -webkit-backdrop-filter: blur(22px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+/* Perplexity-style tinted light field — frosted dark-text plate sat
+   inside a dark glass outer panel. Used as the hero search field. */
+.field-light {
+  background: rgba(247, 249, 250, 0.93);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow:
+    0 14px 36px -16px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  color: #0c1116;
+}
+.field-light ::placeholder,
+.field-light .ph {
+  color: #5d666f;
+}
+
+/* meow-ds room background — subtle radial + vertical wash on the canvas */
+.bg-room {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 80% at 50% 6%, #160d2b 0%, rgba(11, 7, 23, 0) 60%),
+    linear-gradient(180deg, #0a0613 0%, #07050d 55%, #050309 100%);
+}
+
+/* Primary brand CTA — light pink → light purple, dark ink text.
+   The look the user explicitly approved in chat. */
+.btn-brand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  border-radius: 14px;
+  padding: 13px 22px;
+  color: var(--color-purple-ink);
+  border: 1px solid transparent;
+  background: var(--gradient-cta);
+  box-shadow:
+    0 10px 30px -10px rgba(217, 70, 239, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-brand:hover { transform: translateY(-1px); }
+.btn-brand:active { transform: scale(0.98); }
+
+/* "Pill on" — light gradient bg with dark ink. Used for active filters. */
+.pill-on {
+  background: var(--gradient-pill-on);
+  color: #3a1163;
+  border: 1px solid transparent;
+  box-shadow:
+    0 6px 20px -8px rgba(168, 85, 247, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 /* ─────────────────────────────────────────────────────────────────
