@@ -225,23 +225,25 @@ export default function Hero() {
           </span>
         </motion.div>
 
-        {/* H1 — Urbanist ExtraBold. Brand-gradient accent only on the
-            second line. No archival slugs, no Mobbin layering. */}
+        {/* H1 — Instrument Serif, Perplexity-style editorial display.
+            Plain white type, italic secondary line for emphasis. No
+            gradient, no color accent — the contrast is typographic. */}
         <motion.h1
           custom={1}
           variants={fadeUp}
           initial="hidden"
           animate="visible"
-          className="font-display font-extrabold text-text-primary"
+          className="font-display text-text-primary"
           style={{
-            fontSize: "clamp(2.5rem, 6.5vw, 4.875rem)",
-            lineHeight: 1.0,
-            letterSpacing: "-0.03em",
+            fontSize: "clamp(2.75rem, 7vw, 5.25rem)",
+            lineHeight: 1.04,
+            letterSpacing: "-0.02em",
+            fontWeight: 400,
           }}
         >
           Every AI event & internship,
           <br />
-          <span className="u-cool">in one place.</span>
+          <em className="italic font-normal">in one place.</em>
         </motion.h1>
 
         {/* Subtitle */}

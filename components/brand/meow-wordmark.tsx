@@ -12,8 +12,8 @@ interface MeowWordmarkProps {
   style?: CSSProperties
 }
 
-const WORDMARK_GRADIENT = "linear-gradient(95deg, #f472b6, #d946ef 45%, #a855f7)"
-
+// Perplexity pivot — wordmark is now plain text. No gradient,
+// no Poppins; uses the sans face (Urbanist) at bold weight in primary ink.
 export function MeowWordmark({
   size = 24,
   className,
@@ -26,15 +26,12 @@ export function MeowWordmark({
       className={className}
       style={{
         fontFamily:
-          "var(--font-poppins), 'Poppins', ui-sans-serif, system-ui, sans-serif",
-        fontWeight: 800,
+          "var(--font-urbanist), 'Urbanist', system-ui, sans-serif",
+        fontWeight: 700,
         letterSpacing: "-0.02em",
         lineHeight: 1,
         fontSize,
-        backgroundImage: WORDMARK_GRADIENT,
-        WebkitBackgroundClip: "text",
-        backgroundClip: "text",
-        color: "transparent",
+        color: "var(--color-text-primary)",
         display: "inline-block",
         ...style,
       }}

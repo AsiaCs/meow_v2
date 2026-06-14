@@ -1,6 +1,16 @@
 import type { Metadata } from "next"
-import { Plus_Jakarta_Sans, Urbanist, Poppins } from "next/font/google"
+import { Plus_Jakarta_Sans, Urbanist, Poppins, Instrument_Serif } from "next/font/google"
 import "./globals.css"
+
+// Instrument Serif — editorial display serif in the Perplexity register.
+// Loaded across both 400 weights, italic + roman, for the H1 and accents.
+const instrumentSerif = Instrument_Serif({
+  subsets: ["latin"],
+  weight: ["400"],
+  style: ["normal", "italic"],
+  variable: "--font-serif",
+  display: "swap",
+})
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -62,7 +72,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${jakarta.variable} ${urbanist.variable} ${poppins.variable}`}>
+    <html lang="en" className={`${jakarta.variable} ${urbanist.variable} ${poppins.variable} ${instrumentSerif.variable}`}>
       <body className="min-h-dvh bg-bg-base text-text-primary antialiased">
         {children}
       </body>

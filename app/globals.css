@@ -46,22 +46,25 @@
   --color-border-accent: rgba(168, 132, 255, 0.22);   /* focus / selected */
 
   /* ───────────────────────────────────────────────────────────────
-     TYPOGRAPHY — Urbanist for display + body (per meow-ds handoff).
-     Jakarta stays loaded as a UI fallback; Poppins ExtraBold powers
-     the wordmark only.
+     TYPOGRAPHY — Perplexity register:
+       • Display: Instrument Serif (editorial serif H1 + accents).
+       • Sans: Urbanist (UI + body).
+       • Wordmark: Urbanist Bold (plain, no Poppins, no gradient).
      ─────────────────────────────────────────────────────────────── */
   --font-sans: var(--font-urbanist), "Urbanist", system-ui, sans-serif;
-  --font-display: var(--font-urbanist), "Urbanist", system-ui, sans-serif;
-  --font-wordmark: var(--font-poppins), "Poppins", system-ui, sans-serif;
+  --font-display: var(--font-serif), "Instrument Serif", "Tiempos Headline", Georgia, serif;
+  --font-wordmark: var(--font-urbanist), "Urbanist", system-ui, sans-serif;
 }
 
 :root {
-  /* meow brand wordmark gradient — pink → fuchsia → purple, 95deg.
-     Used on the wordmark, H1 accent line, primary CTA, active pills. */
-  --gradient-brand: linear-gradient(95deg, #f472b6 0%, #d946ef 46%, #a855f7 100%);
-  --gradient-cta: linear-gradient(180deg, #f6b8e6 0%, #c98bf6 100%);
-  --gradient-pill-on: linear-gradient(180deg, #fbe8ff 0%, #e9c5ff 100%);
-  --gradient-glow: radial-gradient(ellipse 80% 80% at 50% -20%, rgba(168, 85, 247, 0.28), transparent 70%);
+  /* GRADIENTS REMOVED — Perplexity pivot.
+     The brand gradient is retired from chrome. The aurora still drifts
+     in its full color spectrum behind the page (atmosphere), but no
+     foreground type, button, or pill carries gradient anymore. */
+  --gradient-brand: none;
+  --gradient-cta: none;
+  --gradient-pill-on: none;
+  --gradient-glow: radial-gradient(ellipse 80% 80% at 50% -20%, rgba(168, 85, 247, 0.20), transparent 70%);
 
   /* Metallic stroke — used by DateThumb and any "engineered" surface. */
   --gradient-metal: linear-gradient(
@@ -163,27 +166,29 @@ h1, h2, h3 {
   letter-spacing: -0.02em;
 }
 
-/* Brand gradient text — pink → fuchsia → purple. Used ONLY on the meow
-   wordmark and the single H1 accent line per the meow-ds spec; never
-   on body text, never on default headings. */
+/* Perplexity pivot — gradient text is retired.
+   The H1 accent line ('.u-cool') is now plain Instrument Serif italic in
+   muted ink, carrying emphasis through type contrast instead of color. */
 .gradient-text,
 .u-cool {
-  background: var(--gradient-brand);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  font-style: normal;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
 }
 
-/* Wordmark — Poppins ExtraBold, pink → fuchsia → purple gradient */
+/* Wordmark — clean Urbanist bold in primary ink. No gradient. */
 .u-wm {
   font-family: var(--font-wordmark);
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.02em;
-  background: var(--gradient-brand);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--color-text-primary);
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
 }
 
 /* ─────────────────────────────────────────────────────────────────
@@ -276,38 +281,42 @@ h1, h2, h3 {
     linear-gradient(180deg, #0a0613 0%, #07050d 55%, #050309 100%);
 }
 
-/* Primary brand CTA — light pink → light purple, dark ink text.
-   The look the user explicitly approved in chat. */
+/* Primary CTA — Perplexity pivot. Solid white plate on dark; no gradient,
+   no pink, no purple. Soft inset top highlight + 1px contact line keep
+   the button feeling physical without ever flashing color. */
 .btn-brand {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 9px;
-  font-family: var(--font-display);
+  font-family: var(--font-sans);
   font-weight: 700;
   font-size: 15px;
   border-radius: 14px;
   padding: 13px 22px;
-  color: var(--color-purple-ink);
+  color: var(--color-bg-base);
   border: 1px solid transparent;
-  background: var(--gradient-cta);
+  background: var(--color-text-primary);
   box-shadow:
-    0 10px 30px -10px rgba(217, 70, 239, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 1px 0 rgba(0, 0, 0, 0.25),
+    0 8px 24px -10px rgba(0, 0, 0, 0.4);
   transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 200ms cubic-bezier(0.16, 1, 0.3, 1);
+              background-color 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
-.btn-brand:hover { transform: translateY(-1px); }
+.btn-brand:hover { background: rgba(245, 242, 252, 0.92); }
 .btn-brand:active { transform: scale(0.98); }
 
-/* "Pill on" — light gradient bg with dark ink. Used for active filters. */
+/* Active pill — Perplexity pivot. Solid white plate, dark ink. Used for
+   active filter pills, tabs, and the 'Near me' state. */
 .pill-on {
-  background: var(--gradient-pill-on);
-  color: #3a1163;
+  background: var(--color-text-primary);
+  color: var(--color-bg-base);
   border: 1px solid transparent;
   box-shadow:
-    0 6px 20px -8px rgba(168, 85, 247, 0.7),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 6px 18px -8px rgba(0, 0, 0, 0.4);
 }
 
 /* ─────────────────────────────────────────────────────────────────
