@@ -392,34 +392,80 @@ export default function EventsPage() {
     <div className="flex min-h-dvh">
       {/* Main content */}
       <div className="flex-1 min-w-0">
-        {/* Header */}
-        <div className="border-b border-border bg-bg-surface px-6 py-6 sticky top-0 z-30">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <h1 className="text-xl font-bold text-text-primary font-display">Events</h1>
+        {/* Header — meow design dashboard pattern: floating glass top bar with
+            a Perplexity-tinted-glass search field, brand-gradient 'Near me'
+            pill, and a brand H1. Sticky beneath the layout's aurora. */}
+        <div className="px-6 pt-4 pb-5 sticky top-0 z-30 bg-bg-base/40 backdrop-blur-xl">
+          <div className="flex flex-col gap-5">
+            {/* Top row: search + Near me + Submit shortcut */}
+            <div className="flex items-center gap-3.5">
+              <label className="field-light flex-1 rounded-[15px] px-4 py-[13px] flex items-center gap-3 cursor-text">
+                <Search size={20} strokeWidth={1.8} className="text-[#5d666f] flex-shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Search events, hosts, topics…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="flex-1 bg-transparent text-[15px] font-medium placeholder:text-[#5d666f] focus:outline-none"
+                />
+              </label>
+              <button
+                onClick={() => { setSortByDistance(true); userLoc.request() }}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full px-4 py-[11px] text-[14px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
+                  sortByDistance
+                    ? "pill-on"
+                    : "text-text-secondary bg-white/[0.055] border border-white/[0.11] hover:text-text-primary"
+                )}
+              >
+                <Navigation size={15} strokeWidth={1.9} className={sortByDistance ? "text-purple" : ""} />
+                Near me
+              </button>
               <Link
                 href="/submit"
-                className="flex items-center gap-1.5 text-sm text-purple hover:text-purple-light transition-colors"
+                className="glass-2 rounded-[14px] w-12 h-12 grid place-items-center text-text-primary hover:text-purple-light transition-colors"
+                aria-label="Submit event"
               >
-                <PlusCircle size={15} strokeWidth={1.5} />
-                Submit event
+                <PlusCircle size={20} strokeWidth={1.7} />
               </Link>
             </div>
 
-            {/* Search */}
-            <div className="relative">
-              <Search
-                size={15}
-                strokeWidth={1.5}
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none"
-              />
-              <input
-                type="text"
-                placeholder="Search by name, category, or city…"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-bg-base border border-border rounded-xl pl-9 pr-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple/20 transition-all"
-              />
+            {/* H1 + sorted-by-distance meta — design's 'Closest to me' pattern */}
+            <div className="flex items-end justify-between gap-4 flex-wrap">
+              <div>
+                <h1
+                  className="font-display font-extrabold text-text-primary"
+                  style={{ fontSize: "34px", letterSpacing: "-0.025em", lineHeight: 1.04 }}
+                >
+                  {sortByDistance ? "Closest to me" : "Discover events"}
+                </h1>
+                {sortByDistance && userLoc.position && (
+                  <div className="flex items-center gap-2 mt-1.5 text-text-secondary text-[15px] font-semibold">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--color-mint)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12.5l4.5 4.5L19 7" />
+                    </svg>
+                    Sorted by distance · within {effectiveRadiusMi ?? 50} mi
+                  </div>
+                )}
+              </div>
+
+              {/* Tabs as design's right-aligned pill row */}
+              <div className="flex gap-2 flex-wrap">
+                {TABS.map((t) => (
+                  <button
+                    key={t.value}
+                    onClick={() => setTab(t.value)}
+                    className={cn(
+                      "rounded-full px-4 py-2 text-[13.5px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
+                      tab === t.value
+                        ? "pill-on"
+                        : "text-text-secondary bg-white/[0.055] border border-white/[0.11] hover:text-text-primary",
+                    )}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Tabs — Mobbin pattern: solid monochrome highlight, no gradient.
@@ -442,29 +488,29 @@ export default function EventsPage() {
               ))}
             </div>
 
-            {/* Location filter */}
+            {/* Location filter — meow pill system */}
             {cities.length > 0 && (
               <div className="flex items-center gap-2 flex-wrap">
-                <MapPin size={13} strokeWidth={1.5} className="text-text-muted flex-shrink-0" />
+                <MapPin size={14} strokeWidth={1.5} className="text-text-muted flex-shrink-0" />
                 <button
                   onClick={() => { setSelectedCity("all"); setAutoWidened(false) }}
                   className={cn(
-                    "flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150",
+                    "inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
                     selectedCity === "all"
-                      ? "border-transparent bg-text-primary text-bg-base"
-                      : "border-border-subtle text-text-secondary hover:border-border-strong hover:text-text-primary"
+                      ? "pill-on"
+                      : "text-text-secondary bg-white/[0.055] border border-white/[0.11] hover:text-text-primary",
                   )}
                 >
-                  <Globe size={11} strokeWidth={1.5} />
+                  <Globe size={12} strokeWidth={1.5} />
                   Everywhere
                 </button>
                 <button
                   onClick={() => { setSelectedCity("virtual"); setAutoWidened(false) }}
                   className={cn(
-                    "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors duration-150 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                    "rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
                     selectedCity === "virtual"
-                      ? "border-transparent bg-text-primary text-bg-base"
-                      : "border-border-subtle text-text-secondary hover:border-border-strong hover:text-text-primary"
+                      ? "pill-on"
+                      : "text-text-secondary bg-white/[0.055] border border-white/[0.11] hover:text-text-primary",
                   )}
                 >
                   Online
@@ -474,10 +520,10 @@ export default function EventsPage() {
                     key={city}
                     onClick={() => { setSelectedCity(city); setAutoWidened(false) }}
                     className={cn(
-                      "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors duration-150 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                      "rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
                       selectedCity === city
-                        ? "border-purple bg-purple/15 text-purple-light"
-                        : "border-border text-text-muted hover:border-border-strong hover:text-text-secondary"
+                        ? "pill-on"
+                        : "text-text-secondary bg-white/[0.055] border border-white/[0.11] hover:text-text-primary",
                     )}
                   >
                     {city}
@@ -486,9 +532,9 @@ export default function EventsPage() {
               </div>
             )}
 
-            {/* Category filter chips */}
+            {/* Category filter chips — meow pill system */}
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] uppercase tracking-wider text-text-muted flex-shrink-0 mr-1">
+              <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-text-muted flex-shrink-0 mr-1">
                 Categories
               </span>
               {CATEGORY_CHIPS.map((cat) => {
@@ -498,10 +544,10 @@ export default function EventsPage() {
                     key={cat}
                     onClick={() => toggleCategory(cat)}
                     className={cn(
-                      "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors duration-150 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                      "rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
                       active
-                        ? "border-purple bg-purple/15 text-purple-light"
-                        : "border-border text-text-muted hover:border-border-strong hover:text-text-secondary"
+                        ? "pill-on"
+                        : "text-text-secondary bg-white/[0.055] border border-white/[0.11] hover:text-text-primary",
                     )}
                   >
                     {cat}
