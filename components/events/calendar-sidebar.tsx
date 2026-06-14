@@ -52,11 +52,11 @@ export function CalendarSidebar({
     .slice(0, 5)
 
   return (
-    <aside className="hidden lg:flex flex-col w-[280px] flex-shrink-0 border-l border-border bg-bg-surface min-h-dvh sticky top-0 overflow-y-auto">
+    <aside className="hidden lg:flex flex-col w-[300px] flex-shrink-0 glass rounded-[24px] mr-4 mt-4 mb-4 sticky top-4 max-h-[calc(100dvh-2rem)] overflow-y-auto">
       <div className="p-5">
         {/* Calendar */}
         <div className="mb-6">
-          <h3 className="text-sm font-semibold text-text-secondary mb-3 uppercase tracking-wide">
+          <h3 className="text-[10px] font-semibold text-text-muted mb-4 uppercase tracking-[0.22em]">
             Calendar
           </h3>
           <DayPicker
@@ -90,7 +90,7 @@ export function CalendarSidebar({
                 "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple/40"
               ),
               selected:
-                "bg-purple text-white rounded-lg",
+                "pill-on !rounded-lg !text-[14px] !font-bold",
               today: "text-purple font-semibold",
               outside: "opacity-30",
               disabled: "opacity-20 cursor-not-allowed",
@@ -114,12 +114,12 @@ export function CalendarSidebar({
 
         {/* Upcoming events mini list */}
         <div>
-          <div className="flex items-baseline justify-between mb-3">
-            <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wide">
+          <div className="flex items-baseline justify-between mb-4">
+            <h3 className="text-[10px] font-semibold text-text-muted uppercase tracking-[0.22em]">
               Coming Up
             </h3>
             {cityLabel && (
-              <span className="text-[10px] text-purple-light uppercase tracking-wider">
+              <span className="text-[9.5px] font-semibold text-purple-light uppercase tracking-[0.18em]">
                 in {cityLabel}
               </span>
             )}
@@ -136,13 +136,16 @@ export function CalendarSidebar({
                 <li key={event.id}>
                   <Link
                     href={`/events/${event.id}`}
-                    className="flex items-start gap-3 group rounded-xl -mx-2 px-2 py-1.5 hover:bg-white/[0.03] transition-colors"
+                    className="flex items-start gap-3 group rounded-[14px] -mx-1.5 px-2 py-2 hover:bg-white/[0.04] transition-colors"
                   >
-                    <div className="flex-shrink-0 w-9 h-9 rounded-xl bg-bg-elevated border border-border flex items-center justify-center group-hover:border-purple/40 transition-colors">
+                    <div
+                      className="flex-shrink-0 w-9 h-9 rounded-[11px] glass-2 flex items-center justify-center"
+                      style={{ boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)" }}
+                    >
                       <CalendarDays
                         size={14}
-                        strokeWidth={1.5}
-                        className="text-purple"
+                        strokeWidth={1.6}
+                        className="text-purple-light"
                       />
                     </div>
                     <div className="flex-1 min-w-0">

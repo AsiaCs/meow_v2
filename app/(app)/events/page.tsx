@@ -435,7 +435,7 @@ export default function EventsPage() {
               <div>
                 <h1
                   className="font-display font-extrabold text-text-primary"
-                  style={{ fontSize: "34px", letterSpacing: "-0.025em", lineHeight: 1.04 }}
+                  style={{ fontSize: "44px", letterSpacing: "-0.03em", lineHeight: 1.0 }}
                 >
                   {sortByDistance ? "Closest to me" : "Discover events"}
                 </h1>
@@ -468,25 +468,6 @@ export default function EventsPage() {
               </div>
             </div>
 
-            {/* Tabs — Mobbin pattern: solid monochrome highlight, no gradient.
-                Active state is a sharp white pill that reads as a hard
-                state change, not a vibe shift. */}
-            <div className="flex gap-1">
-              {TABS.map((t) => (
-                <button
-                  key={t.value}
-                  onClick={() => setTab(t.value)}
-                  className={cn(
-                    "px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors duration-150 ease-[cubic-bezier(0.16,1,0.3,1)]",
-                    tab === t.value
-                      ? "bg-text-primary text-bg-base"
-                      : "text-text-secondary hover:text-text-primary hover:bg-white/[0.04]",
-                  )}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
 
             {/* Location filter — meow pill system */}
             {cities.length > 0 && (
@@ -564,93 +545,44 @@ export default function EventsPage() {
               )}
             </div>
 
-            {/* Proximity controls — "Use my location" / sort by distance / radius */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <Navigation
-                size={13}
-                strokeWidth={1.75}
-                className={cn(
-                  "flex-shrink-0 transition-colors",
-                  userLoc.position ? "text-purple-light" : "text-text-muted",
-                )}
-              />
-              {!userLoc.position ? (
-                <button
-                  onClick={() => {
-                    // One-click: requesting permission AND opting into the
-                    // Closest-to-me proximity filter happen together. The
-                    // user no longer has to click two buttons in sequence.
-                    setSortByDistance(true)
-                    userLoc.request()
-                  }}
-                  disabled={userLoc.status === "loading"}
-                  className={cn(
-                    "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium",
-                    "bg-text-primary text-bg-base hover:bg-text-primary/90 disabled:opacity-60",
-                    "transition-colors duration-150 ease-[cubic-bezier(0.16,1,0.3,1)]",
-                  )}
-                >
-                  {userLoc.status === "loading" ? (
-                    <>
-                      <Loader2 size={11} className="animate-spin" />
-                      Locating…
-                    </>
-                  ) : (
-                    "Use my location"
-                  )}
-                </button>
-              ) : (
-                <>
-                  <button
-                    onClick={() => setSortByDistance((v) => !v)}
-                    aria-pressed={sortByDistance}
-                    title={
-                      sortByDistance
-                        ? `Showing events within ${effectiveRadiusMi ?? DEFAULT_CLOSEST_RADIUS_MI} miles`
-                        : "Sort and cap by distance from your location"
-                    }
-                    className={cn(
-                      "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors duration-150 ease-[cubic-bezier(0.16,1,0.3,1)]",
-                      sortByDistance
-                        ? "border-transparent bg-text-primary text-bg-base"
-                        : "border-border-subtle text-text-secondary hover:border-border-strong hover:text-text-primary",
-                    )}
-                  >
-                    Closest to me
-                    {sortByDistance && !radiusMiles && (
-                      <span className="ml-1 text-text-muted/80">· {DEFAULT_CLOSEST_RADIUS_MI} mi</span>
-                    )}
-                  </button>
-                  {RADIUS_OPTIONS.map((mi) => (
-                    <button
-                      key={mi}
-                      onClick={() => setRadiusMiles((v) => (v === mi ? null : mi))}
-                      aria-pressed={radiusMiles === mi}
-                      className={cn(
-                        "px-3 py-1.5 rounded-full text-xs font-medium border transition-colors duration-150 ease-[cubic-bezier(0.16,1,0.3,1)]",
-                        radiusMiles === mi
-                          ? "border-purple bg-purple/15 text-purple-light"
-                          : "border-border text-text-muted hover:border-border-strong hover:text-text-secondary",
-                      )}
-                    >
-                      {mi} mi
-                    </button>
-                  ))}
-                  <button
-                    onClick={userLoc.clear}
-                    className="px-3 py-1 rounded-full text-xs font-medium text-text-muted hover:text-text-secondary transition-colors"
-                    title="Forget my location"
-                  >
-                    Clear
-                  </button>
-                </>
-              )}
-              {userLoc.status === "denied" && (
-                <span className="text-[11px] text-red-400">
-                  Permission denied — enable Location in your browser settings.
+            {/* Radius pills — only shown when the user has actually granted
+                location AND opted into proximity sorting via the top-right
+                'Near me' button. No standalone 'Use my location' button —
+                that lives only in the top bar now to avoid duplicate CTAs. */}
+            {userLoc.position && sortByDistance && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-text-muted flex-shrink-0 mr-1">
+                  Radius
                 </span>
-              )}
-            </div>
+                {RADIUS_OPTIONS.map((mi) => (
+                  <button
+                    key={mi}
+                    onClick={() => setRadiusMiles((v) => (v === mi ? null : mi))}
+                    aria-pressed={radiusMiles === mi}
+                    className={cn(
+                      "rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
+                      radiusMiles === mi
+                        ? "pill-on"
+                        : "text-text-secondary bg-white/[0.055] border border-white/[0.11] hover:text-text-primary",
+                    )}
+                  >
+                    {mi} mi
+                  </button>
+                ))}
+                <button
+                  onClick={userLoc.clear}
+                  className="text-[11px] font-semibold text-text-muted hover:text-text-secondary transition-colors ml-1"
+                  title="Forget my location"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
+            {userLoc.status === "denied" && (
+              <span className="text-[11px] text-red-400">
+                Permission denied — enable Location in your browser settings.
+              </span>
+            )}
           </div>
         </div>
 

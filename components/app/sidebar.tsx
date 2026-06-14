@@ -75,10 +75,10 @@ export default function Sidebar({ user }: SidebarProps) {
     <>
       {/* Desktop sidebar — floating glass, 268px wide, 16px margin */}
       <aside className="hidden md:flex fixed left-4 top-4 bottom-4 w-[268px] flex-col glass rounded-[24px] p-4 z-40">
-        {/* Wordmark */}
+        {/* Wordmark — sized to fit comfortably inside the 268px sidebar. */}
         <div className="px-2.5 pt-1 pb-5">
           <Link href="/dashboard" className="inline-flex items-center">
-            <MeowLockup iconSize={30} wordmarkSize={23} gap={10} />
+            <MeowLockup iconSize={26} wordmarkSize={19} gap={9} />
           </Link>
         </div>
 
