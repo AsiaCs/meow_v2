@@ -3,8 +3,9 @@
 import { useState, useEffect, useMemo, useCallback } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { Search, Navigation } from "lucide-react"
+import { Search, Navigation, MapPin, Globe, PlusCircle } from "lucide-react"
 import { EventCard } from "@/components/events/event-card"
+import { CalendarSidebar } from "@/components/events/calendar-sidebar"
 import { cn, isOnLocalDay } from "@/lib/utils"
 import { useUserLocation } from "@/hooks/use-user-location"
 import { distanceMiles } from "@/lib/geo/haversine"
@@ -394,9 +395,9 @@ export default function EventsPage() {
   }, [loading, autoWidened, autoSelectedCity, selectedCity, events.length, sorted.length])
 
   return (
-    <div className="min-h-dvh">
-      {/* Main content — full width, no sidebar split (design canvas pattern) */}
-      <div className="min-w-0">
+    <div className="flex min-h-dvh">
+      {/* Main content — pairs with the right-side CalendarSidebar */}
+      <div className="flex-1 min-w-0">
         {/* Header — meow design dashboard pattern: floating glass top bar with
             a Perplexity-tinted-glass search field, brand-gradient 'Near me'
             pill, and a brand H1. Sticky beneath the layout's aurora. */}
@@ -486,6 +487,113 @@ export default function EventsPage() {
               </div>
             </div>
 
+            {/* CITIES — restored. User asked: 'i also want to select locaitons
+                as well. why did you remove it.' Same monochrome pill system. */}
+            {cities.length > 0 && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <MapPin size={14} strokeWidth={1.5} className="text-text-muted flex-shrink-0" />
+                <button
+                  onClick={() => { setSelectedCity("all"); setAutoWidened(false) }}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
+                    selectedCity === "all"
+                      ? "pill-on"
+                      : "text-text-secondary bg-white/[0.055] border border-white/[0.11] hover:text-text-primary",
+                  )}
+                >
+                  <Globe size={12} strokeWidth={1.5} />
+                  Everywhere
+                </button>
+                <button
+                  onClick={() => { setSelectedCity("virtual"); setAutoWidened(false) }}
+                  className={cn(
+                    "rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
+                    selectedCity === "virtual"
+                      ? "pill-on"
+                      : "text-text-secondary bg-white/[0.055] border border-white/[0.11] hover:text-text-primary",
+                  )}
+                >
+                  Online
+                </button>
+                {cities.map((city) => (
+                  <button
+                    key={city}
+                    onClick={() => { setSelectedCity(city); setAutoWidened(false) }}
+                    className={cn(
+                      "rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
+                      selectedCity === city
+                        ? "pill-on"
+                        : "text-text-secondary bg-white/[0.055] border border-white/[0.11] hover:text-text-primary",
+                    )}
+                  >
+                    {city}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* CATEGORIES — restored. Monochrome pill system. */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-text-muted flex-shrink-0 mr-1">
+                Categories
+              </span>
+              {CATEGORY_CHIPS.map((cat) => {
+                const active = selectedCategories.includes(cat)
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => toggleCategory(cat)}
+                    className={cn(
+                      "rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
+                      active
+                        ? "pill-on"
+                        : "text-text-secondary bg-white/[0.055] border border-white/[0.11] hover:text-text-primary",
+                    )}
+                  >
+                    {cat}
+                  </button>
+                )
+              })}
+              {selectedCategories.length > 0 && (
+                <button
+                  onClick={() => setSelectedCategories([])}
+                  className="text-[11px] font-semibold text-text-muted hover:text-text-secondary transition-colors ml-1"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+
+            {/* RADIUS — only when Near me is on. */}
+            {userLoc.position && sortByDistance && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-text-muted flex-shrink-0 mr-1">
+                  Radius
+                </span>
+                {RADIUS_OPTIONS.map((mi) => (
+                  <button
+                    key={mi}
+                    onClick={() => setRadiusMiles((v) => (v === mi ? null : mi))}
+                    className={cn(
+                      "rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
+                      radiusMiles === mi
+                        ? "pill-on"
+                        : "text-text-secondary bg-white/[0.055] border border-white/[0.11] hover:text-text-primary",
+                    )}
+                  >
+                    {mi} mi
+                  </button>
+                ))}
+                <button
+                  onClick={userLoc.clear}
+                  className="text-[11px] font-semibold text-text-muted hover:text-text-secondary transition-colors ml-1"
+                  title="Forget my location"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
+
             {userLoc.status === "denied" && (
               <span className="text-[11px] text-red-400">
                 Permission denied — enable Location in your browser settings.
@@ -549,6 +657,23 @@ export default function EventsPage() {
           )}
         </div>
       </div>
+
+      {/* Calendar sidebar — restored per user request. Glass-styled to
+          match the rest of the dashboard. Coming Up panel uses the SAME
+          city predicate as the main feed so it stays in lockstep with
+          the active city pill. */}
+      <CalendarSidebar
+        events={events
+          .filter(matchesSelectedCity)
+          .map((e) => ({
+            ...e,
+            startDate: new Date(e.startDate),
+            location: e.location ?? undefined,
+          }))}
+        selectedDate={selectedDate}
+        onDateChange={setSelectedDate}
+        cityLabel={selectedCity === "all" || selectedCity === "virtual" ? null : selectedCity}
+      />
     </div>
   )
 }

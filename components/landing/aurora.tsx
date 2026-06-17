@@ -12,10 +12,16 @@
 export function Aurora() {
   return (
     <div className="aurora" aria-hidden="true">
+      {/* Top cluster — original meow-ds.css spec, drifts behind the hero */}
       <span className="au au1" />
       <span className="au au2" />
       <span className="au au3" />
       <span className="au au4" />
+      {/* Bottom cluster — added so the aurora extends past the first viewport
+          and the rest of the page doesn't read as a dark void. Same colors,
+          mirrored to the lower half on independent loops. */}
+      <span className="au au5" />
+      <span className="au au6" />
     </div>
   )
 }

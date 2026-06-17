@@ -220,17 +220,24 @@ h1, h2, h3 {
 .au2 { width: 52%; height: 54%; right: -10%; top: -18%; background: radial-gradient(closest-side, #a855f7, transparent); }
 .au3 { width: 64%; height: 44%; left: 16%;  top: -12%; background: radial-gradient(closest-side, #22d3ee, transparent); }
 .au4 { width: 44%; height: 42%; left: 40%;  top: -8%;  background: radial-gradient(closest-side, #f472b6, transparent); opacity: 0.34; }
+/* Lower-half drift — fixes the dark void on long-scroll dashboards. */
+.au5 { width: 50%; height: 48%; left: -6%;  bottom: -14%; background: radial-gradient(closest-side, #6366f1, transparent); opacity: 0.32; }
+.au6 { width: 48%; height: 46%; right: -8%; bottom: -16%; background: radial-gradient(closest-side, #22d3ee, transparent); opacity: 0.30; }
 
 @media (prefers-reduced-motion: no-preference) {
   .au1 { animation: auA 24s ease-in-out infinite; }
   .au2 { animation: auB 29s ease-in-out infinite; }
   .au3 { animation: auC 33s ease-in-out infinite; }
   .au4 { animation: auD 27s ease-in-out infinite; }
+  .au5 { animation: auE 31s ease-in-out infinite; }
+  .au6 { animation: auF 35s ease-in-out infinite; }
 }
 @keyframes auA { 0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); } 50% { transform: translate(16%, 9%) scale(1.18) rotate(8deg); } }
 @keyframes auB { 0%, 100% { transform: translate(0, 0) scale(1.06); } 50% { transform: translate(-15%, 11%) scale(1.26) rotate(-6deg); } }
 @keyframes auC { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(11%, 15%) scale(1.2) rotate(5deg); } }
 @keyframes auD { 0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.34; } 50% { transform: translate(-9%, 7%) scale(1.32); opacity: 0.18; } }
+@keyframes auE { 0%, 100% { transform: translate(0, 0) scale(1); } 50% { transform: translate(14%, -10%) scale(1.22) rotate(-7deg); } }
+@keyframes auF { 0%, 100% { transform: translate(0, 0) scale(1.04); } 50% { transform: translate(-12%, -8%) scale(1.28) rotate(6deg); } }
 
 /* ─────────────────────────────────────────────────────────────────
    GLASS surfaces — meow-ds canonical frosted panels. Real
