@@ -565,7 +565,7 @@ export default function ProfilePage() {
 
           {/* Add form */}
           {showAddForm && (
-            <div className="border border-border rounded-2xl p-4 bg-bg-surface space-y-4">
+            <div className="rounded-2xl p-4 glass-2 space-y-4">
               <h4 className="text-sm font-semibold text-text-primary">
                 Add {TYPE_LABELS[activeTab]}
               </h4>
@@ -637,7 +637,7 @@ export default function ProfilePage() {
                   onChange={(e) =>
                     setExpForm({ ...expForm, description: e.target.value })
                   }
-                  className="bg-bg-base border border-border rounded-xl px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple/20 transition-all resize-none"
+                  className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple/20 transition-all resize-none"
                 />
               </div>
               <Input

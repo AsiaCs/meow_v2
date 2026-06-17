@@ -11,20 +11,14 @@ interface CardSectionProps {
   className?: string
 }
 
+// Single source of truth for every form / panel container in the app.
+// Switched from a doubled border+bg-bg-card plate to a real .glass surface
+// so the aurora behind bleeds through every form (submit, profile, etc).
+// No more dark rectangle behind the liquid-glass UI.
 export function Card({ children, className, innerClassName }: CardProps) {
   return (
-    <div
-      className={cn(
-        "border border-white/[0.06] rounded-3xl p-1.5 bg-white/[0.02]",
-        className
-      )}
-    >
-      <div
-        className={cn(
-          "bg-bg-card rounded-[calc(1.5rem-0.375rem)] overflow-hidden",
-          innerClassName
-        )}
-      >
+    <div className={cn("glass rounded-3xl", className)}>
+      <div className={cn("rounded-3xl overflow-hidden", innerClassName)}>
         {children}
       </div>
     </div>

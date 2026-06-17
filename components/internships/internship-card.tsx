@@ -67,9 +67,9 @@ export function InternshipCard({
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -4 }}
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
-      className="border border-white/[0.06] rounded-3xl p-1.5 bg-white/[0.02] h-full"
+      className="glass rounded-3xl h-full"
     >
-      <div className="bg-bg-card rounded-[calc(1.5rem-0.375rem)] overflow-hidden flex flex-col h-full p-5 gap-4">
+      <div className="rounded-[24px] overflow-hidden flex flex-col h-full p-5 gap-4">
         {/* Header */}
         <div className="flex items-start gap-3">
           {/* Company logo or initial */}

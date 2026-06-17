@@ -3,16 +3,18 @@
 // A simple, accessible time picker that's much nicer than the native
 // <input type="time"> control on desktop.
 //
-// • One <select> for hour (1-12), one for minute (00 / 15 / 30 / 45), one
-//   for AM/PM. Each is a real <select> so it gets the OS-native picker on
-//   mobile and a clean dropdown on desktop — no positioning logic, no
-//   focus traps, no library.
+// • <select> for hour (1-12) and AM/PM. Real <select>s, so OS-native
+//   picker on mobile and clean dropdown on desktop.
 //
-// • Value is a 24-hour "HH:MM" string ("09:30", "14:45"), to match what
+// • Minute is a typeable text input so the user can enter ANY value 0-59
+//   directly (e.g. "37", "08"). Replaces the previous 00/15/30/45-only
+//   dropdown that the user explicitly called out as too restrictive.
+//
+// • Value is a 24-hour "HH:MM" string ("09:30", "14:37"), to match what
 //   <input type="time"> produces — so the rest of the form code keeps
 //   working without changes.
 
-import { useId } from "react"
+import { useId, useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 
 interface TimePickerProps {
@@ -52,19 +54,29 @@ export function TimePicker({
   onChange,
   required,
   error,
-  step = 15,
   className,
 }: TimePickerProps) {
   const id = useId()
   const parts = parse24(value) ?? { h12: 12, min: 0, ampm: "AM" as const }
   const isEmpty = !value
 
-  const minutes: number[] = []
-  for (let m = 0; m < 60; m += step) minutes.push(m)
+  // Local minute string lets the user type freely (including the half-typed
+  // "0" before the second digit) without us snapping the value back. On
+  // blur we clamp + pad + commit to the parent's 24h HH:MM format.
+  const [minText, setMinText] = useState<string>(isEmpty ? "" : parts.min.toString().padStart(2, "0"))
+  useEffect(() => {
+    if (!isEmpty) setMinText(parts.min.toString().padStart(2, "0"))
+  }, [parts.min, isEmpty])
 
   const setHour = (h12: number) => onChange(compose24(h12, parts.min, parts.ampm))
-  const setMin = (min: number) => onChange(compose24(parts.h12, min, parts.ampm))
   const setAmPm = (ampm: "AM" | "PM") => onChange(compose24(parts.h12, parts.min, ampm))
+
+  const commitMin = (raw: string) => {
+    const n = parseInt(raw, 10)
+    const clamped = Number.isFinite(n) ? Math.max(0, Math.min(59, n)) : parts.min
+    onChange(compose24(parts.h12, clamped, parts.ampm))
+    setMinText(clamped.toString().padStart(2, "0"))
+  }
 
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
@@ -96,17 +108,22 @@ export function TimePicker({
 
         <span className="self-center text-text-muted text-lg leading-none select-none">:</span>
 
-        <NativeSelect
+        {/* Free-text minute — user can type any value 0–59 (no preset
+            00/15/30/45 lock-in). Clamped + padded on blur. */}
+        <input
           aria-label="Minute"
-          value={isEmpty ? "" : parts.min}
-          onChange={(e) => setMin(Number(e.target.value))}
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          maxLength={2}
+          value={minText}
+          placeholder="—"
           required={required}
-        >
-          {isEmpty && <option value="" disabled hidden>—</option>}
-          {minutes.map((m) => (
-            <option key={m} value={m}>{m.toString().padStart(2, "0")}</option>
-          ))}
-        </NativeSelect>
+          onChange={(e) => setMinText(e.target.value.replace(/[^0-9]/g, ""))}
+          onBlur={(e) => commitMin(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur() }}
+          className="appearance-none bg-transparent text-text-primary text-sm text-center px-4 py-2.5 outline-none min-w-[60px] placeholder:text-text-muted"
+        />
 
         <span className="w-px self-stretch bg-border" />
 

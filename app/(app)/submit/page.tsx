@@ -252,7 +252,7 @@ export default function SubmitEventPage() {
               <textarea
                 placeholder="What's this event about? Who should attend?"
                 rows={4}
-                className="bg-bg-surface border border-border rounded-xl px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple/20 transition-all resize-none"
+                className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple/20 transition-all resize-none"
                 {...register("description")}
               />
             </div>
@@ -283,7 +283,7 @@ export default function SubmitEventPage() {
             </div>
 
             {/* Virtual toggle */}
-            <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-bg-surface">
+            <div className="flex items-center justify-between p-4 rounded-xl glass-2">
               <div>
                 <p className="text-sm font-medium text-text-primary">Virtual Event</p>
                 <p className="text-xs text-text-muted mt-0.5">Toggle on if this event is online</p>
@@ -375,7 +375,7 @@ export default function SubmitEventPage() {
             </div>
 
             {/* Free toggle */}
-            <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-bg-surface">
+            <div className="flex items-center justify-between p-4 rounded-xl glass-2">
               <div>
                 <p className="text-sm font-medium text-text-primary">Free Event</p>
                 <p className="text-xs text-text-muted mt-0.5">Is this event free to attend?</p>
