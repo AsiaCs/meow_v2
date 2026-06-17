@@ -72,7 +72,7 @@ export default function InternshipsPage() {
     <div className="min-h-dvh">
       {/* Header — same dashboard pattern as /events: field-light search,
           monochrome pill-on for active filter, big Urbanist H1. */}
-      <div className="px-6 pt-4 pb-5 sticky top-0 z-30 backdrop-blur-xl" style={{ background: "linear-gradient(to bottom, rgba(7,5,13,0.55) 0%, rgba(7,5,13,0.25) 70%, transparent 100%)" }}>
+      <div className="px-6 pt-4 pb-5 sticky top-0 z-30 backdrop-blur-[12px]">
         <div className="flex flex-col gap-5">
           {/* Top row — search + category dropdown */}
           <div className="flex items-center gap-3.5 flex-col sm:flex-row">
@@ -94,9 +94,15 @@ export default function InternshipsPage() {
                 style={{ colorScheme: "dark" }}
                 className="appearance-none glass-2 rounded-[15px] pl-4 pr-10 py-[13px] text-[14px] font-semibold text-text-primary focus:outline-none cursor-pointer min-w-[180px]"
               >
-                <option value="All Categories">All Categories</option>
+                {/* Inline styling on every <option> is required because native
+                    select popups are OS-painted and Tailwind classes do not
+                    reach them. Without this, Windows renders white text on
+                    a near-white system background — unreadable. */}
+                <option value="All Categories" style={{ background: "#1a102f", color: "#f5f2fc" }}>
+                  All Categories
+                </option>
                 {INTEREST_AREAS.map((area) => (
-                  <option key={area} value={area}>
+                  <option key={area} value={area} style={{ background: "#1a102f", color: "#f5f2fc" }}>
                     {area}
                   </option>
                 ))}

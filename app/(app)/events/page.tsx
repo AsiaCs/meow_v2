@@ -401,7 +401,7 @@ export default function EventsPage() {
         {/* Header — meow design dashboard pattern: floating glass top bar with
             a Perplexity-tinted-glass search field, brand-gradient 'Near me'
             pill, and a brand H1. Sticky beneath the layout's aurora. */}
-        <div className="px-6 pt-4 pb-5 sticky top-0 z-30 backdrop-blur-xl" style={{ background: "linear-gradient(to bottom, rgba(7,5,13,0.55) 0%, rgba(7,5,13,0.25) 70%, transparent 100%)" }}>
+        <div className="px-6 pt-4 pb-5 sticky top-0 z-30 backdrop-blur-[12px]">
           <div className="flex flex-col gap-5">
             {/* Top row: search + Near me + Submit shortcut */}
             <div className="flex items-center gap-3.5">

@@ -136,8 +136,8 @@ export default async function DashboardPage() {
           {events.length === 0 ? (
             <EmptySection message="No verified events at the moment — try again later as we re-scrape every 30 minutes." />
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {events.map((event) => (
+            <div className="flex flex-col gap-3">
+              {events.slice(0, 5).map((event) => (
                 <EventCard
                   key={stableEventId(event.registrationUrl)}
                   id={stableEventId(event.registrationUrl)}
