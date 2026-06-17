@@ -46,13 +46,12 @@
   --color-border-accent: rgba(168, 132, 255, 0.22);   /* focus / selected */
 
   /* ───────────────────────────────────────────────────────────────
-     TYPOGRAPHY — Perplexity register:
-       • Display: Instrument Serif (editorial serif H1 + accents).
-       • Sans: Urbanist (UI + body).
-       • Wordmark: Urbanist Bold (plain, no Poppins, no gradient).
+     TYPOGRAPHY — Urbanist everywhere.
+     User asked for the sidebar font across the whole app. Sans for
+     display, sans for body, sans for the wordmark. One typeface.
      ─────────────────────────────────────────────────────────────── */
   --font-sans: var(--font-urbanist), "Urbanist", system-ui, sans-serif;
-  --font-display: var(--font-serif), "Instrument Serif", "Tiempos Headline", Georgia, serif;
+  --font-display: var(--font-urbanist), "Urbanist", system-ui, sans-serif;
   --font-wordmark: var(--font-urbanist), "Urbanist", system-ui, sans-serif;
 }
 

@@ -57,7 +57,7 @@ const PEEK_EVENTS = [
     tag: "Summit",
     mo: "NOV",
     day: "14",
-    cover: "linear-gradient(135deg,#6d28d9,#db2777 60%,#f59e0b)",
+    cover: null,
   },
   {
     title: "Latent Space — Paper Club",
@@ -81,7 +81,7 @@ const PEEK_EVENTS = [
     tag: "Hack",
     mo: "NOV",
     day: "12",
-    cover: "linear-gradient(135deg,#0ea5e9,#6366f1 55%,#a855f7)",
+    cover: null,
   },
 ]
 
@@ -225,25 +225,24 @@ export default function Hero() {
           </span>
         </motion.div>
 
-        {/* H1 — Instrument Serif, Perplexity-style editorial display.
-            Plain white type, italic secondary line for emphasis. No
-            gradient, no color accent — the contrast is typographic. */}
+        {/* H1 — Urbanist ExtraBold (matches the sidebar font register).
+            Plain white, no gradient. Emphasis comes from weight + size,
+            not from color. */}
         <motion.h1
           custom={1}
           variants={fadeUp}
           initial="hidden"
           animate="visible"
-          className="font-display text-text-primary"
+          className="font-display font-extrabold text-text-primary"
           style={{
-            fontSize: "clamp(2.75rem, 7vw, 5.25rem)",
-            lineHeight: 1.04,
-            letterSpacing: "-0.02em",
-            fontWeight: 400,
+            fontSize: "clamp(2.75rem, 7vw, 5rem)",
+            lineHeight: 1.02,
+            letterSpacing: "-0.03em",
           }}
         >
           Every AI event & internship,
           <br />
-          <em className="italic font-normal">in one place.</em>
+          in one place.
         </motion.h1>
 
         {/* Subtitle */}

@@ -50,45 +50,31 @@ function formatMonthDay(date: Date | string): { mo: string; day: string } {
   }
 }
 
-// Deterministic image-gradient palette for events that lack a real cover.
-// A hash of the title picks one of a curated set of brand-spectrum gradients
-// so the grid reads as varied without being random.
-const COVER_GRADIENTS = [
-  "linear-gradient(135deg,#6d28d9,#db2777 60%,#f59e0b)",
-  "linear-gradient(135deg,#0ea5e9,#6366f1 55%,#a855f7)",
-  "linear-gradient(135deg,#f43f5e,#a855f7)",
-  "linear-gradient(135deg,#22d3ee,#6366f1 60%,#d946ef)",
-  "linear-gradient(135deg,#10b981,#22d3ee 60%,#6366f1)",
-]
-
 function hashIndex(s: string, modulo: number): number {
   let h = 0
   for (let i = 0; i < s.length; i++) h = ((h << 5) - h) + s.charCodeAt(i)
   return Math.abs(h) % modulo
 }
 
-// Cover panel — the design's two-mode rule. If we have a real image, use it.
-// Otherwise we'd normally show the #1A102F fallback panel; but with no real
-// covers in the feed yet, we hash a brand-spectrum gradient so the grid feels
-// alive. Either way, the spaced uppercase month sits over the big day numeral.
+// Cover panel — two modes only. Real image, or the #1A102F ink plate.
+// The user explicitly killed the rainbow-gradient covers in chat
+// ("remove all gradient backgrounds in this app, it seems too much
+// like ai slop"). Every event card without a real photo gets the
+// quiet ink fallback with spaced MONTH over a big day numeral.
 function Cover({
   imageUrl,
   failed,
   onError,
   mo,
   day,
-  hashKey,
-  variant,
 }: {
   imageUrl?: string
   failed: boolean
   onError: () => void
   mo: string
   day: string
-  hashKey: string
-  variant: "gradient" | "ink"
 }) {
-  // 1) Real cover image
+  // 1) Real cover image — kept verbatim with the design's specular sheen
   if (imageUrl && !failed) {
     return (
       <div className="h-[148px] rounded-[13px] relative overflow-hidden border border-white/[0.06]">
@@ -104,29 +90,21 @@ function Cover({
           className="absolute inset-0 pointer-events-none"
           style={{ background: "radial-gradient(120% 80% at 80% -10%, rgba(255,255,255,.30), transparent 55%)" }}
         />
-        <CoverGlyph mo={mo} day={day} />
-      </div>
-    )
-  }
-
-  // 2) Hashed brand-gradient cover
-  if (variant === "gradient") {
-    const grad = COVER_GRADIENTS[hashIndex(hashKey, COVER_GRADIENTS.length)]
-    return (
-      <div
-        className="h-[148px] rounded-[13px] relative overflow-hidden"
-        style={{ backgroundImage: grad, backgroundSize: "cover" }}
-      >
         <div
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: "radial-gradient(120% 80% at 80% -10%, rgba(255,255,255,.32), transparent 55%)" }}
-        />
-        <CoverGlyph mo={mo} day={day} />
+          className="absolute left-3.5 top-3 flex flex-col items-center leading-none"
+          style={{ color: "#fff", textShadow: "0 1px 8px rgba(0,0,0,.45)" }}
+        >
+          <span className="font-bold text-[11px] tracking-[0.26em]">{mo}</span>
+          <span className="font-extrabold text-[26px] leading-none mt-0.5" style={{ letterSpacing: "-0.04em" }}>
+            {day}
+          </span>
+        </div>
       </div>
     )
   }
 
-  // 3) #1A102F ink-fallback (used for sparse rows in a row to balance the grid)
+  // 2) #1A102F ink fallback — used for every event without a real cover.
+  // Quiet violet bloom at top-right keeps it from feeling flat.
   return (
     <div
       className="h-[148px] rounded-[13px] relative overflow-hidden flex flex-col items-center justify-center"
@@ -139,20 +117,6 @@ function Cover({
         {mo}
       </span>
       <span className="font-display font-extrabold text-text-primary leading-[0.86] mt-1" style={{ fontSize: "60px", letterSpacing: "-0.04em" }}>
-        {day}
-      </span>
-    </div>
-  )
-}
-
-function CoverGlyph({ mo, day }: { mo: string; day: string }) {
-  return (
-    <div
-      className="absolute left-3.5 top-3 flex flex-col items-center leading-none"
-      style={{ color: "#fff", textShadow: "0 1px 8px rgba(0,0,0,.45)" }}
-    >
-      <span className="font-bold text-[11px] tracking-[0.26em]">{mo}</span>
-      <span className="font-extrabold text-[26px] leading-none mt-0.5" style={{ letterSpacing: "-0.04em" }}>
         {day}
       </span>
     </div>
@@ -172,10 +136,6 @@ export function EventCard({
   const [imgFailed, setImgFailed] = useState(false)
   const { mo, day } = formatMonthDay(startDate)
 
-  // Two-mode cover variant from the title hash — gradient or ink. Cheap
-  // hash so half the grid is gradient, half is ink, looking like the design.
-  const variant: "gradient" | "ink" = hashIndex(title, 2) === 0 ? "gradient" : "ink"
-
   return (
     <Link
       href={`/events/${id}`}
@@ -192,8 +152,6 @@ export function EventCard({
         onError={() => setImgFailed(true)}
         mo={mo}
         day={day}
-        hashKey={title}
-        variant={variant}
       />
 
       <div className="px-1 pb-1">

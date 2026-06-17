@@ -70,34 +70,29 @@ export default function InternshipsPage() {
 
   return (
     <div className="min-h-dvh">
-      {/* Header */}
-      <div className="border-b border-border bg-bg-surface px-6 py-6 sticky top-0 z-30">
-        <div className="flex flex-col gap-4 max-w-5xl mx-auto">
-          <h1 className="text-xl font-bold text-text-primary font-display">Internships</h1>
-
-          {/* Search + area filter row */}
-          <div className="flex gap-3 flex-col sm:flex-row">
-            <div className="relative flex-1">
-              <Search
-                size={15}
-                strokeWidth={1.5}
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none"
-              />
+      {/* Header — same dashboard pattern as /events: field-light search,
+          monochrome pill-on for active filter, big Urbanist H1. */}
+      <div className="px-6 pt-4 pb-5 sticky top-0 z-30 bg-bg-base/40 backdrop-blur-xl">
+        <div className="flex flex-col gap-5">
+          {/* Top row — search + category dropdown */}
+          <div className="flex items-center gap-3.5 flex-col sm:flex-row">
+            <label className="field-light flex-1 w-full rounded-[15px] px-4 py-[13px] flex items-center gap-3 cursor-text">
+              <Search size={20} strokeWidth={1.8} className="text-[#5d666f] flex-shrink-0" />
               <input
                 type="text"
-                placeholder="Search by role, company, or skill..."
+                placeholder="Search roles, companies, skills…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-bg-base border border-border rounded-xl pl-9 pr-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple/20 transition-all"
+                className="flex-1 bg-transparent text-[15px] font-medium placeholder:text-[#5d666f] focus:outline-none"
               />
-            </div>
+            </label>
 
-            {/* Interest area dropdown */}
-            <div className="relative">
+            <div className="relative w-full sm:w-auto">
               <select
                 value={selectedArea}
                 onChange={(e) => setSelectedArea(e.target.value)}
-                className="appearance-none bg-bg-base border border-border rounded-xl pl-4 pr-9 py-2.5 text-sm text-text-secondary focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple/20 transition-all cursor-pointer"
+                style={{ colorScheme: "dark" }}
+                className="appearance-none glass-2 rounded-[15px] pl-4 pr-10 py-[13px] text-[14px] font-semibold text-text-primary focus:outline-none cursor-pointer min-w-[180px]"
               >
                 <option value="All Categories">All Categories</option>
                 {INTEREST_AREAS.map((area) => (
@@ -107,29 +102,38 @@ export default function InternshipsPage() {
                 ))}
               </select>
               <ChevronDown
-                size={14}
-                strokeWidth={1.5}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none"
+                size={16}
+                strokeWidth={1.8}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none"
               />
             </div>
           </div>
 
-          {/* Tabs */}
-          <div className="flex gap-1">
-            {TABS.map((t) => (
-              <button
-                key={t.value}
-                onClick={() => setTab(t.value)}
-                className={cn(
-                  "px-3 py-1.5 rounded-lg text-[13px] font-medium transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]",
-                  tab === t.value
-                    ? "bg-text-primary text-bg-base"
-                    : "text-text-secondary hover:text-text-primary hover:bg-white/[0.04]",
-                )}
-              >
-                {t.label}
-              </button>
-            ))}
+          {/* H1 + right-aligned tabs */}
+          <div className="flex items-end justify-between gap-4 flex-wrap">
+            <h1
+              className="font-display font-extrabold text-text-primary"
+              style={{ fontSize: "44px", letterSpacing: "-0.03em", lineHeight: 1.0 }}
+            >
+              Internships
+            </h1>
+
+            <div className="flex gap-2 flex-wrap">
+              {TABS.map((t) => (
+                <button
+                  key={t.value}
+                  onClick={() => setTab(t.value)}
+                  className={cn(
+                    "rounded-full px-4 py-2 text-[13.5px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
+                    tab === t.value
+                      ? "pill-on"
+                      : "text-text-secondary bg-white/[0.055] border border-white/[0.11] hover:text-text-primary",
+                  )}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
