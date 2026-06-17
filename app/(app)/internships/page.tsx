@@ -72,7 +72,7 @@ export default function InternshipsPage() {
     <div className="min-h-dvh">
       {/* Header — same dashboard pattern as /events: field-light search,
           monochrome pill-on for active filter, big Urbanist H1. */}
-      <div className="px-6 pt-4 pb-5 sticky top-0 z-30 bg-bg-base/40 backdrop-blur-xl">
+      <div className="px-6 pt-4 pb-5 sticky top-0 z-30 backdrop-blur-xl" style={{ background: "linear-gradient(to bottom, rgba(7,5,13,0.55) 0%, rgba(7,5,13,0.25) 70%, transparent 100%)" }}>
         <div className="flex flex-col gap-5">
           {/* Top row — search + category dropdown */}
           <div className="flex items-center gap-3.5 flex-col sm:flex-row">

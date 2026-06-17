@@ -401,7 +401,7 @@ export default function EventsPage() {
         {/* Header — meow design dashboard pattern: floating glass top bar with
             a Perplexity-tinted-glass search field, brand-gradient 'Near me'
             pill, and a brand H1. Sticky beneath the layout's aurora. */}
-        <div className="px-6 pt-4 pb-5 sticky top-0 z-30 bg-bg-base/40 backdrop-blur-xl">
+        <div className="px-6 pt-4 pb-5 sticky top-0 z-30 backdrop-blur-xl" style={{ background: "linear-gradient(to bottom, rgba(7,5,13,0.55) 0%, rgba(7,5,13,0.25) 70%, transparent 100%)" }}>
           <div className="flex flex-col gap-5">
             {/* Top row: search + Near me + Submit shortcut */}
             <div className="flex items-center gap-3.5">
@@ -603,19 +603,19 @@ export default function EventsPage() {
         </div>
 
 
-        {/* 3-col grid of glass event cards — design canvas pattern */}
+        {/* Single-column scrollable list — user wanted one event per row */}
         <div className="px-6 py-6">
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[18px]">
+            <div className="flex flex-col gap-3 max-w-3xl">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div
                   key={i}
-                  className="glass rounded-[20px] p-2.5 flex flex-col gap-2.5 animate-pulse"
+                  className="glass rounded-[20px] p-3 flex items-stretch gap-4 animate-pulse"
                 >
-                  <div className="h-[148px] rounded-[13px] bg-white/[0.04]" />
-                  <div className="px-1 pb-1 space-y-2">
-                    <div className="h-4 w-20 bg-white/[0.04] rounded" />
-                    <div className="h-5 w-3/4 bg-white/[0.04] rounded" />
+                  <div className="w-[100px] h-[100px] rounded-xl bg-white/[0.04] flex-shrink-0" />
+                  <div className="flex-1 flex flex-col justify-center gap-2">
+                    <div className="h-3 w-20 bg-white/[0.04] rounded" />
+                    <div className="h-4 w-3/4 bg-white/[0.04] rounded" />
                     <div className="h-3 w-1/2 bg-white/[0.04] rounded" />
                   </div>
                 </div>
@@ -635,7 +635,7 @@ export default function EventsPage() {
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[18px]">
+            <div className="flex flex-col gap-3 max-w-3xl">
               {sorted.map((event) => (
                 <EventCard
                   key={event.id}

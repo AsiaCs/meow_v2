@@ -115,19 +115,22 @@ export default async function DashboardPage() {
   const firstName = (user.user_metadata?.full_name as string | undefined)?.split(" ")[0] ?? "there"
 
   return (
-    <div className="min-h-dvh bg-bg-base">
-      <div className="border-b border-border bg-bg-surface px-6 py-8">
+    <div className="min-h-dvh">
+      <div className="px-6 pt-8 pb-6">
         <div className="max-w-5xl mx-auto">
-          <h1 className="text-2xl font-bold text-text-primary font-display">
-            {getGreeting()}, {firstName} 👋
+          <h1
+            className="font-display font-extrabold text-text-primary"
+            style={{ fontSize: "44px", letterSpacing: "-0.03em", lineHeight: 1.0 }}
+          >
+            {getGreeting()}, {firstName}
           </h1>
-          <p className="text-text-secondary mt-1.5 text-sm leading-relaxed">
+          <p className="text-text-secondary mt-3 text-[15px] leading-relaxed">
             Here&apos;s what&apos;s happening in your network. Discover opportunities tailored to you.
           </p>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-6 py-8 space-y-12">
+      <div className="max-w-5xl mx-auto px-6 pt-2 pb-8 space-y-12">
         <section>
           <SectionHeader title="Upcoming Events" icon={CalendarDays} href="/events" />
           {events.length === 0 ? (

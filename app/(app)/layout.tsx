@@ -17,7 +17,7 @@ export default async function AppLayout({
   if (!user) redirect("/auth/signin")
 
   return (
-    <div className="relative min-h-dvh bg-bg-base overflow-hidden">
+    <div className="relative min-h-dvh overflow-hidden">
       {/* Brand background — fixed beneath all dashboard content */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <Room />
