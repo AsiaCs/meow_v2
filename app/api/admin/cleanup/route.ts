@@ -44,10 +44,19 @@ type EventRow = {
 }
 
 export async function POST(request: Request) {
-  // Simple auth: require a secret param
+  // Require a secret param that matches SCRAPER_SECRET. Fail closed: if the
+  // env var is unset we refuse the request rather than falling back to a
+  // guessable default — this endpoint performs destructive deletes.
+  const expected = process.env.SCRAPER_SECRET
+  if (!expected || expected.length < 16) {
+    return NextResponse.json(
+      { error: "Server misconfigured: SCRAPER_SECRET is unset or too short (need 16+ chars)." },
+      { status: 503 },
+    )
+  }
   const { searchParams } = new URL(request.url)
   const secret = searchParams.get("secret")
-  if (secret !== (process.env.SCRAPER_SECRET ?? "meow-admin")) {
+  if (secret !== expected) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 

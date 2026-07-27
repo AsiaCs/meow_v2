@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Search, ChevronDown } from "lucide-react"
+import { useState, useEffect, useCallback } from "react"
+import { Search, ChevronDown, RefreshCw } from "lucide-react"
 import { InternshipCard } from "@/components/internships/internship-card"
 import { INTEREST_AREAS, cn } from "@/lib/utils"
 
@@ -29,23 +29,35 @@ const TABS: { label: string; value: FilterTab }[] = [
 export default function InternshipsPage() {
   const [internships, setInternships] = useState<Internship[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [tab, setTab] = useState<FilterTab>("all")
   const [search, setSearch] = useState("")
   const [selectedArea, setSelectedArea] = useState<string>("All Categories")
 
-  useEffect(() => {
-    fetch("/api/internships")
-      .then((r) => r.json())
-      .then((data) => {
-        const rawInternships = Array.isArray(data) ? data : data.internships ?? []
-        setInternships(rawInternships.map((item: Internship) => ({
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(false)
+    try {
+      const r = await fetch("/api/internships")
+      if (!r.ok) throw new Error(`Request failed (${r.status})`)
+      const data = await r.json()
+      const rawInternships = Array.isArray(data) ? data : data.internships ?? []
+      setInternships(
+        rawInternships.map((item: Internship) => ({
           ...item,
           tags: Array.isArray(item.tags) ? item.tags : [],
-        })))
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
+        })),
+      )
+    } catch {
+      setError(true)
+    } finally {
+      setLoading(false)
+    }
   }, [])
+
+  useEffect(() => {
+    load()
+  }, [load])
 
   const filtered = internships.filter((item) => {
     if (tab === "remote" && !item.isRemote) return false
@@ -154,6 +166,21 @@ export default function InternshipsPage() {
                 className="border border-white/[0.06] rounded-3xl h-52 bg-white/[0.01] animate-pulse"
               />
             ))}
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <div className="text-5xl mb-4">🛑</div>
+            <h3 className="text-text-primary font-semibold mb-2">Couldn&apos;t load internships</h3>
+            <p className="text-text-muted text-sm mb-5 max-w-sm">
+              Something went wrong reaching our servers. Check your connection and try again.
+            </p>
+            <button
+              onClick={load}
+              className="inline-flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5 text-sm font-medium text-text-primary transition-colors hover:bg-white/[0.08] cursor-pointer"
+            >
+              <RefreshCw size={15} strokeWidth={1.75} />
+              Try again
+            </button>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">

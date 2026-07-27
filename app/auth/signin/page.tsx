@@ -196,9 +196,9 @@ export default function SignInPage() {
 
             <p className="text-center text-xs text-text-muted mt-4">
               By continuing, you agree to our{" "}
-              <a href="#" className="text-text-secondary hover:text-text-primary transition-colors">Terms</a>
+              <a href="/terms" className="text-text-secondary hover:text-text-primary transition-colors">Terms</a>
               {" "}and{" "}
-              <a href="#" className="text-text-secondary hover:text-text-primary transition-colors">Privacy Policy</a>
+              <a href="/privacy" className="text-text-secondary hover:text-text-primary transition-colors">Privacy Policy</a>
             </p>
           </div>
         </div>

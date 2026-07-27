@@ -82,7 +82,7 @@ export default function LandingNav() {
               href="/auth/signin"
               className="btn-brand !px-5 !py-2.5 !text-[14px] !rounded-full"
             >
-              Get the app
+              Get started
               <span aria-hidden>→</span>
             </Link>
           </div>
@@ -154,7 +154,7 @@ export default function LandingNav() {
                   onClick={() => setOpen(false)}
                   className="btn-brand !px-8 !py-4 !text-[17px] !rounded-full"
                 >
-                  Get the app <span aria-hidden>→</span>
+                  Get started <span aria-hidden>→</span>
                 </Link>
               </motion.div>
             </motion.div>

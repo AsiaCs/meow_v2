@@ -156,6 +156,7 @@ export default function EventsPage() {
 
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [tab, setTab] = useState<FilterTab | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [search, setSearch] = useState("")
@@ -180,38 +181,35 @@ export default function EventsPage() {
     )
   }
 
-  useEffect(() => {
-    // Load events and user location in parallel
-    Promise.all([
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(false)
+    try {
       // cache: 'no-store' = always go to the server. Without this, the browser
       // can serve a memoized copy from before the user submitted their event,
       // making fresh submissions appear "missing" until manual hard-reload.
-      fetch("/api/events", { cache: "no-store" }).then((r) => r.json()),
-      fetch("/api/me").then((r) => r.json()),
-    ])
-      .then(async ([eventsData, meData]) => {
-        const rawEvents = Array.isArray(eventsData) ? eventsData : eventsData.events ?? []
-        setEvents(
-          rawEvents.map((event: Event) => ({
-            ...event,
-            tags: Array.isArray(event.tags) ? event.tags : [],
-          })),
-        )
-
-        // The redesigned dashboard has no city UI — sorting/filtering happens
-        // exclusively through the top-right "Near me" pill (which fires
-        // navigator.geolocation directly). Auto-narrowing to a city silently
-        // would hide events with no way for the user to reset it, so we leave
-        // selectedCity on "all" and let the explicit ?city= URL param still
-        // win when present (used by deep-linked profile views).
-        if (cityParam) {
-          // already initialized — user explicitly asked for this
-        }
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      const r = await fetch("/api/events", { cache: "no-store" })
+      if (!r.ok) throw new Error(`Request failed (${r.status})`)
+      const eventsData = await r.json()
+      const rawEvents = Array.isArray(eventsData) ? eventsData : eventsData.events ?? []
+      setEvents(
+        rawEvents.map((event: Event) => ({
+          ...event,
+          tags: Array.isArray(event.tags) ? event.tags : [],
+        })),
+      )
+      // /api/me is best-effort — a failure here shouldn't blank the events list.
+      await fetch("/api/me").catch(() => null)
+    } catch {
+      setError(true)
+    } finally {
+      setLoading(false)
+    }
   }, [])
+
+  useEffect(() => {
+    load()
+  }, [load])
 
   // Curated global tech-hub list. Dynamic city extraction from event locations
   // produced garbage chips like "Datadog - Headquarters" or "18 E 50th St" —
@@ -620,6 +618,16 @@ export default function EventsPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <h3 className="font-display font-bold text-[22px] text-text-primary mb-2">Couldn&apos;t load events</h3>
+              <p className="text-text-muted text-sm mb-6 max-w-sm">
+                Something went wrong reaching our servers. Check your connection and try again.
+              </p>
+              <button onClick={load} className="btn-brand !rounded-full">
+                Try again
+              </button>
             </div>
           ) : sorted.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-center">

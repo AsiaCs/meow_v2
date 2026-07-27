@@ -57,15 +57,17 @@ create trigger on_auth_user_created
 -- 4. Tighten RLS so users can read/update their own row. Safe to re-apply.
 alter table public.users enable row level security;
 
+-- Casts to text: Prisma makes `id` a text column but auth.uid() is uuid;
+-- comparing them directly errors with "operator does not exist: uuid = text".
 drop policy if exists "users_self_select" on public.users;
 create policy "users_self_select"
   on public.users for select
-  using (auth.uid() = id);
+  using ((select auth.uid())::text = id::text);
 
 drop policy if exists "users_self_update" on public.users;
 create policy "users_self_update"
   on public.users for update
-  using (auth.uid() = id);
+  using ((select auth.uid())::text = id::text);
 
 -- The handle_new_user trigger runs as SECURITY DEFINER so it bypasses RLS
 -- for the initial insert. No additional insert policy needed.
