@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client"
 import { MeowLogo } from "@/components/brand/meow-logo"
 import { MeowWordmark } from "@/components/brand/meow-wordmark"
 import { TurnstileWidget } from "@/components/auth/turnstile-widget"
+import { Aurora, Room } from "@/components/landing/aurora"
 
 function GoogleIcon() {
   return (
@@ -100,15 +101,20 @@ export default function SignInPage() {
   }
 
   return (
-    <main className="min-h-screen bg-bg-base flex items-center justify-center p-4">
+    <main className="relative min-h-dvh flex items-center justify-center p-4 overflow-hidden">
+      {/* Brand background — same aurora + room wash as the landing and dashboards */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <Room />
+        <Aurora />
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
-        className="w-full max-w-md"
+        className="relative z-10 w-full max-w-md"
       >
-        <div className="rounded-3xl border border-white/[0.06] p-2 bg-white/[0.02]">
-          <div className="bg-bg-card rounded-[calc(1.5rem-0.375rem)] p-8">
+        <div className="glass rounded-[26px] p-8 shadow-[0_28px_80px_-24px_rgba(4,2,10,0.9)]">
             {/* Logo */}
             <div className="text-center mb-8 flex flex-col items-center">
               <MeowLogo size={64} tone="dark" className="mb-4" />
@@ -146,7 +152,7 @@ export default function SignInPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full bg-bg-base border border-border rounded-xl px-4 py-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple/20 transition-all"
+                className="w-full bg-white/[0.04] border border-white/[0.09] rounded-xl px-4 py-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple/20 transition-all"
               />
 
               <div className="relative">
@@ -157,7 +163,7 @@ export default function SignInPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="w-full bg-bg-base border border-border rounded-xl px-4 py-3 pr-11 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple/20 transition-all"
+                  className="w-full bg-white/[0.04] border border-white/[0.09] rounded-xl px-4 py-3 pr-11 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple/20 transition-all"
                 />
                 <button
                   type="button"
@@ -191,8 +197,7 @@ export default function SignInPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-white font-medium transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
-                style={{ background: "linear-gradient(135deg, #7c3aed, #ec4899)" }}
+                className="btn-brand w-full !py-3.5 !rounded-xl mt-1 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {loading && <Loader2 size={16} className="animate-spin" />}
                 {mode === "signin" ? "Sign in" : "Create account"}
@@ -216,7 +221,6 @@ export default function SignInPage() {
               {" "}and{" "}
               <a href="/privacy" className="text-text-secondary hover:text-text-primary transition-colors">Privacy Policy</a>
             </p>
-          </div>
         </div>
       </motion.div>
     </main>
