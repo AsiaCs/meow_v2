@@ -1,8 +1,10 @@
 "use client"
 
 import { useState, useEffect, useMemo, useCallback } from "react"
+import useSWR from "swr"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
+import { fetcher, swrDefaults } from "@/lib/swr"
 import { Search, Navigation, MapPin, Globe, PlusCircle } from "lucide-react"
 import { EventCard } from "@/components/events/event-card"
 import { CalendarSidebar } from "@/components/events/calendar-sidebar"
@@ -154,9 +156,18 @@ export default function EventsPage() {
   const cityParam = searchParams.get("city")
   const categoryParam = searchParams.get("category")
 
-  const [events, setEvents] = useState<Event[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
+  // SWR: caches across navigations + dedupes identical requests; the /api/events
+  // response is now edge-cached (60s), so this is cheap under load.
+  const { data: eventsData, error, isLoading: loading, mutate } = useSWR<Event[] | { events: Event[] }>(
+    "/api/events",
+    fetcher,
+    swrDefaults,
+  )
+  const events = useMemo<Event[]>(() => {
+    const raw = Array.isArray(eventsData) ? eventsData : eventsData?.events ?? []
+    return raw.map((event) => ({ ...event, tags: Array.isArray(event.tags) ? event.tags : [] }))
+  }, [eventsData])
+
   const [tab, setTab] = useState<FilterTab | null>(null)
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [search, setSearch] = useState("")
@@ -180,36 +191,6 @@ export default function EventsPage() {
       prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
     )
   }
-
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError(false)
-    try {
-      // cache: 'no-store' = always go to the server. Without this, the browser
-      // can serve a memoized copy from before the user submitted their event,
-      // making fresh submissions appear "missing" until manual hard-reload.
-      const r = await fetch("/api/events", { cache: "no-store" })
-      if (!r.ok) throw new Error(`Request failed (${r.status})`)
-      const eventsData = await r.json()
-      const rawEvents = Array.isArray(eventsData) ? eventsData : eventsData.events ?? []
-      setEvents(
-        rawEvents.map((event: Event) => ({
-          ...event,
-          tags: Array.isArray(event.tags) ? event.tags : [],
-        })),
-      )
-      // /api/me is best-effort — a failure here shouldn't blank the events list.
-      await fetch("/api/me").catch(() => null)
-    } catch {
-      setError(true)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    load()
-  }, [load])
 
   // Curated global tech-hub list. Dynamic city extraction from event locations
   // produced garbage chips like "Datadog - Headquarters" or "18 E 50th St" —
@@ -625,7 +606,7 @@ export default function EventsPage() {
               <p className="text-text-muted text-sm mb-6 max-w-sm">
                 Something went wrong reaching our servers. Check your connection and try again.
               </p>
-              <button onClick={load} className="btn-brand !rounded-full">
+              <button onClick={() => mutate()} className="btn-brand !rounded-full">
                 Try again
               </button>
             </div>

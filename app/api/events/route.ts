@@ -1,13 +1,10 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { getAllEvents, stableEventId, type ScrapedEvent } from "@/lib/events/source"
-import { filterReachable } from "@/lib/validators/links"
 import { isSpecificEventUrl } from "@/lib/validators/specific-urls"
 
 export const runtime = "nodejs"
-export const dynamic = "force-dynamic"
 export const maxDuration = 30
-export const revalidate = 1800
 
 type DbEventRow = {
   id: string                      // real Postgres UUID — used as the React key for user events
@@ -61,12 +58,11 @@ export async function GET(request: Request) {
         const dbSpecific = (dbEvents as DbEventRow[]).filter(
           (e) => e.source === "user" || isSpecificEventUrl(e.registrationUrl),
         )
-        // Same logic for reachability: don't HEAD-check user-supplied URLs.
-        // The user is on the hook for their own link.
-        const userRows  = dbSpecific.filter((e) => e.source === "user")
-        const otherRows = dbSpecific.filter((e) => e.source !== "user")
-        const validOther = await filterReachable(otherRows, (e) => e.registrationUrl)
-        const validDb = [...userRows, ...validOther]
+        // Reachability is already validated at ingest (scraper) and pruned by
+        // the daily cleanup cron, so we do NOT re-HEAD-check every URL on every
+        // read — that was a per-request outbound request storm (a load + mild
+        // amplification problem). Trust the ingest/cleanup validation instead.
+        const validDb = dbSpecific
 
         const seenUrls = new Set(events.map((e) => e.registrationUrl))
         for (const e of validDb) {
@@ -150,7 +146,13 @@ export async function GET(request: Request) {
       lng:     e.lng     ?? null,
     }))
 
-    return NextResponse.json(shaped)
+    // Edge-cache: the response is identical for every user (city filtering is
+    // client-side), so let Vercel's CDN serve concurrent traffic from one
+    // recompute per minute instead of hitting the DB on every request.
+    // Tradeoff: newly-submitted events appear within ~60s rather than instantly.
+    return NextResponse.json(shaped, {
+      headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" },
+    })
   } catch (error) {
     console.error("[events/GET]", error)
     return NextResponse.json([])

@@ -1,9 +1,11 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useMemo } from "react"
+import useSWR from "swr"
 import { Search, ChevronDown, RefreshCw } from "lucide-react"
 import { InternshipCard } from "@/components/internships/internship-card"
 import { INTEREST_AREAS, cn } from "@/lib/utils"
+import { fetcher, swrDefaults } from "@/lib/swr"
 
 interface Internship {
   id: string
@@ -27,37 +29,21 @@ const TABS: { label: string; value: FilterTab }[] = [
 ]
 
 export default function InternshipsPage() {
-  const [internships, setInternships] = useState<Internship[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
+  // SWR caches across navigations + dedupes; the shared edge cache handles load.
+  const { data, error, isLoading, mutate } = useSWR<Internship[] | { internships: Internship[] }>(
+    "/api/internships",
+    fetcher,
+    swrDefaults,
+  )
+  const internships = useMemo<Internship[]>(() => {
+    const raw = Array.isArray(data) ? data : data?.internships ?? []
+    return raw.map((item) => ({ ...item, tags: Array.isArray(item.tags) ? item.tags : [] }))
+  }, [data])
+  const loading = isLoading
+
   const [tab, setTab] = useState<FilterTab>("all")
   const [search, setSearch] = useState("")
   const [selectedArea, setSelectedArea] = useState<string>("All Categories")
-
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError(false)
-    try {
-      const r = await fetch("/api/internships")
-      if (!r.ok) throw new Error(`Request failed (${r.status})`)
-      const data = await r.json()
-      const rawInternships = Array.isArray(data) ? data : data.internships ?? []
-      setInternships(
-        rawInternships.map((item: Internship) => ({
-          ...item,
-          tags: Array.isArray(item.tags) ? item.tags : [],
-        })),
-      )
-    } catch {
-      setError(true)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    load()
-  }, [load])
 
   const filtered = internships.filter((item) => {
     if (tab === "remote" && !item.isRemote) return false
@@ -175,7 +161,7 @@ export default function InternshipsPage() {
               Something went wrong reaching our servers. Check your connection and try again.
             </p>
             <button
-              onClick={load}
+              onClick={() => mutate()}
               className="inline-flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5 text-sm font-medium text-text-primary transition-colors hover:bg-white/[0.08] cursor-pointer"
             >
               <RefreshCw size={15} strokeWidth={1.75} />

@@ -72,8 +72,10 @@ export async function GET(request: Request) {
         .select("id, title, company, location, isRemote, description, applicationUrl, deadline, isPaid, salary, tags, source, sourceUrl, createdAt")
         .order("createdAt", { ascending: false })
       if (Array.isArray(dbInternships) && dbInternships.length > 0) {
-        const specificDb = (dbInternships as DbInternshipRow[]).filter((i) => isSpecificApplyUrl(i.applicationUrl))
-        const validDb = await filterReachable(specificDb, (i) => i.applicationUrl)
+        // Don't HEAD-check DB internships on every request — they're validated
+        // at ingest and pruned by the daily cleanup cron. Re-checking per read
+        // was a per-request outbound request storm.
+        const validDb = (dbInternships as DbInternshipRow[]).filter((i) => isSpecificApplyUrl(i.applicationUrl))
         const seen = new Set(internships.map((i) => i.applicationUrl))
         for (const i of validDb) {
           if (!seen.has(i.applicationUrl)) {
