@@ -10,12 +10,14 @@ import { NextResponse } from "next/server"
 // is OFF until those env vars exist in the environment. Set them in Vercel to
 // turn protection on. (In prod we log once if they're missing.)
 
-const url = process.env.UPSTASH_REDIS_REST_URL
-const token = process.env.UPSTASH_REDIS_REST_TOKEN
+// Accept both the Upstash-native names and the KV_* names that Vercel's
+// Upstash Marketplace integration injects.
+const url = process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL
+const token = process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN
 const redis = url && token ? new Redis({ url, token }) : null
 
 if (!redis && process.env.NODE_ENV === "production") {
-  console.warn("[ratelimit] UPSTASH_REDIS_REST_URL/_TOKEN not set — rate limiting is DISABLED (fail-open).")
+  console.warn("[ratelimit] No Redis REST URL/token (UPSTASH_* or KV_*) — rate limiting is DISABLED (fail-open).")
 }
 
 function make(limiter: ReturnType<typeof Ratelimit.slidingWindow>): Ratelimit | null {
