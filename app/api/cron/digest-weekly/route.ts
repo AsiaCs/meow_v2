@@ -104,7 +104,7 @@ function appBaseUrl(): string {
   return (
     process.env.NEXT_PUBLIC_SITE_URL ??
     process.env.VERCEL_URL?.replace(/^https?:\/\//, "")?.replace(/^/, "https://") ??
-    "https://meow-two-pied.vercel.app"
+    "https://usemeow.co"
   )
 }
 

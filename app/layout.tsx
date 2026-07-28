@@ -37,7 +37,7 @@ const poppins = Poppins({
   display: "swap",
 })
 
-const siteUrl = "https://meow-two-pied.vercel.app"
+const siteUrl = "https://usemeow.co"
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
