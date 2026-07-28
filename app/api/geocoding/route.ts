@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
+import { limiters, clientIp, checkRateLimit, tooManyRequests } from "@/lib/ratelimit"
 
 export async function GET(request: NextRequest) {
+  const rl = await checkRateLimit(limiters.proxy, `geocoding:${clientIp(request)}`)
+  if (!rl.ok) return tooManyRequests(rl.reset)
+
   const { searchParams } = new URL(request.url)
   const city = searchParams.get("city")
   const lat = searchParams.get("lat")

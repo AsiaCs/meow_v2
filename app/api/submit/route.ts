@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createClient as createServiceClient } from "@supabase/supabase-js"
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/supabase/config"
 import { parseLocation } from "@/lib/geo/parse"
+import { limiters, checkRateLimit, tooManyRequests } from "@/lib/ratelimit"
 
 // ---- Schema ----------------------------------------------------------------
 
@@ -100,6 +101,10 @@ export async function POST(request: Request) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+  // Rate limit event submissions per user (anti-spam / flood guard).
+  const rl = await checkRateLimit(limiters.write, `submit:${user.id}`)
+  if (!rl.ok) return tooManyRequests(rl.reset)
 
   let body: unknown
   try { body = await request.json() } catch {

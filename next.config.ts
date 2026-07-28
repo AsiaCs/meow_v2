@@ -1,4 +1,5 @@
 import type { NextConfig } from "next"
+import { withSentryConfig } from "@sentry/nextjs"
 
 const nextConfig: NextConfig = {
   images: {
@@ -19,4 +20,12 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+// Wrap with Sentry. Source-map upload is skipped unless SENTRY_AUTH_TOKEN +
+// org/project are set — error capture still works without it. tunnelRoute
+// routes events through our own domain so ad-blockers don't drop them.
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  silent: !process.env.CI,
+  tunnelRoute: "/monitoring",
+})

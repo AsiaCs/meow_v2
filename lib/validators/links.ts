@@ -23,9 +23,40 @@ function isTrusted(url: string): boolean {
   }
 }
 
+// SSRF guard. Only allow http/https to public hosts; reject localhost, private
+// and link-local ranges (incl. the cloud metadata IP 169.254.169.254), and
+// literal internal IPs. This is a best-effort defense — it blocks direct
+// internal targets. Callers still pass server-controlled URLs (scraper/admin),
+// so this is defense-in-depth, not the primary control. Note: it does not
+// re-check the target of an HTTP redirect, so we keep the trusted-source model.
+function isSafePublicUrl(url: string): boolean {
+  let parsed: URL
+  try { parsed = new URL(url) } catch { return false }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false
+
+  const host = parsed.hostname.toLowerCase().replace(/^\[|\]$/g, "")
+  if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".internal")) return false
+  // IPv6 loopback / unique-local / link-local
+  if (host === "::1" || host.startsWith("fc") || host.startsWith("fd") || host.startsWith("fe80")) return false
+
+  // IPv4 literal → block private / loopback / link-local / reserved ranges
+  const m = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/)
+  if (m) {
+    const [a, b] = [Number(m[1]), Number(m[2])]
+    if (a === 10 || a === 127 || a === 0) return false
+    if (a === 169 && b === 254) return false            // link-local + metadata
+    if (a === 172 && b >= 16 && b <= 31) return false   // 172.16/12
+    if (a === 192 && b === 168) return false            // 192.168/16
+    if (a === 100 && b >= 64 && b <= 127) return false  // CGNAT 100.64/10
+    if (a >= 224) return false                          // multicast / reserved
+  }
+  return true
+}
+
 export async function isLinkReachable(url: string, timeoutMs = 5000): Promise<boolean> {
   if (!url) return false
   try { new URL(url) } catch { return false }
+  if (!isSafePublicUrl(url)) return false
   if (isTrusted(url)) return true
 
   const headers = { "User-Agent": "Mozilla/5.0 (compatible; Meow-Bot/1.0)" }

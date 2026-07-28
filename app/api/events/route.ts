@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { getAllEvents, stableEventId, type ScrapedEvent } from "@/lib/events/source"
-import { filterReachable, isLinkReachable } from "@/lib/validators/links"
+import { filterReachable } from "@/lib/validators/links"
 import { isSpecificEventUrl } from "@/lib/validators/specific-urls"
 
 export const runtime = "nodejs"
@@ -157,14 +157,9 @@ export async function GET(request: Request) {
   }
 }
 
-// Lazy escape-hatch verifier endpoint — useful for debugging individual URLs
-export async function POST(request: Request) {
-  try {
-    const { url } = await request.json()
-    if (typeof url !== "string") return NextResponse.json({ ok: false })
-    const ok = await isLinkReachable(url)
-    return NextResponse.json({ ok, specific: isSpecificEventUrl(url) })
-  } catch {
-    return NextResponse.json({ ok: false })
-  }
-}
+// NOTE: a former unauthenticated `POST` "URL verifier" lived here. It called
+// isLinkReachable() on a caller-supplied URL — an SSRF vector (server would
+// fetch any URL, incl. internal/metadata endpoints). It had no callers and was
+// removed. Link validation now happens only server-side on trusted sources
+// (scraper output, admin cleanup) which additionally go through the SSRF guard
+// in lib/validators/links.ts.

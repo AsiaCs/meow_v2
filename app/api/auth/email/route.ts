@@ -2,9 +2,14 @@ import { createServerClient, serializeCookieHeader } from "@supabase/ssr"
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/supabase/config"
+import { limiters, clientIp, checkRateLimit, tooManyRequests } from "@/lib/ratelimit"
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limit auth attempts per IP (brute-force / credential-stuffing guard).
+    const rl = await checkRateLimit(limiters.auth, `auth:${clientIp(request)}`)
+    if (!rl.ok) return tooManyRequests(rl.reset)
+
     let body: { email?: string; password?: string; mode?: string }
     try {
       body = await request.json()
