@@ -6,6 +6,7 @@ import { Eye, EyeOff, Loader2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { MeowLogo } from "@/components/brand/meow-logo"
 import { MeowWordmark } from "@/components/brand/meow-wordmark"
+import { TurnstileWidget } from "@/components/auth/turnstile-widget"
 
 function GoogleIcon() {
   return (
@@ -28,6 +29,7 @@ export default function SignInPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
+  const [turnstileToken, setTurnstileToken] = useState("")
 
   const handleGoogleSignIn = async () => {
     try {
@@ -47,13 +49,20 @@ export default function SignInPage() {
     e.preventDefault()
     setError(null)
     setSuccessMsg(null)
+
+    // Bot protection: require a Turnstile token before creating an account.
+    if (mode === "signup" && !turnstileToken) {
+      setError("Please complete the verification below.")
+      return
+    }
+
     setLoading(true)
 
     try {
       const res = await fetch("/api/auth/email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, mode }),
+        body: JSON.stringify({ email, password, mode, turnstileToken }),
       })
 
       let json: Record<string, unknown> = {}
@@ -170,6 +179,13 @@ export default function SignInPage() {
                 <p className="text-xs text-green-400 bg-green-400/10 border border-green-400/20 rounded-lg px-3 py-2.5">
                   {successMsg}
                 </p>
+              )}
+
+              {/* Bot protection on account creation only */}
+              {mode === "signup" && (
+                <div className="pt-1">
+                  <TurnstileWidget onToken={setTurnstileToken} />
+                </div>
               )}
 
               <button

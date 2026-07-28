@@ -4,22 +4,53 @@ import type { NextRequest } from "next/server"
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "@/lib/supabase/config"
 import { limiters, clientIp, checkRateLimit, tooManyRequests } from "@/lib/ratelimit"
 
+// Verify a Cloudflare Turnstile token server-side. Fail-open only if the secret
+// isn't configured (so local/dev without keys still works); otherwise a missing
+// or invalid token is rejected.
+async function verifyTurnstile(token: string | undefined, ip: string): Promise<boolean> {
+  const secret = process.env.TURNSTILE_SECRET_KEY
+  if (!secret) return true // not configured — don't block
+  if (!token) return false
+  try {
+    const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ secret, response: token, remoteip: ip }),
+    })
+    const data = (await res.json()) as { success?: boolean }
+    return data.success === true
+  } catch {
+    return false
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Rate limit auth attempts per IP (brute-force / credential-stuffing guard).
     const rl = await checkRateLimit(limiters.auth, `auth:${clientIp(request)}`)
     if (!rl.ok) return tooManyRequests(rl.reset)
 
-    let body: { email?: string; password?: string; mode?: string }
+    let body: { email?: string; password?: string; mode?: string; turnstileToken?: string }
     try {
       body = await request.json()
     } catch {
       return NextResponse.json({ error: "Invalid request body" }, { status: 400 })
     }
 
-    const { email, password, mode } = body
+    const { email, password, mode, turnstileToken } = body
     if (!email || !password || !mode) {
       return NextResponse.json({ error: "Missing email, password, or mode" }, { status: 400 })
+    }
+
+    // Bot protection on account creation.
+    if (mode === "signup") {
+      const human = await verifyTurnstile(turnstileToken, clientIp(request))
+      if (!human) {
+        return NextResponse.json(
+          { error: "Verification failed. Please complete the challenge and try again." },
+          { status: 400 },
+        )
+      }
     }
 
     const response = NextResponse.json({ ok: true })
