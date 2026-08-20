@@ -3,10 +3,28 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase/config'
 
+// Only allow redirecting back into this app after login. Must be a path that
+// starts with a single '/' (rejects '//evil.com', 'https://evil.com', and
+// bare hostnames like 'evil.com' that the browser would treat as external).
+function safeNextPath(raw: string | null): string {
+  if (!raw) return '/dashboard'
+  if (!raw.startsWith('/') || raw.startsWith('//')) return '/dashboard'
+  try {
+    // Resolving against a fixed base and checking the origin survives is a
+    // reliable way to catch backslash/protocol-relative tricks the startsWith
+    // check above might miss (e.g. '/\evil.com').
+    const resolved = new URL(raw, 'https://internal.invalid')
+    if (resolved.origin !== 'https://internal.invalid') return '/dashboard'
+    return raw
+  } catch {
+    return '/dashboard'
+  }
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  const next = searchParams.get('next') ?? '/dashboard'
+  const next = safeNextPath(searchParams.get('next'))
 
   if (code) {
     try {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { isLinkReachable } from "@/lib/validators/links"
 import { isSpecificApplyUrl, isSpecificEventUrl } from "@/lib/validators/specific-urls"
+import { limiters, clientIp, checkRateLimit, tooManyRequests } from "@/lib/ratelimit"
 
 export const runtime = "nodejs"
 export const maxDuration = 60
@@ -44,6 +45,11 @@ type EventRow = {
 }
 
 export async function POST(request: Request) {
+  // Rate-limit by IP before even checking the secret, so this endpoint can't
+  // be brute-forced quickly even if SCRAPER_SECRET is ever weak.
+  const rl = await checkRateLimit(limiters.auth, `admin-cleanup:${clientIp(request)}`)
+  if (!rl.ok) return tooManyRequests(rl.reset)
+
   // Require a secret param that matches SCRAPER_SECRET. Fail closed: if the
   // env var is unset we refuse the request rather than falling back to a
   // guessable default — this endpoint performs destructive deletes.

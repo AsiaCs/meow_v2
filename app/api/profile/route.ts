@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import * as z from "zod"
 import { createClient } from "@/lib/supabase/server"
 import { normalizeProfileData } from "@/lib/profile-normalization"
+import { limiters, checkRateLimit, tooManyRequests } from "@/lib/ratelimit"
 
 type ProfileRow = {
   email?: string | null
@@ -109,6 +110,9 @@ export async function PATCH(request: Request) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+    const rl = await checkRateLimit(limiters.write, `profile:${user.id}`)
+    if (!rl.ok) return tooManyRequests(rl.reset)
 
     let body: unknown
     try { body = await request.json() } catch {

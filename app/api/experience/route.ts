@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import * as z from "zod"
 import { createClient } from "@/lib/supabase/server"
+import { limiters, checkRateLimit, tooManyRequests } from "@/lib/ratelimit"
 
 const experienceSchema = z.object({
   type: z.enum(["WORK", "EDUCATION", "PROJECT", "CERTIFICATION", "EXTRACURRICULAR"]),
@@ -39,6 +40,9 @@ export async function POST(request: Request) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+    const rl = await checkRateLimit(limiters.write, `experience:${user.id}`)
+    if (!rl.ok) return tooManyRequests(rl.reset)
 
     let body: unknown
     try { body = await request.json() } catch {

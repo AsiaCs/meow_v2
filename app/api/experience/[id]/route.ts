@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import * as z from "zod"
 import { createClient } from "@/lib/supabase/server"
+import { limiters, checkRateLimit, tooManyRequests } from "@/lib/ratelimit"
 
 const experienceUpdateSchema = z.object({
   type: z.enum(["WORK", "EDUCATION", "PROJECT", "CERTIFICATION", "EXTRACURRICULAR"]).optional(),
@@ -21,6 +22,9 @@ export async function DELETE(
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+    const rl = await checkRateLimit(limiters.write, `experience:${user.id}`)
+    if (!rl.ok) return tooManyRequests(rl.reset)
 
     const { id } = await params
     const { error } = await supabase
@@ -45,6 +49,9 @@ export async function PATCH(
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+
+    const rl = await checkRateLimit(limiters.write, `experience:${user.id}`)
+    if (!rl.ok) return tooManyRequests(rl.reset)
 
     const { id } = await params
 

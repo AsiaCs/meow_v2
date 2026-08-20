@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server"
 import { runAllScrapers } from "@/lib/scrapers"
+import { limiters, clientIp, checkRateLimit, tooManyRequests } from "@/lib/ratelimit"
 
 export const runtime = "nodejs"
 
 export async function POST(request: Request) {
+  const rl = await checkRateLimit(limiters.auth, `scraper:${clientIp(request)}`)
+  if (!rl.ok) return tooManyRequests(rl.reset)
+
   const { searchParams } = new URL(request.url)
   const secret = searchParams.get("secret")
 
