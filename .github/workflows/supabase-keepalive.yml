@@ -1,0 +1,76 @@
+# ============================================================================
+# Keep the Supabase project from auto-pausing.
+#
+# WHY: on the Supabase free plan a project is paused after ~7 days with no
+# activity, and restoring it is a manual click in the dashboard. "Activity"
+# means real requests against the API/database — opening the dashboard does
+# not count.
+#
+# This job issues a cheap anonymous read against public.events every 2 days.
+# That table is already anon-readable (supabase/migrations/20260726_harden_rls.sql,
+# policy "events_public_select"), so no schema change is needed and no private
+# data is touched.
+#
+# Deliberately NOT a Vercel cron: the point is that this keeps working even if
+# a deploy is broken, CRON_SECRET is unset, or the app is down.
+#
+# Secrets required (Settings -> Secrets and variables -> Actions):
+#   SUPABASE_URL       -> value of NEXT_PUBLIC_SUPABASE_URL
+#   SUPABASE_ANON_KEY  -> value of NEXT_PUBLIC_SUPABASE_ANON_KEY
+# Both are public-by-design values (they ship in the browser bundle); they are
+# stored as secrets to keep them out of the repo, not because they are private.
+# ============================================================================
+name: Supabase Keepalive
+
+on:
+  schedule:
+    # Every 2 days at 09:17 UTC. Off-the-hour on purpose: GitHub delays cron
+    # jobs that are scheduled on popular round times under load.
+    - cron: "17 9 */2 * *"
+  workflow_dispatch:
+
+# If a run is somehow still going, don't pile up another.
+concurrency:
+  group: supabase-keepalive
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping Supabase REST
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_ANON_KEY:-}" ]; then
+            echo "::error::SUPABASE_URL / SUPABASE_ANON_KEY secrets are not set."
+            exit 1
+          fi
+
+          # Retry a few times so a transient blip doesn't burn the whole slot.
+          for attempt in 1 2 3; do
+            code=$(curl -sS -o /tmp/body.txt -w '%{http_code}' \
+              --max-time 30 \
+              "${SUPABASE_URL}/rest/v1/events?select=id&limit=1" \
+              -H "apikey: ${SUPABASE_ANON_KEY}" \
+              -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" || echo "000")
+
+            if [ "$code" = "200" ]; then
+              echo "OK (HTTP 200) on attempt ${attempt} - project is awake."
+              exit 0
+            fi
+
+            echo "Attempt ${attempt} failed with HTTP ${code}"
+            [ "$attempt" -lt 3 ] && sleep 15
+          done
+
+          # Fail loudly. A silently-green keepalive is worse than none: you
+          # find out it stopped working when the project is already paused.
+          echo "::error::Keepalive failed after 3 attempts (last HTTP ${code})."
+          echo "--- response body ---"
+          cat /tmp/body.txt || true
+          exit 1
