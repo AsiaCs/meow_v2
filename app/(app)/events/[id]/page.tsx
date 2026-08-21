@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation"
-import { headers } from "next/headers"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { getAllEvents, stableEventId, type ScrapedEvent } from "@/lib/events/source"
+import { fetchListedEvents } from "@/lib/events/listing"
 import { isSpecificEventUrl } from "@/lib/validators/specific-urls"
 import { safeExternalUrl } from "@/lib/url-helpers"
 import { ArrowLeft, MapPin, Monitor, CalendarDays, ExternalLink, Clock, Tag } from "lucide-react"
@@ -68,31 +68,8 @@ function formatEventDate(date: Date) {
 // resolves. It is edge-cached (s-maxage=60), so this is not a real round trip
 // in production.
 async function findViaListing(id: string): Promise<ScrapedEvent | null> {
-  try {
-    const h = await headers()
-    const host = h.get("x-forwarded-host") ?? h.get("host")
-    if (!host) return null
-    const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https")
-
-    const res = await fetch(`${proto}://${host}/api/events`, { next: { revalidate: 60 } })
-    if (!res.ok) return null
-
-    const listed = (await res.json()) as Array<Record<string, unknown>>
-    const match = listed.find((e) => e.id === id)
-    if (!match) return null
-
-    return {
-      ...match,
-      startDate: new Date(match.startDate as string),
-      endDate: match.endDate ? new Date(match.endDate as string) : undefined,
-      sourceUrl: match.registrationUrl as string,
-      description: (match.description as string | null) ?? undefined,
-      location: (match.location as string | null) ?? undefined,
-      imageUrl: (match.imageUrl as string | null) ?? undefined,
-    } as unknown as ScrapedEvent
-  } catch {
-    return null
-  }
+  const listed = await fetchListedEvents()
+  return listed.find((e) => stableEventId(e.registrationUrl) === id || (e as { id?: string }).id === id) ?? null
 }
 
 async function findEvent(id: string): Promise<ScrapedEvent | null> {

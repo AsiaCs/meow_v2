@@ -4,7 +4,8 @@ import Link from "next/link"
 import { ArrowRight, CalendarDays, Briefcase } from "lucide-react"
 import { EventCard } from "@/components/events/event-card"
 import { InternshipCard } from "@/components/internships/internship-card"
-import { getAllEvents, stableEventId } from "@/lib/events/source"
+import { stableEventId } from "@/lib/events/source"
+import { fetchListedEvents } from "@/lib/events/listing"
 import { filterReachable } from "@/lib/validators/links"
 import { isSpecificApplyUrl } from "@/lib/validators/specific-urls"
 
@@ -93,8 +94,11 @@ export default async function DashboardPage() {
   const userLocation = profile?.location ?? null
   const userCity = userLocation?.split(",")[0]?.trim().toLowerCase() ?? null
 
-  // Live-scrape events (cached 30 min) and validate URLs
-  const scrapedEvents = await getAllEvents()
+  // Read the same payload /events renders. Calling getAllEvents() here gave
+  // this page its own unstable_cache fill (see lib/events/listing.ts) — one
+  // so stale that a single far-future event survived the filter below while
+  // the listing showed 46.
+  const scrapedEvents = await fetchListedEvents()
   const now = new Date()
   const futureEvents = scrapedEvents.filter((e) => new Date(e.startDate) > now)
 
