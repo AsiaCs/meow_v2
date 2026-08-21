@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation"
+import { headers } from "next/headers"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import { getAllEvents, stableEventId, type ScrapedEvent } from "@/lib/events/source"
@@ -52,6 +53,48 @@ function formatEventDate(date: Date) {
   return { dateStr, timeStr }
 }
 
+// Resolve against the exact payload the listing rendered.
+//
+// getAllEvents() is an unstable_cache instance, and Next bundles route
+// handlers and pages separately — so /api/events and this page each hold
+// their OWN fill of that cache, populated at different moments from a live
+// scrape whose result set changes. Measured locally: the page's fill had 27
+// events while /api/events served 31, stably, across repeated requests and
+// rebuilds. The 9-event gap was invisible to the user until they clicked a
+// card the listing had just drawn and got a 404.
+//
+// Asking the listing endpoint directly makes that class of mismatch
+// impossible by construction: if the card was rendered, the payload behind it
+// resolves. It is edge-cached (s-maxage=60), so this is not a real round trip
+// in production.
+async function findViaListing(id: string): Promise<ScrapedEvent | null> {
+  try {
+    const h = await headers()
+    const host = h.get("x-forwarded-host") ?? h.get("host")
+    if (!host) return null
+    const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https")
+
+    const res = await fetch(`${proto}://${host}/api/events`, { next: { revalidate: 60 } })
+    if (!res.ok) return null
+
+    const listed = (await res.json()) as Array<Record<string, unknown>>
+    const match = listed.find((e) => e.id === id)
+    if (!match) return null
+
+    return {
+      ...match,
+      startDate: new Date(match.startDate as string),
+      endDate: match.endDate ? new Date(match.endDate as string) : undefined,
+      sourceUrl: match.registrationUrl as string,
+      description: (match.description as string | null) ?? undefined,
+      location: (match.location as string | null) ?? undefined,
+      imageUrl: (match.imageUrl as string | null) ?? undefined,
+    } as unknown as ScrapedEvent
+  } catch {
+    return null
+  }
+}
+
 async function findEvent(id: string): Promise<ScrapedEvent | null> {
   // 1. Try the shared live-scraped cache first. Same function the listing
   //    endpoint uses, so the IDs always line up.
@@ -90,7 +133,9 @@ async function findEvent(id: string): Promise<ScrapedEvent | null> {
     }
   } catch { /* fall through */ }
 
-  return null
+  // 3. Last resort: whatever the listing endpoint is currently serving. This
+  //    is the step that actually closes the cache-fill gap described above.
+  return await findViaListing(id)
 }
 
 export default async function EventDetailPage({

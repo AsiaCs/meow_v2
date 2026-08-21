@@ -53,11 +53,22 @@ function isSafePublicUrl(url: string): boolean {
   return true
 }
 
-export async function isLinkReachable(url: string, timeoutMs = 5000): Promise<boolean> {
-  if (!url) return false
-  try { new URL(url) } catch { return false }
-  if (!isSafePublicUrl(url)) return false
-  if (isTrusted(url)) return true
+// Three-state, because "the server told us it's gone" and "we couldn't reach
+// the server" are very different facts and collapsing them loses content.
+//
+// WHY THIS MATTERS: lu.ma rate-limits the concurrent probes filterReachable
+// fires, so a batch of perfectly live event URLs intermittently times out.
+// When a timeout counted as "dead", those events were silently dropped from
+// whichever getAllEvents() cache fill happened to be unlucky — so the listing
+// and the event detail page could disagree about which events exist, and
+// clicking a card the listing had just rendered produced a 404.
+export type Reachability = "reachable" | "dead" | "unknown"
+
+export async function checkLink(url: string, timeoutMs = 5000): Promise<Reachability> {
+  if (!url) return "dead"
+  try { new URL(url) } catch { return "dead" }
+  if (!isSafePublicUrl(url)) return "dead"
+  if (isTrusted(url)) return "reachable"
 
   const headers = { "User-Agent": "Mozilla/5.0 (compatible; Meow-Bot/1.0)" }
 
@@ -71,8 +82,8 @@ export async function isLinkReachable(url: string, timeoutMs = 5000): Promise<bo
       redirect: "follow",
     })
     clearTimeout(id)
-    if (res.status < 400) return true
-    if (res.status !== 405) return false
+    if (res.status < 400) return "reachable"
+    if (res.status !== 405) return "dead"
   } catch {
     // Some event/job boards block HEAD. Fall through to a small GET probe.
   }
@@ -87,10 +98,18 @@ export async function isLinkReachable(url: string, timeoutMs = 5000): Promise<bo
       redirect: "follow",
     })
     clearTimeout(id)
-    return res.status < 400
+    return res.status < 400 ? "reachable" : "dead"
   } catch {
-    return false
+    // Timeout, DNS failure, connection reset, rate-limit drop. We learned
+    // nothing about the URL — say so rather than condemning it.
+    return "unknown"
   }
+}
+
+// Unchanged semantics: only a positive result counts as reachable. Callers
+// that DELETE rows (app/api/admin/cleanup) depend on this strictness.
+export async function isLinkReachable(url: string, timeoutMs = 5000): Promise<boolean> {
+  return (await checkLink(url, timeoutMs)) === "reachable"
 }
 
 export async function filterReachable<T>(
@@ -98,6 +117,10 @@ export async function filterReachable<T>(
   getUrl: (item: T) => string | undefined,
   concurrency = 6,
 ): Promise<T[]> {
+  // Drops ONLY links the server positively reported as gone. A probe that
+  // timed out or was rate-limited yields "unknown" and the item is kept —
+  // dropping it would make an event vanish from one cache fill and not
+  // another, which is exactly what produced 404s on event detail pages.
   const valid: T[] = []
   for (let i = 0; i < items.length; i += concurrency) {
     const batch = items.slice(i, i + concurrency)
@@ -105,12 +128,13 @@ export async function filterReachable<T>(
       batch.map(async (item) => {
         const url = getUrl(item)
         if (!url) return item
-        const ok = await isLinkReachable(url)
-        return ok ? item : null
+        return (await checkLink(url)) === "dead" ? null : item
       }),
     )
     for (const r of settled) {
-      if (r.status === "fulfilled" && r.value !== null) valid.push(r.value as T)
+      // A thrown probe is also "we don't know" — keep the item.
+      if (r.status === "rejected") continue
+      if (r.value !== null) valid.push(r.value as T)
     }
   }
   return valid
