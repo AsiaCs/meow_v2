@@ -62,6 +62,22 @@ function toRow(e: ScrapedEvent) {
   }
 }
 
+// True when the write failed because a column in the payload does not exist.
+//
+// Two different wordings have to be matched. Postgres itself says
+//   column "city" of relation "events" does not exist
+// but PostgREST rejects unknown columns from its own schema cache *before*
+// the statement ever reaches Postgres, and words it completely differently:
+//   PGRST204  Could not find the 'city' column of 'events' in the schema cache
+// Only matching the Postgres wording meant this fallback never fired against a
+// real Supabase project — see supabase/migrations/20260820_add_event_geo_columns.sql.
+function isUnknownColumnError(e: { code?: string; message?: string } | null): boolean {
+  if (!e) return false
+  if (e.code === "PGRST204") return true
+  const m = e.message ?? ""
+  return /column .* does not exist/i.test(m) || /could not find the .* column/i.test(m)
+}
+
 const GEO_KEYS = ["venue", "city", "region", "state", "country", "lat", "lng"]
 
 export async function ingestScrapedEvents(): Promise<IngestStats> {
@@ -112,7 +128,7 @@ export async function ingestScrapedEvents(): Promise<IngestStats> {
       .upsert(batch, { onConflict: "sourceUrl", ignoreDuplicates: false })
 
     // Graceful fallback if geo columns aren't migrated yet
-    if (result.error && /column .* does not exist/i.test(result.error.message ?? "")) {
+    if (result.error && isUnknownColumnError(result.error)) {
       const slim = batch.map((r) => {
         const out: Record<string, unknown> = { ...r }
         for (const k of GEO_KEYS) delete out[k]
