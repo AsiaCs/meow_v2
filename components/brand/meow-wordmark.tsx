@@ -25,10 +25,12 @@ export function MeowWordmark({
     <Tag
       className={className}
       style={{
-        fontFamily:
-          "var(--font-urbanist), 'Urbanist', system-ui, sans-serif",
-        fontWeight: 700,
-        letterSpacing: "-0.02em",
+        // Bricolage Grotesque via the wordmark token. Urbanist is no longer
+        // loaded, so the old hardcoded var resolved to nothing and the mark
+        // silently fell back to system-ui.
+        fontFamily: "var(--font-wordmark)",
+        fontWeight: 800,
+        letterSpacing: "-0.03em",
         lineHeight: 1,
         fontSize,
         color: "var(--color-text-primary)",

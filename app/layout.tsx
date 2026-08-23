@@ -1,39 +1,37 @@
 import type { Metadata } from "next"
-import { Plus_Jakarta_Sans, Urbanist, Poppins, Instrument_Serif } from "next/font/google"
+import { Bricolage_Grotesque, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google"
 import "./globals.css"
 
-// Instrument Serif — editorial display serif in the Perplexity register.
-// Loaded across both 400 weights, italic + roman, for the H1 and accents.
-const instrumentSerif = Instrument_Serif({
+// ── Display: Bricolage Grotesque ────────────────────────────────────────────
+// Variable grotesque with irregular widths and a slightly off-grid character.
+// Chosen because it does NOT read as the default geometric sans every product
+// in this category ships with, and it holds up under the heavy negative
+// tracking the display scale applies. Also carries the wordmark.
+const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
-  weight: ["400"],
-  style: ["normal", "italic"],
-  variable: "--font-serif",
+  variable: "--font-bricolage",
   display: "swap",
 })
 
-const jakarta = Plus_Jakarta_Sans({
+// ── Text / UI: IBM Plex Sans ────────────────────────────────────────────────
+// Humane grotesque with real character that still survives at 13–15px in dense
+// listing rows. Deliberately a different tonal register from the display face
+// rather than a second geometric sans.
+const plexSans = IBM_Plex_Sans({
   subsets: ["latin"],
-  variable: "--font-jakarta",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-plex-sans",
   display: "swap",
 })
 
-// Urbanist replaces Sora as the display face — same geometric grotesk family,
-// tighter apertures, the Mobbin-style high-contrast look. Loaded across the
-// weights actually used (regular through extrabold) so the date-thumb glyph
-// and h1/h2 headings render correctly at production weight.
-const urbanist = Urbanist({
+// ── Numerics: IBM Plex Mono ─────────────────────────────────────────────────
+// Same superfamily as the text face, so it is not a third voice. Used only for
+// figures — dates, salary, deadlines, match scores — where tabular alignment
+// between rows actually matters.
+const plexMono = IBM_Plex_Mono({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800", "900"],
-  variable: "--font-urbanist",
-  display: "swap",
-})
-
-// Used by the meow wordmark — Poppins ExtraBold per the v2 logo handoff.
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
-  variable: "--font-poppins",
+  weight: ["400", "500"],
+  variable: "--font-plex-mono",
   display: "swap",
 })
 
@@ -72,7 +70,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${jakarta.variable} ${urbanist.variable} ${poppins.variable} ${instrumentSerif.variable}`}>
+    <html lang="en" className={`${plexSans.variable} ${bricolage.variable} ${plexMono.variable}`}>
       <body className="min-h-dvh bg-bg-base text-text-primary antialiased">
         {children}
       </body>

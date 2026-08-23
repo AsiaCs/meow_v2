@@ -1,34 +1,22 @@
-// Aurora background — northern-lights ribbons in the meow logo spectrum.
-// Pure CSS animation; sits as the visual identity behind the hero.
+// RETIRED — kept as no-op exports so the three call sites still compile
+// until they are rebuilt.
 //
-// Implementation matches the meow-ds.css handoff verbatim. The four blobs
-// drift on independent long loops (24–33s) using transform + opacity only,
-// so the GPU compositor handles everything off the main thread.
+// The aurora was six blurred radial blobs in mint / purple / cyan / pink /
+// indigo drifting on 24–35s loops behind the hero, plus a radial "room" wash.
+// That is two of the banned patterns at once — decorative radial orbs and
+// rainbow colour — and it was also permanently animated peripheral motion,
+// which HIG's Reduce Motion guidance explicitly calls out ("reduce automatic
+// and repetitive animations, including zooming, scaling, and peripheral
+// motion").
 //
-// Lives next to other landing decorations and is mounted ONCE at the top
-// of the marketing page (not per-section) — the aurora is the background
-// for the whole landing, not a per-section accent.
+// Depth in the rebuilt system comes from the base/elevated surface ladder and
+// hairlines, not from ambient glow. Delete this file once the landing page,
+// the (app) layout and the sign-in page no longer import it.
 
 export function Aurora() {
-  return (
-    <div className="aurora" aria-hidden="true">
-      {/* Top cluster — original meow-ds.css spec, drifts behind the hero */}
-      <span className="au au1" />
-      <span className="au au2" />
-      <span className="au au3" />
-      <span className="au au4" />
-      {/* Bottom cluster — added so the aurora extends past the first viewport
-          and the rest of the page doesn't read as a dark void. Same colors,
-          mirrored to the lower half on independent loops. */}
-      <span className="au au5" />
-      <span className="au au6" />
-    </div>
-  )
+  return null
 }
 
-// Room — meow-ds canonical canvas wash. Soft radial bloom from the top
-// over a vertical gradient. Pair it with <Aurora /> so the aurora's
-// transparency reads against a proper depth field, not flat black.
 export function Room() {
-  return <div className="bg-room" aria-hidden="true" />
+  return null
 }
