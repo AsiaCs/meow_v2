@@ -1,331 +1,141 @@
-"use client"
-
-import { motion } from "framer-motion"
 import Link from "next/link"
-import { ArrowRight, Search, Clock, Users, MapPin } from "lucide-react"
-import { Aurora, Room } from "./aurora"
 
-// Hero — exact port of design/meow-v2/project/meow UI.html (Landing artboard).
-// No extra sections, no archival slugs, no Mobbin-pass overlays. Just the
-// designed landing: aurora + bg-room, eyebrow, H1 with .u-cool accent,
-// subtitle, Perplexity tinted-glass search panel, three peek event cards.
+// ── Hero ────────────────────────────────────────────────────────────────────
+//
+// The brief's structural note: nav → title → image → supporting text → CTA is
+// the skeleton most landing pages collapse into, and it is a pattern to vary,
+// not fill in. So this hero has no centred headline, no pair of buttons under
+// it, and no product screenshot standing in for content.
+//
+// Instead the product IS the visual content. meow's actual asset is a live
+// index of real events with real dates, so the hero is set as an editorial
+// index: a typographic statement on the narrower left column, the genuine
+// next-up listings on the wider right. Nothing here is staged — every row is a
+// real event from the same endpoint /events renders.
+//
+// Deliberately a SERVER component. The entrance reveal is CSS (see .enter in
+// globals.css), so this ships zero client JS: the content is in the HTML and
+// visible without hydration. An earlier revision used framer-motion here and
+// server-rendered the whole hero at opacity:0 — in a backgrounded tab, where
+// requestAnimationFrame never fires, it stayed invisible indefinitely. Reveal
+// animations must not be able to hide content.
 
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      delay: i * 0.07,
-      duration: 0.75,
-      ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
-    },
-  }),
+export type HeroEvent = {
+  id: string
+  title: string
+  city: string | null
+  startISO: string
+  source: string
 }
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 40 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: {
-      delay: 0.65 + i * 0.12,
-      duration: 0.95,
-      ease: [0.16, 1, 0.3, 1] as [number, number, number, number],
-    },
-  }),
+function formatSlot(iso: string) {
+  const d = new Date(iso)
+  const day = d.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase()
+  const date = d.toLocaleDateString("en-US", { month: "short", day: "numeric" }).toUpperCase()
+  const time = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
+  return { day, date, time }
 }
 
-const FILTER_PILLS = [
-  { label: "Near me", icon: <NearIcon />, active: true },
-  { label: "This week", icon: <CalendarIcon />, active: false },
-  { label: "Internships", icon: <BriefcaseIcon />, active: false },
-  { label: "For you", icon: <SparkIcon />, active: false },
-]
-
-// Mirrors EVENTS[0..2] from meow-kit.jsx verbatim — same titles, hosts,
-// tags, distances, and attending counts so the peek cards read as the
-// real product rather than placeholder mocks.
-const PEEK_EVENTS = [
-  {
-    title: "Cerebral Valley AI Summit",
-    host: "Cerebral Valley",
-    when: "Thu · 9:00 AM",
-    place: "Pier 27 · San Francisco",
-    dist: "1.2 mi",
-    going: 480,
-    tag: "Summit",
-    mo: "NOV",
-    day: "14",
-    cover: null,
-  },
-  {
-    title: "Latent Space — Paper Club",
-    host: "Latent.Space",
-    when: "Sat · 11:00 AM",
-    place: "Notion HQ · San Francisco",
-    dist: "0.8 mi",
-    going: 120,
-    tag: "Meetup",
-    mo: "NOV",
-    day: "09",
-    cover: null,
-  },
-  {
-    title: "AI Tinkerers · Hack Night",
-    host: "AI Tinkerers",
-    when: "Tue · 6:30 PM",
-    place: "GitHub HQ · San Francisco",
-    dist: "2.4 mi",
-    going: 90,
-    tag: "Hack",
-    mo: "NOV",
-    day: "12",
-    cover: null,
-  },
-]
-
-function NearIcon() {
+export default function Hero({
+  events,
+  totalCount,
+}: {
+  events: HeroEvent[]
+  totalCount: number
+}) {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="3" />
-      <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
-    </svg>
-  )
-}
-function CalendarIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="5" width="18" height="16" rx="3" /><path d="M3 10h18M8 3v4M16 3v4" />
-    </svg>
-  )
-}
-function BriefcaseIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="7" width="18" height="13" rx="3" /><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
-    </svg>
-  )
-}
-function SparkIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 3v4M12 17v4M3 12h4M17 12h4M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3" />
-    </svg>
-  )
-}
+    <section className="relative border-b border-border">
+      <div className="mx-auto w-full max-w-[1240px] px-6 pt-28 pb-16 md:pt-36 md:pb-24">
+        {/* Asymmetric split — not a centred stack, not three equal columns.
+            The index gets the wider column because the data is the argument. */}
+        <div className="grid grid-cols-1 gap-14 lg:grid-cols-12 lg:gap-10">
+          {/* ── Statement ─────────────────────────────────────────────── */}
+          <div className="lg:col-span-5">
+            <p className="enter font-mono text-meta uppercase text-text-muted" style={{ "--i": 0 } as React.CSSProperties}>
+              Updated every 30 minutes
+            </p>
 
-// Cover panel — matches the design's Cover() component from meow-kit.jsx.
-// Image gradient with top-right specular glow + month/day overlay when
-// `cover` is set, otherwise the #1a102f fallback panel with spaced month
-// over a massive day numeral.
-function Cover({ cover, mo, day }: { cover: string | null; mo: string; day: string }) {
-  if (cover) {
-    return (
-      <div
-        className="h-[132px] rounded-[13px] relative overflow-hidden"
-        style={{ backgroundImage: cover, backgroundSize: "cover" }}
-      >
-        <div
-          className="absolute inset-0"
-          style={{ background: "radial-gradient(120% 80% at 80% -10%, rgba(255,255,255,.35), transparent 55%)" }}
-        />
-        <div
-          className="absolute left-3.5 top-3 flex flex-col items-center leading-none"
-          style={{ color: "#fff", textShadow: "0 1px 8px rgba(0,0,0,.4)" }}
-        >
-          <span className="font-bold text-[11px] tracking-[0.26em]">{mo}</span>
-          <span className="font-extrabold text-[26px] leading-none mt-0.5" style={{ letterSpacing: "-0.04em" }}>
-            {day}
-          </span>
-        </div>
-      </div>
-    )
-  }
-  return (
-    <div
-      className="h-[132px] rounded-[13px] relative overflow-hidden flex flex-col items-center justify-center gap-1.5"
-      style={{
-        background:
-          "radial-gradient(120% 90% at 80% 0%, rgba(168,85,247,.28), rgba(26,16,47,0) 60%), #1a102f",
-      }}
-    >
-      <span
-        className="font-bold text-[12px] uppercase"
-        style={{ letterSpacing: "0.34em", color: "rgba(245,242,252,.62)" }}
-      >
-        {mo}
-      </span>
-      <span
-        className="font-display font-extrabold text-text-primary leading-[0.86]"
-        style={{ fontSize: "60px", letterSpacing: "-0.04em" }}
-      >
-        {day}
-      </span>
-    </div>
-  )
-}
+            <h1
+              className="enter mt-6 font-display text-display-l text-text-primary md:text-display-xl"
+              style={{ "--i": 1 } as React.CSSProperties}
+            >
+              Every AI event and internship, in one index.
+            </h1>
 
-function PeekCard({ ev }: { ev: typeof PEEK_EVENTS[number] }) {
-  return (
-    <div className="glass rounded-[20px] p-2.5 flex flex-col gap-2.5 w-[320px]">
-      <Cover cover={ev.cover} mo={ev.mo} day={ev.day} />
-      <div className="px-1 pb-1">
-        {/* Tag pill + distance */}
-        <div className="flex items-center gap-2 mb-1.5">
-          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[12px] font-semibold text-text-secondary bg-white/[0.055] border border-white/[0.11]">
-            {ev.tag}
-          </span>
-          <span className="inline-flex items-center gap-1 text-[13px] font-semibold text-purple-light">
-            <MapPin size={13} strokeWidth={1.8} />
-            {ev.dist}
-          </span>
-        </div>
+            <p
+              className="enter mt-7 max-w-[42ch] text-body-l text-text-secondary"
+              style={{ "--i": 2 } as React.CSSProperties}
+            >
+              Talks, hackathons and mixers pulled from Luma and Cerebral Valley,
+              alongside open roles. Filtered to your city, sorted by what happens next.
+            </p>
 
-        {/* Title */}
-        <div
-          className="font-display font-bold text-[17px] leading-[1.18] text-text-primary"
-          style={{ letterSpacing: "-0.01em" }}
-        >
-          {ev.title}
-        </div>
-
-        {/* When row */}
-        <div className="flex items-center gap-1.5 mt-2 text-text-secondary text-[13.5px] font-medium">
-          <Clock size={14} strokeWidth={1.7} />
-          {ev.when}
-        </div>
-
-        {/* Host + going count */}
-        <div className="flex items-center justify-between mt-2.5">
-          <span className="text-text-muted text-[13px] font-medium">{ev.host}</span>
-          <span className="inline-flex items-center gap-1 text-text-secondary text-[13px] font-semibold">
-            <Users size={14} strokeWidth={1.7} />
-            {ev.going}
-          </span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-export default function Hero() {
-  return (
-    <section className="relative min-h-[100dvh] flex flex-col items-center pt-32 pb-12 px-4 overflow-hidden">
-      {/* Background stack */}
-      <Room />
-      <Aurora />
-
-      {/* Content — exactly matches design's hero block (no archival slugs) */}
-      <div className="relative z-10 flex flex-col items-center text-center max-w-[980px] mx-auto w-full">
-        {/* Eyebrow */}
-        <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible">
-          <span className="inline-block text-[13px] font-semibold tracking-[0.18em] uppercase text-text-secondary mb-5">
-            Curiosity, organized
-          </span>
-        </motion.div>
-
-        {/* H1 — Urbanist ExtraBold (matches the sidebar font register).
-            Plain white, no gradient. Emphasis comes from weight + size,
-            not from color. */}
-        <motion.h1
-          custom={1}
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          className="font-display font-extrabold text-text-primary"
-          style={{
-            fontSize: "clamp(2.75rem, 7vw, 5rem)",
-            lineHeight: 1.02,
-            letterSpacing: "-0.03em",
-          }}
-        >
-          Every AI event & internship,
-          <br />
-          in one place.
-        </motion.h1>
-
-        {/* Subtitle */}
-        <motion.p
-          custom={2}
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          className="text-[18px] sm:text-[20px] text-text-secondary font-medium max-w-[600px] mx-auto leading-[1.5] mt-7"
-        >
-          Talks, hackathons, mixers and open roles from the people building the future —
-          near you, updated in real time.
-        </motion.p>
-
-        {/* Perplexity tinted-glass search */}
-        <motion.div
-          custom={3}
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          className="glass rounded-[24px] p-3.5 w-full max-w-[680px] mx-auto mt-9"
-        >
-          <div className="field-light rounded-2xl px-4 py-[17px] flex items-center gap-3">
-            <Search size={22} strokeWidth={1.8} className="text-[#5d666f] flex-shrink-0" />
-            <span className="ph text-[17px] font-medium">Search events near you…</span>
-            <motion.span
-              animate={{ opacity: [1, 0.2, 1] }}
-              transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
-              className="ml-auto inline-block w-[2.5px] h-[22px] rounded-[2px] bg-[#0c1116]"
-            />
+            <div
+              className="enter mt-9 flex items-baseline gap-7"
+              style={{ "--i": 3 } as React.CSSProperties}
+            >
+              <Link href="/events" className="link-underline font-medium text-body-l text-brand">
+                Browse {totalCount > 0 ? totalCount : "all"} events
+              </Link>
+              <Link href="/submit" className="link-underline text-body-m text-text-muted">
+                Post an event
+              </Link>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2.5 flex-wrap pt-3.5 pb-1 px-1.5">
-            {FILTER_PILLS.map(({ label, icon, active }) => (
-              <span
-                key={label}
-                className={
-                  active
-                    ? "pill-on inline-flex items-center gap-1.5 rounded-full px-3.5 py-[9px] text-[13.5px] font-semibold"
-                    : "inline-flex items-center gap-1.5 rounded-full px-3.5 py-[9px] text-[13.5px] font-semibold text-text-secondary bg-white/[0.055] border border-white/[0.11]"
-                }
-              >
-                <span className={active ? "text-[#a855f7]" : "text-text-muted"}>{icon}</span>
-                {label}
-              </span>
-            ))}
-            <Link href="/events" className="btn-brand !rounded-[14px] !px-[22px] !py-[11px] ml-auto !text-[14px]">
-              Explore
-              <ArrowRight size={15} strokeWidth={2.2} />
-            </Link>
-          </div>
-        </motion.div>
-      </div>
+          {/* ── Live index ───────────────────────────────────────────────── */}
+          <div className="lg:col-span-7">
+            <div className="flex items-baseline justify-between">
+              <h2 className="font-mono text-meta uppercase tracking-[0.14em] text-text-muted">
+                Next up
+              </h2>
+              {events.length > 0 && (
+                <span className="font-mono text-meta tabular-nums text-text-faint">
+                  {events.length} of {totalCount}
+                </span>
+              )}
+            </div>
 
-      {/* Three perspective peek cards bleeding off the bottom edge — exact
-          design pattern from meow-web.jsx Landing(). Middle card lifts -14px
-          for cinema framing; bottom mask fades them into the page below. */}
-      <div
-        className="relative mt-16 w-full max-w-[1080px] hidden md:flex gap-5 justify-center"
-        style={{
-          perspective: 1400,
-          WebkitMaskImage: "linear-gradient(180deg, #000 60%, transparent)",
-          maskImage: "linear-gradient(180deg, #000 60%, transparent)",
-        }}
-      >
-        {PEEK_EVENTS.map((ev, i) => (
-          <motion.div
-            key={ev.title}
-            custom={i}
-            variants={cardVariants}
-            initial="hidden"
-            animate="visible"
-            style={{
-              transform: `rotateX(14deg) translateY(${i === 1 ? -14 : 0}px)`,
-            }}
-            whileHover={{
-              y: i === 1 ? -22 : -8,
-              transition: { type: "spring", stiffness: 280, damping: 22 },
-            }}
-          >
-            <PeekCard ev={ev} />
-          </motion.div>
-        ))}
+            <ul className="mt-5 border-t border-border">
+              {events.map((e, i) => {
+                const { day, date, time } = formatSlot(e.startISO)
+                return (
+                  <li
+                    key={e.id}
+                    className="enter-row border-b border-border"
+                    style={{ "--i": i } as React.CSSProperties}
+                  >
+                    <Link
+                      href={`/events/${e.id}`}
+                      className="group grid grid-cols-[auto_1fr] items-baseline gap-x-5 py-4 md:grid-cols-[132px_1fr_auto] md:gap-x-6"
+                    >
+                      {/* Numerics in the mono face so rows align down the page. */}
+                      <span className="font-mono text-meta tabular-nums text-text-muted">
+                        {day} {date}
+                      </span>
+                      <span className="text-body-l text-text-primary transition-colors duration-200 group-hover:text-brand">
+                        {e.title}
+                      </span>
+                      <span className="col-start-2 font-mono text-meta text-text-faint md:col-start-3 md:text-right">
+                        {time}
+                        {e.city ? ` · ${e.city}` : ""}
+                      </span>
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+
+            {events.length === 0 && (
+              // Honest failure. An empty index means the feed broke, and saying
+              // so beats decoration that hides it.
+              <p className="border-b border-border py-6 text-body-m text-text-muted">
+                No events are loading right now. This is a fault on our side, not an
+                empty calendar.
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     </section>
   )

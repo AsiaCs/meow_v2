@@ -1,166 +1,132 @@
-﻿"use client"
+"use client"
 
-import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { Menu, X } from "lucide-react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
-import { MeowLockup } from "@/components/brand/meow-lockup"
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion"
+import { List, X } from "@phosphor-icons/react"
+import { MeowWordmark } from "@/components/brand/meow-wordmark"
 
-const links = [
-  { label: "Home", href: "/" },
-  { label: "Events", href: "/events" },
-  { label: "Internships", href: "/internships" },
+// ── Nav ─────────────────────────────────────────────────────────────────────
+//
+// Was a floating rounded capsule with a permanent border. Now a plain
+// full-width bar that gains a hairline and a veil ONLY once the page has
+// scrolled — depth doing a job (separating chrome from content that has moved
+// under it) rather than sitting there as ambient decoration.
+//
+// Icons: two, from one library, at one weight. The previous nav pulled raw
+// Lucide defaults; the rebuild uses a curated Phosphor subset.
+
+const LINKS = [
+  { href: "/events", label: "Events" },
+  { href: "/internships", label: "Internships" },
 ]
 
-const overlayVariants = {
-  hidden: { opacity: 0 },
-  visible: { opacity: 1, transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] } },
-  exit: { opacity: 0, transition: { duration: 0.2, ease: [0.32, 0.72, 0, 1] as [number, number, number, number] } },
-}
-
-const linkContainerVariants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.05, delayChildren: 0.1 } },
-}
-
-const linkVariants = {
-  hidden: { opacity: 0, y: 24, filter: "blur(4px)" },
-  visible: {
-    opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
-    transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
-  },
-}
-
 export default function LandingNav() {
+  const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
+  const reduced = useReducedMotion()
 
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden"
-    } else {
-      document.body.style.overflow = ""
+    let frame = 0
+    const onScroll = () => {
+      if (frame) return
+      frame = requestAnimationFrame(() => {
+        setScrolled(window.scrollY > 8)
+        frame = 0
+      })
     }
+    onScroll()
+    window.addEventListener("scroll", onScroll, { passive: true })
     return () => {
-      document.body.style.overflow = ""
+      window.removeEventListener("scroll", onScroll)
+      if (frame) cancelAnimationFrame(frame)
+    }
+  }, [])
+
+  // Lock the page while the mobile sheet is open, and restore on unmount so a
+  // route change mid-animation cannot strand the scroll lock.
+  useEffect(() => {
+    if (!open) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = prev
     }
   }, [open])
 
   return (
-    <>
-      <div className="fixed top-0 left-0 right-0 z-50 flex justify-center pt-6 px-4 pointer-events-none">
-        <motion.nav
-          initial={{ opacity: 0, y: -16, filter: "blur(8px)" }}
-          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
-          className="pointer-events-auto flex items-center gap-2 px-3 py-2 rounded-full backdrop-blur-xl bg-white/[0.04] border border-white/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
-        >
-          {/* Logo */}
-          <Link href="/" className="flex items-center px-3 py-1.5 mr-1">
-            <MeowLockup iconSize={22} wordmarkSize={18} gap={8} />
-          </Link>
+    <header
+      className={[
+        "fixed inset-x-0 top-0 z-50 transition-colors duration-300",
+        scrolled
+          ? "border-b border-border bg-bg-veil backdrop-blur-xl"
+          : "border-b border-transparent bg-transparent",
+      ].join(" ")}
+    >
+      <nav className="mx-auto flex h-16 w-full max-w-[1240px] items-center gap-8 px-6">
+        <Link href="/" aria-label="meow — home" className="shrink-0">
+          <MeowWordmark size={22} />
+        </Link>
 
-          {/* Desktop links */}
-          <div className="hidden md:flex items-center gap-1">
-            {links.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="px-4 py-2 rounded-full text-sm text-text-secondary hover:text-text-primary transition-colors duration-200"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-
-          {/* CTA — meow brand: light pink → light purple gradient with dark ink.
-              This is the deliberate brand color (per meow-ds handoff), not the
-              generic AI purple-slop. The CTA pulses the wordmark gradient. */}
-          <div className="hidden md:flex ml-2">
+        <div className="ml-auto hidden items-center gap-8 md:flex">
+          {LINKS.map((l) => (
             <Link
-              href="/auth/signin"
-              className="btn-brand !px-5 !py-2.5 !text-[14px] !rounded-full"
+              key={l.href}
+              href={l.href}
+              className="link-underline text-body-m text-text-secondary transition-colors hover:text-text-primary"
             >
-              Get started
-              <span aria-hidden>→</span>
+              {l.label}
             </Link>
-          </div>
-
-          {/* Mobile hamburger */}
-          <button
-            onClick={() => setOpen(!open)}
-            className="md:hidden ml-2 p-2 rounded-full text-text-secondary hover:text-text-primary hover:bg-white/[0.06] transition-all duration-200"
-            aria-label="Toggle menu"
+          ))}
+          <Link
+            href="/auth/signin"
+            className="rounded-full bg-brand px-5 py-2 text-body-m font-medium text-on-brand transition-colors hover:bg-brand-hi"
           >
-            <AnimatePresence mode="wait" initial={false}>
-              {open ? (
-                <motion.span
-                  key="x"
-                  initial={{ rotate: -90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: 90, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <X size={18} strokeWidth={1.5} />
-                </motion.span>
-              ) : (
-                <motion.span
-                  key="menu"
-                  initial={{ rotate: 90, opacity: 0 }}
-                  animate={{ rotate: 0, opacity: 1 }}
-                  exit={{ rotate: -90, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <Menu size={18} strokeWidth={1.5} />
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </button>
-        </motion.nav>
-      </div>
+            Sign in
+          </Link>
+        </div>
 
-      {/* Mobile overlay */}
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-label={open ? "Close menu" : "Open menu"}
+          aria-expanded={open}
+          // 44px target — HIG's minimum for touch.
+          className="ml-auto flex h-11 w-11 items-center justify-center text-text-secondary md:hidden"
+        >
+          {open ? <X size={22} weight="regular" /> : <List size={22} weight="regular" />}
+        </button>
+      </nav>
+
       <AnimatePresence>
         {open && (
           <motion.div
-            key="overlay"
-            variants={overlayVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="fixed inset-0 z-40 md:hidden flex flex-col items-center justify-center bg-bg-base/95 backdrop-blur-2xl"
+            initial={{ opacity: 0, y: reduced ? 0 : -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: reduced ? 0 : -8 }}
+            transition={{ type: "spring", bounce: 0.1, visualDuration: 0.32 }}
+            className="border-b border-border bg-bg-surface px-6 pb-6 pt-2 md:hidden"
           >
-            <motion.div
-              variants={linkContainerVariants}
-              initial="hidden"
-              animate="visible"
-              className="flex flex-col items-center gap-2"
+            {LINKS.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                onClick={() => setOpen(false)}
+                className="block border-b border-border py-4 text-body-l text-text-primary"
+              >
+                {l.label}
+              </Link>
+            ))}
+            <Link
+              href="/auth/signin"
+              onClick={() => setOpen(false)}
+              className="mt-6 block rounded-full bg-brand px-5 py-3 text-center text-body-m font-medium text-on-brand"
             >
-              {links.map((link) => (
-                <motion.div key={link.href} variants={linkVariants}>
-                  <Link
-                    href={link.href}
-                    onClick={() => setOpen(false)}
-                    className="block px-8 py-4 text-3xl font-display font-semibold text-text-secondary hover:text-text-primary transition-colors duration-200"
-                  >
-                    {link.label}
-                  </Link>
-                </motion.div>
-              ))}
-              <motion.div variants={linkVariants} className="mt-6">
-                <Link
-                  href="/auth/signin"
-                  onClick={() => setOpen(false)}
-                  className="btn-brand !px-8 !py-4 !text-[17px] !rounded-full"
-                >
-                  Get started <span aria-hidden>→</span>
-                </Link>
-              </motion.div>
-            </motion.div>
+              Sign in
+            </Link>
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </header>
   )
 }

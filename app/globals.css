@@ -220,6 +220,69 @@
   --shadow-overlay: 0 24px 60px -24px rgba(0, 0, 0, 0.7);
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   ENTRANCE REVEALS
+
+   These are CSS, not JS, on purpose. A JS-driven entrance has to render
+   the content at opacity:0 and rely on requestAnimationFrame to reveal
+   it — so anything that never fires rAF (a background tab, an OG-image
+   renderer, a crawler, or simply JS failing) leaves the hero blank.
+   Observed directly: in a backgrounded tab the whole hero stayed at
+   opacity 0 indefinitely.
+
+   With @starting-style the resting state IS the visible state; the
+   from-state only exists for the first transition. If the transition
+   never runs, the content is simply there. Failure degrades to "no
+   animation", never to "no content".
+
+   The easing is a real spring encoded as linear(), including its
+   overshoot, rather than an ease-out curve — springs are the standard
+   this rebuild holds motion to. CSS transitions are also interruptible
+   and animate from the current value by definition, which is the rest
+   of that standard.
+
+   Stagger is opt-in per element via style={{ '--i': n }}.
+   Reduce Motion is handled by the global backstop below.
+   ═══════════════════════════════════════════════════════════════════ */
+
+:root {
+  --spring-entrance: linear(
+    0, 0.006, 0.025 2.8%, 0.101 6.1%, 0.539 18.9%, 0.721 25.3%, 0.85 31.5%,
+    0.937 38.1%, 0.968 41.8%, 0.991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001 100%
+  );
+}
+
+.enter {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 620ms var(--spring-entrance),
+    transform 620ms var(--spring-entrance);
+  transition-delay: calc(var(--i, 0) * 55ms);
+}
+
+@starting-style {
+  .enter {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+
+/* Rows in the live index get a distinct treatment — quicker, tighter
+   stagger, no vertical travel — so the page is not one uniform fade-up
+   applied to every element regardless of what it is. */
+.enter-row {
+  opacity: 1;
+  transition: opacity 420ms var(--spring-entrance);
+  transition-delay: calc(180ms + var(--i, 0) * 42ms);
+}
+
+@starting-style {
+  .enter-row {
+    opacity: 0;
+  }
+}
+
 /* HIG accessibility: when Reduce Motion is on, "reduce automatic and
    repetitive animations, including zooming, scaling, and peripheral
    motion." This is the global backstop — JS-driven motion must ALSO
