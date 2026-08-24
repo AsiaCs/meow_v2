@@ -15,7 +15,7 @@ const STEPS = [
   {
     n: "01",
     title: "Tell it where you are",
-    body: "Set a city once. Everything reorders around it — the feed, the calendar, the week ahead. Change it whenever you travel.",
+    body: "Set a city once. The feed, the calendar and the week ahead all reorder around it. Change it whenever you travel.",
   },
   {
     n: "02",

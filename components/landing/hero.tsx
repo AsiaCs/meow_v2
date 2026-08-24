@@ -20,20 +20,19 @@ import Link from "next/link"
 // requestAnimationFrame never fires, it stayed invisible indefinitely. Reveal
 // animations must not be able to hide content.
 
+// Times arrive pre-formatted in the EVENT's timezone (see lib/events/timezone.ts).
+// Formatting here would use the server's zone, which on Vercel is UTC — that
+// rendered a 7:30 PM San Francisco meetup as "2:30 AM · San Francisco".
 export type HeroEvent = {
   id: string
   title: string
   city: string | null
   startISO: string
+  weekday: string
+  month: string
+  dayNum: string
+  time: string
   source: string
-}
-
-function formatSlot(iso: string) {
-  const d = new Date(iso)
-  const day = d.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase()
-  const date = d.toLocaleDateString("en-US", { month: "short", day: "numeric" }).toUpperCase()
-  const time = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })
-  return { day, date, time }
 }
 
 export default function Hero({
@@ -98,7 +97,6 @@ export default function Hero({
 
             <ul className="mt-5 border-t border-border">
               {events.map((e, i) => {
-                const { day, date, time } = formatSlot(e.startISO)
                 return (
                   <li
                     key={e.id}
@@ -110,14 +108,14 @@ export default function Hero({
                       className="group grid grid-cols-[auto_1fr] items-baseline gap-x-5 py-4 md:grid-cols-[132px_1fr_auto] md:gap-x-6"
                     >
                       {/* Numerics in the mono face so rows align down the page. */}
-                      <span className="font-mono text-meta tabular-nums text-text-muted">
-                        {day} {date}
-                      </span>
+                      <time dateTime={e.startISO} className="font-mono text-meta tabular-nums text-text-muted">
+                        {e.weekday} {e.month} {e.dayNum}
+                      </time>
                       <span className="text-body-l text-text-primary transition-colors duration-200 group-hover:text-brand">
                         {e.title}
                       </span>
                       <span className="col-start-2 font-mono text-meta text-text-faint md:col-start-3 md:text-right">
-                        {time}
+                        {e.time}
                         {e.city ? ` · ${e.city}` : ""}
                       </span>
                     </Link>

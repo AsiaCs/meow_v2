@@ -6,6 +6,7 @@ import HowItWorks from "@/components/landing/how-it-works"
 import Footer from "@/components/landing/footer"
 import { fetchListedEvents } from "@/lib/events/listing"
 import { isTechRelevant, stripEmoji } from "@/lib/events/relevance"
+import { timeZoneFor, formatInZone } from "@/lib/events/timezone"
 
 // The landing page renders real listings, not a staged demo. Events come from
 // the same endpoint /events uses, so the marketing surface and the app can
@@ -36,43 +37,51 @@ export default async function LandingPage() {
     }),
   )
 
-  const idOf = (e: (typeof relevant)[number]) =>
-    (e as { id?: string }).id ?? e.registrationUrl
-  const cityOf = (e: (typeof relevant)[number]) =>
-    (e as { city?: string | null }).city ?? null
+  type Ev = (typeof relevant)[number]
+  const idOf = (e: Ev) => (e as { id?: string }).id ?? e.registrationUrl
+  const cityOf = (e: Ev) => (e as { city?: string | null }).city ?? null
 
-  const heroEvents: HeroEvent[] = relevant.slice(0, 7).map((e) => ({
-    id: idOf(e),
-    title: stripEmoji(e.title),
-    city: cityOf(e),
-    startISO: new Date(e.startDate).toISOString(),
-    source: e.source,
-  }))
+  // Every date on this page is formatted in the EVENT's timezone, never the
+  // server's. Vercel runs UTC, so server-side toLocaleTimeString() rendered a
+  // 7:30 PM San Francisco meetup as "2:30 AM · San Francisco" — plausible
+  // enough to survive review, and wrong on every single row.
+  const zoned = (e: Ev) => {
+    const iso = new Date(e.startDate).toISOString()
+    return { iso, f: formatInZone(iso, timeZoneFor(cityOf(e), e.location ?? null)) }
+  }
 
-  // ── Group the next seven days that actually have something in them ────────
+  const heroEvents: HeroEvent[] = relevant.slice(0, 7).map((e) => {
+    const { iso, f } = zoned(e)
+    return {
+      id: idOf(e),
+      title: stripEmoji(e.title),
+      city: cityOf(e),
+      startISO: iso,
+      weekday: f.weekday,
+      month: f.month,
+      dayNum: f.dayNum,
+      time: f.time,
+      source: e.source,
+    }
+  })
+
+  // ── Group by the event's own calendar day ─────────────────────────────────
   const byDay = new Map<string, WeekDay>()
   for (const e of relevant) {
-    const d = new Date(e.startDate)
-    // Key on the LOCAL date, because the labels below are local. Keying on
-    // toISOString() (UTC) split a single local day across two columns —
-    // "24 MON AUG" rendered twice — for any event late enough in the evening
-    // to fall on the next UTC day.
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
-      d.getDate(),
-    ).padStart(2, "0")}`
-    if (!byDay.has(key)) {
-      byDay.set(key, {
-        key,
-        weekday: d.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase(),
-        dayNum: String(d.getDate()).padStart(2, "0"),
-        month: d.toLocaleDateString("en-US", { month: "short" }).toUpperCase(),
+    const { f } = zoned(e)
+    if (!byDay.has(f.dayKey)) {
+      byDay.set(f.dayKey, {
+        key: f.dayKey,
+        weekday: f.weekday,
+        dayNum: f.dayNum,
+        month: f.month,
         events: [],
       })
     }
-    byDay.get(key)!.events.push({
+    byDay.get(f.dayKey)!.events.push({
       id: idOf(e),
       title: stripEmoji(e.title),
-      time: d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
+      time: f.time,
       city: cityOf(e),
     })
   }
