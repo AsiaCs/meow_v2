@@ -25,16 +25,46 @@ export async function fetchListedEvents(): Promise<ScrapedEvent[]> {
   try {
     const h = await headers()
     const host = h.get("x-forwarded-host") ?? h.get("host")
-    if (!host) return []
+    if (!host) return fallbackToDirect()
     const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https")
 
-    const res = await fetch(`${proto}://${host}/api/events`, { next: { revalidate: 60 } })
-    if (!res.ok) return []
+    // Vercel's deployment protection sits at the edge, so a deployment
+    // fetching its OWN api route is intercepted too: on a protected preview
+    // this returns a 302 to the SSO login rather than JSON, and the landing
+    // page renders empty. Observed on preview meow-21dieuj4n. The bypass
+    // header is the documented escape hatch; it is only present when
+    // Protection Bypass for Automation is enabled, hence the fallback below.
+    const bypass = process.env.VERCEL_AUTOMATION_BYPASS_SECRET
+    const res = await fetch(`${proto}://${host}/api/events`, {
+      next: { revalidate: 60 },
+      redirect: "manual",
+      headers: bypass ? { "x-vercel-protection-bypass": bypass } : undefined,
+    })
+
+    // A redirect here means something intercepted us (auth wall, protection,
+    // WAF) — not that there are no events.
+    if (res.status >= 300 && res.status < 400) return fallbackToDirect()
+    if (!res.ok) return fallbackToDirect()
 
     const listed = (await res.json()) as Array<Record<string, unknown>>
-    if (!Array.isArray(listed)) return []
+    if (!Array.isArray(listed)) return fallbackToDirect()
 
     return listed.map(toScrapedEvent)
+  } catch {
+    return fallbackToDirect()
+  }
+}
+
+// Last resort: read the scrape cache in-process.
+//
+// This is the path the split-cache problem lives on — each bundle gets its own
+// unstable_cache fill, which is why the HTTP route is preferred. But showing
+// a page with slightly different events beats showing a page with none, so
+// when the endpoint is unreachable we take the inconsistency over the blank.
+async function fallbackToDirect(): Promise<ScrapedEvent[]> {
+  try {
+    const { getAllEvents } = await import("@/lib/events/source")
+    return await getAllEvents()
   } catch {
     return []
   }
