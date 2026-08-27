@@ -3,6 +3,7 @@ import Hero, { type HeroEvent } from "@/components/landing/hero"
 import Week, { type WeekDay } from "@/components/landing/week"
 import Coverage, { type CityCount } from "@/components/landing/coverage"
 import HowItWorks from "@/components/landing/how-it-works"
+import ClosingCta from "@/components/landing/closing-cta"
 import Footer from "@/components/landing/footer"
 import { fetchListedEvents } from "@/lib/events/listing"
 import { isTechRelevant, stripEmoji } from "@/lib/events/relevance"
@@ -104,6 +105,7 @@ export default async function LandingPage() {
       <Week days={days} />
       <Coverage cities={cities} totalCount={relevant.length} />
       <HowItWorks />
+      <ClosingCta />
       <Footer />
     </main>
   )
