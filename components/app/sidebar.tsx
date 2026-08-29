@@ -5,12 +5,13 @@ import { usePathname } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Home, Calendar, Briefcase, Plus, LogOut, User, Bookmark } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { MeowLockup } from "@/components/brand/meow-lockup"
+import { MeowWordmark } from "@/components/brand/meow-wordmark"
 
-// Floating glass sidebar — port of meow-web.jsx Dashboard().
-// 268px wide, 16px margin around, .glass surface, 24px radius. Active row
-// is .glass-2 with a brand-accent icon. User card at the bottom in a
-// glass-2 plate with a gradient avatar swatch.
+// Floating sidebar, 268px wide, 16px margin around. Flat bordered panel —
+// same register as card.tsx and every other surface in the rebuild, no
+// blur, no glow. Active row is bg-bg-elevated with a brand-accent icon. No
+// icon lockup: meow-logo.tsx is still the old rainbow glyph and hasn't been
+// carried over to the brass system (see nav.tsx / footer.tsx).
 
 interface SidebarProps {
   user: {
@@ -46,14 +47,14 @@ function SideItem({
       className={cn(
         "flex items-center gap-3 px-3.5 py-3 rounded-[13px] transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]",
         active
-          ? "glass-2 text-text-primary"
-          : "text-text-secondary hover:text-text-primary hover:bg-white/[0.04]",
+          ? "bg-bg-elevated text-text-primary"
+          : "text-text-secondary hover:text-text-primary hover:bg-bg-surface",
       )}
     >
       <Icon
         size={21}
         strokeWidth={active ? 2 : 1.7}
-        className={active ? "text-purple" : "text-text-secondary"}
+        className={active ? "text-brand" : "text-text-secondary"}
       />
       <span className={cn("text-[15px]", active ? "font-bold" : "font-semibold")}>
         {label}
@@ -73,12 +74,12 @@ export default function Sidebar({ user }: SidebarProps) {
 
   return (
     <>
-      {/* Desktop sidebar — floating glass, 268px wide, 16px margin */}
-      <aside className="hidden md:flex fixed left-4 top-4 bottom-4 w-[268px] flex-col glass rounded-[24px] p-4 z-40">
+      {/* Desktop sidebar — floating flat panel, 268px wide, 16px margin */}
+      <aside className="hidden md:flex fixed left-4 top-4 bottom-4 w-[268px] flex-col rounded-[24px] border border-border bg-bg-card p-4 z-40">
         {/* Wordmark — sized to fit comfortably inside the 268px sidebar. */}
         <div className="px-2.5 pt-1 pb-5">
           <Link href="/dashboard" className="inline-flex items-center">
-            <MeowLockup iconSize={26} wordmarkSize={19} gap={9} />
+            <MeowWordmark size={19} />
           </Link>
         </div>
 
@@ -99,16 +100,13 @@ export default function Sidebar({ user }: SidebarProps) {
           ))}
         </nav>
 
-        {/* User card — glass-2 plate with gradient avatar swatch */}
+        {/* User card — flat bordered plate, solid brand avatar swatch */}
         <div className="mt-auto pt-3 space-y-1.5">
           <Link
             href="/profile"
-            className="glass-2 flex items-center gap-3 rounded-[16px] p-3.5 group"
+            className="flex items-center gap-3 rounded-[16px] border border-border bg-bg-surface p-3.5 transition-colors hover:bg-bg-elevated group"
           >
-            <div
-              className="w-[38px] h-[38px] rounded-[11px] flex-shrink-0 overflow-hidden flex items-center justify-center text-text-primary text-sm font-bold"
-              style={{ background: "linear-gradient(160deg, #c98bf6, #6366f1)" }}
-            >
+            <div className="w-[38px] h-[38px] rounded-[11px] flex-shrink-0 overflow-hidden flex items-center justify-center bg-brand text-on-brand text-sm font-bold">
               {user.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={user.image} alt={user.name ?? "User"} className="w-full h-full object-cover" />
@@ -129,7 +127,7 @@ export default function Sidebar({ user }: SidebarProps) {
 
           <button
             onClick={handleSignOut}
-            className="flex items-center gap-3 px-3.5 py-2.5 rounded-[13px] w-full text-left text-[13.5px] font-semibold text-text-secondary hover:text-red-400 hover:bg-red-400/[0.06] transition-colors duration-200"
+            className="flex items-center gap-3 px-3.5 py-2.5 rounded-[13px] w-full text-left text-[13.5px] font-semibold text-text-secondary hover:text-critical hover:bg-critical/10 transition-colors duration-200"
           >
             <LogOut size={17} strokeWidth={1.5} />
             Sign out
@@ -146,7 +144,7 @@ export default function Sidebar({ user }: SidebarProps) {
 function MobileNav({ pathname }: { pathname: string }) {
   const mobileItems = navItems.slice(0, 4)
   return (
-    <nav className="md:hidden fixed bottom-3 left-3 right-3 z-40 glass-2 rounded-[26px] px-2 py-2.5 flex items-center justify-around">
+    <nav className="md:hidden fixed bottom-3 left-3 right-3 z-40 rounded-[26px] border border-border bg-bg-card px-2 py-2.5 flex items-center justify-around">
       {mobileItems.map((item) => {
         const Icon = item.icon
         const active =
@@ -165,7 +163,7 @@ function MobileNav({ pathname }: { pathname: string }) {
             <Icon
               size={22}
               strokeWidth={active ? 2 : 1.7}
-              className={active ? "text-purple" : ""}
+              className={active ? "text-brand" : ""}
             />
             <span className={cn("text-[10.5px]", active ? "font-bold" : "font-semibold")}>
               {item.label}
