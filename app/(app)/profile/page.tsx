@@ -92,7 +92,7 @@ function ExperienceItemCard({
   onDelete: (id: string) => void
 }) {
   return (
-    <div className="border border-white/[0.06] rounded-2xl p-4 bg-bg-elevated/50 space-y-2">
+    <div className="border border-border rounded-2xl p-4 bg-bg-elevated/50 space-y-2">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <h4 className="text-sm font-semibold text-text-primary">{item.title}</h4>
@@ -110,7 +110,7 @@ function ExperienceItemCard({
         </div>
         <button
           onClick={() => onDelete(item.id)}
-          className="text-text-muted hover:text-red-400 transition-colors p-1"
+          className="text-text-muted hover:text-critical transition-colors p-1"
         >
           <X size={14} strokeWidth={1.5} />
         </button>
@@ -132,7 +132,7 @@ function ExperienceItemCard({
           href={item.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-[11px] text-purple hover:text-purple-light transition-colors"
+          className="inline-flex items-center gap-1 text-[11px] text-brand hover:text-brand-hi transition-colors"
         >
           <ExternalLink size={11} strokeWidth={1.5} />
           View link
@@ -349,7 +349,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="min-h-dvh flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-purple border-t-transparent animate-spin" />
+        <div className="w-8 h-8 rounded-full border-2 border-brand border-t-transparent animate-spin" />
       </div>
     )
   }
@@ -399,7 +399,7 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={useMyLocation}
-              className="inline-flex items-center gap-1.5 text-xs text-purple-light hover:text-purple transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs text-brand hover:text-brand-hi transition-colors"
             >
               <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="3" />
@@ -451,8 +451,8 @@ export default function ProfilePage() {
                     saveMessage.toLowerCase().startsWith("network") ||
                     saveMessage.toLowerCase().includes("error") ||
                     saveMessage.toLowerCase().includes("denied")
-                    ? "text-red-400"
-                    : "text-green-400"
+                    ? "text-critical"
+                    : "text-positive"
                 )}
               >
                 {saveMessage}
@@ -504,7 +504,7 @@ export default function ProfilePage() {
                   className={cn(
                     "px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-150",
                     active
-                      ? "border-purple bg-purple/15 text-purple-light"
+                      ? "border-brand bg-brand/15 text-brand"
                       : "border-border text-text-muted hover:border-border-strong hover:text-text-secondary"
                   )}
                 >
@@ -535,7 +535,7 @@ export default function ProfilePage() {
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]",
                   activeTab === value
                     ? "bg-text-primary text-bg-base"
-                    : "text-text-secondary hover:text-text-primary hover:bg-white/[0.04]",
+                    : "text-text-secondary hover:text-text-primary hover:bg-bg-surface",
                 )}
               >
                 <Icon size={14} strokeWidth={1.5} />
@@ -565,7 +565,7 @@ export default function ProfilePage() {
 
           {/* Add form */}
           {showAddForm && (
-            <div className="rounded-2xl p-4 glass-2 space-y-4">
+            <div className="rounded-2xl p-4 border border-border bg-bg-surface space-y-4">
               <h4 className="text-sm font-semibold text-text-primary">
                 Add {TYPE_LABELS[activeTab]}
               </h4>
@@ -622,7 +622,7 @@ export default function ProfilePage() {
                   onChange={(e) =>
                     setExpForm({ ...expForm, current: e.target.checked })
                   }
-                  className="accent-purple"
+                  className="accent-brand"
                 />
                 <span className="text-sm text-text-secondary">Currently here</span>
               </label>
@@ -637,7 +637,7 @@ export default function ProfilePage() {
                   onChange={(e) =>
                     setExpForm({ ...expForm, description: e.target.value })
                   }
-                  className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple/20 transition-all resize-none"
+                  className="bg-bg-surface border border-border rounded-xl px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand/20 transition-all resize-none"
                 />
               </div>
               <Input
@@ -707,8 +707,8 @@ function DigestToggle({ value, onChange }: { value: boolean; onChange: (next: bo
         aria-checked={value}
         onClick={() => onChange(!value)}
         className={cn(
-          "relative inline-flex h-6 w-11 flex-shrink-0 rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-purple/40",
-          value ? "bg-purple" : "bg-white/[0.08]"
+          "relative inline-flex h-6 w-11 flex-shrink-0 rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-brand/40",
+          value ? "bg-brand" : "bg-bg-elevated"
         )}
       >
         <span

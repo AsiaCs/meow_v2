@@ -377,21 +377,20 @@ export default function EventsPage() {
     <div className="flex min-h-dvh">
       {/* Main content — pairs with the right-side CalendarSidebar */}
       <div className="flex-1 min-w-0">
-        {/* Header — meow design dashboard pattern: floating glass top bar with
-            a Perplexity-tinted-glass search field, brand-gradient 'Near me'
-            pill, and a brand H1. Sticky beneath the layout's aurora. */}
-        <div className="px-6 pt-4 pb-5 sticky top-0 z-30 backdrop-blur-[12px]">
+        {/* Header — flat bordered top bar, opaque so it covers the list
+            scrolling beneath it. Sticky, same register as nav.tsx. */}
+        <div className="px-6 pt-4 pb-5 sticky top-0 z-30 bg-bg-base border-b border-border">
           <div className="flex flex-col gap-5">
             {/* Top row: search + Near me + Submit shortcut */}
             <div className="flex items-center gap-3.5">
-              <label className="field-light flex-1 rounded-[15px] px-4 py-[13px] flex items-center gap-3 cursor-text">
-                <Search size={20} strokeWidth={1.8} className="text-[#5d666f] flex-shrink-0" />
+              <label className="flex-1 rounded-[15px] px-4 py-[13px] flex items-center gap-3 cursor-text border border-border bg-bg-surface">
+                <Search size={20} strokeWidth={1.8} className="text-text-muted flex-shrink-0" />
                 <input
                   type="text"
                   placeholder="Search events, hosts, topics…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="flex-1 bg-transparent text-[15px] font-medium placeholder:text-[#5d666f] focus:outline-none"
+                  className="flex-1 bg-transparent text-[15px] font-medium text-text-primary placeholder:text-text-muted focus:outline-none"
                 />
               </label>
               <button
@@ -400,15 +399,15 @@ export default function EventsPage() {
                   "inline-flex items-center gap-1.5 rounded-full px-4 py-[11px] text-[14px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
                   sortByDistance
                     ? "pill-on"
-                    : "text-text-secondary bg-white/[0.055] border border-white/[0.11] hover:text-text-primary"
+                    : "text-text-secondary bg-bg-surface border border-border hover:text-text-primary"
                 )}
               >
-                <Navigation size={15} strokeWidth={1.9} className={sortByDistance ? "text-purple" : ""} />
+                <Navigation size={15} strokeWidth={1.9} className={sortByDistance ? "text-brand" : ""} />
                 Near me
               </button>
               <Link
                 href="/submit"
-                className="glass-2 rounded-[14px] w-12 h-12 grid place-items-center text-text-primary hover:text-purple-light transition-colors"
+                className="rounded-[14px] w-12 h-12 grid place-items-center border border-border bg-bg-card text-text-primary hover:text-brand transition-colors"
                 aria-label="Notifications"
               >
                 {/* Bell — matches the design dashboard top bar. */}
@@ -439,7 +438,7 @@ export default function EventsPage() {
                 </h1>
                 {sortByDistance && userLoc.position && (
                   <div className="flex items-center gap-2 mt-2 text-text-secondary text-[15px] font-semibold">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--color-mint)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--color-positive)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M5 12.5l4.5 4.5L19 7" />
                     </svg>
                     Sorted by distance · {sorted.filter((e) => !e.isVirtual && typeof e.distanceMi === "number").length} within {effectiveRadiusMi ?? 50} mi · global events hidden
@@ -457,7 +456,7 @@ export default function EventsPage() {
                       "rounded-full px-4 py-2 text-[13.5px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
                       tab === t.value
                         ? "pill-on"
-                        : "text-text-secondary bg-white/[0.055] border border-white/[0.11] hover:text-text-primary",
+                        : "text-text-secondary bg-bg-surface border border-border hover:text-text-primary",
                     )}
                   >
                     {t.label}
@@ -477,7 +476,7 @@ export default function EventsPage() {
                     "inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
                     selectedCity === "all"
                       ? "pill-on"
-                      : "text-text-secondary bg-white/[0.055] border border-white/[0.11] hover:text-text-primary",
+                      : "text-text-secondary bg-bg-surface border border-border hover:text-text-primary",
                   )}
                 >
                   <Globe size={12} strokeWidth={1.5} />
@@ -489,7 +488,7 @@ export default function EventsPage() {
                     "rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
                     selectedCity === "virtual"
                       ? "pill-on"
-                      : "text-text-secondary bg-white/[0.055] border border-white/[0.11] hover:text-text-primary",
+                      : "text-text-secondary bg-bg-surface border border-border hover:text-text-primary",
                   )}
                 >
                   Online
@@ -502,7 +501,7 @@ export default function EventsPage() {
                       "rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
                       selectedCity === city
                         ? "pill-on"
-                        : "text-text-secondary bg-white/[0.055] border border-white/[0.11] hover:text-text-primary",
+                        : "text-text-secondary bg-bg-surface border border-border hover:text-text-primary",
                     )}
                   >
                     {city}
@@ -526,7 +525,7 @@ export default function EventsPage() {
                       "rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
                       active
                         ? "pill-on"
-                        : "text-text-secondary bg-white/[0.055] border border-white/[0.11] hover:text-text-primary",
+                        : "text-text-secondary bg-bg-surface border border-border hover:text-text-primary",
                     )}
                   >
                     {cat}
@@ -557,7 +556,7 @@ export default function EventsPage() {
                       "rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
                       radiusMiles === mi
                         ? "pill-on"
-                        : "text-text-secondary bg-white/[0.055] border border-white/[0.11] hover:text-text-primary",
+                        : "text-text-secondary bg-bg-surface border border-border hover:text-text-primary",
                     )}
                   >
                     {mi} mi
@@ -574,7 +573,7 @@ export default function EventsPage() {
             )}
 
             {userLoc.status === "denied" && (
-              <span className="text-[11px] text-red-400">
+              <span className="text-[11px] text-critical">
                 Permission denied — enable Location in your browser settings.
               </span>
             )}
@@ -589,13 +588,13 @@ export default function EventsPage() {
               {Array.from({ length: 6 }).map((_, i) => (
                 <div
                   key={i}
-                  className="glass rounded-[20px] p-3 flex items-stretch gap-4 animate-pulse"
+                  className="rounded-[20px] p-3 flex items-stretch gap-4 border border-border bg-bg-card animate-pulse"
                 >
-                  <div className="w-[100px] h-[100px] rounded-xl bg-white/[0.04] flex-shrink-0" />
+                  <div className="w-[100px] h-[100px] rounded-xl bg-bg-elevated flex-shrink-0" />
                   <div className="flex-1 flex flex-col justify-center gap-2">
-                    <div className="h-3 w-20 bg-white/[0.04] rounded" />
-                    <div className="h-4 w-3/4 bg-white/[0.04] rounded" />
-                    <div className="h-3 w-1/2 bg-white/[0.04] rounded" />
+                    <div className="h-3 w-20 bg-bg-elevated rounded" />
+                    <div className="h-4 w-3/4 bg-bg-elevated rounded" />
+                    <div className="h-3 w-1/2 bg-bg-elevated rounded" />
                   </div>
                 </div>
               ))}
@@ -647,10 +646,9 @@ export default function EventsPage() {
         </div>
       </div>
 
-      {/* Calendar sidebar — restored per user request. Glass-styled to
-          match the rest of the dashboard. Coming Up panel uses the SAME
-          city predicate as the main feed so it stays in lockstep with
-          the active city pill. */}
+      {/* Calendar sidebar — flat bordered panel, matches the rest of the
+          dashboard. Coming Up panel uses the SAME city predicate as the
+          main feed so it stays in lockstep with the active city pill. */}
       <CalendarSidebar
         events={events
           .filter(matchesSelectedCity)

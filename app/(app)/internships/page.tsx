@@ -68,20 +68,20 @@ export default function InternshipsPage() {
 
   return (
     <div className="min-h-dvh">
-      {/* Header — same dashboard pattern as /events: field-light search,
+      {/* Header — same dashboard pattern as /events: flat bordered search,
           monochrome pill-on for active filter, big Urbanist H1. */}
-      <div className="px-6 pt-4 pb-5 sticky top-0 z-30 backdrop-blur-[12px]">
+      <div className="px-6 pt-4 pb-5 sticky top-0 z-30 bg-bg-base border-b border-border">
         <div className="flex flex-col gap-5">
           {/* Top row — search + category dropdown */}
           <div className="flex items-center gap-3.5 flex-col sm:flex-row">
-            <label className="field-light flex-1 w-full rounded-[15px] px-4 py-[13px] flex items-center gap-3 cursor-text">
-              <Search size={20} strokeWidth={1.8} className="text-[#5d666f] flex-shrink-0" />
+            <label className="flex-1 w-full rounded-[15px] px-4 py-[13px] flex items-center gap-3 cursor-text border border-border bg-bg-surface">
+              <Search size={20} strokeWidth={1.8} className="text-text-muted flex-shrink-0" />
               <input
                 type="text"
                 placeholder="Search roles, companies, skills…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="flex-1 bg-transparent text-[15px] font-medium placeholder:text-[#5d666f] focus:outline-none"
+                className="flex-1 bg-transparent text-[15px] font-medium text-text-primary placeholder:text-text-muted focus:outline-none"
               />
             </label>
 
@@ -89,18 +89,14 @@ export default function InternshipsPage() {
               <select
                 value={selectedArea}
                 onChange={(e) => setSelectedArea(e.target.value)}
-                style={{ colorScheme: "dark" }}
-                className="appearance-none glass-2 rounded-[15px] pl-4 pr-10 py-[13px] text-[14px] font-semibold text-text-primary focus:outline-none cursor-pointer min-w-[180px]"
+                // Follow the page's mode — see time-picker.tsx's NativeSelect
+                // for the same call (the design system ships both now).
+                style={{ colorScheme: "light dark" }}
+                className="appearance-none rounded-[15px] pl-4 pr-10 py-[13px] text-[14px] font-semibold text-text-primary focus:outline-none cursor-pointer min-w-[180px] border border-border bg-bg-card"
               >
-                {/* Inline styling on every <option> is required because native
-                    select popups are OS-painted and Tailwind classes do not
-                    reach them. Without this, Windows renders white text on
-                    a near-white system background — unreadable. */}
-                <option value="All Categories" style={{ background: "#1a102f", color: "#f5f2fc" }}>
-                  All Categories
-                </option>
+                <option value="All Categories">All Categories</option>
                 {INTEREST_AREAS.map((area) => (
-                  <option key={area} value={area} style={{ background: "#1a102f", color: "#f5f2fc" }}>
+                  <option key={area} value={area}>
                     {area}
                   </option>
                 ))}
@@ -131,7 +127,7 @@ export default function InternshipsPage() {
                     "rounded-full px-4 py-2 text-[13.5px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
                     tab === t.value
                       ? "pill-on"
-                      : "text-text-secondary bg-white/[0.055] border border-white/[0.11] hover:text-text-primary",
+                      : "text-text-secondary bg-bg-surface border border-border hover:text-text-primary",
                   )}
                 >
                   {t.label}
@@ -149,20 +145,19 @@ export default function InternshipsPage() {
             {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
-                className="border border-white/[0.06] rounded-3xl h-52 bg-white/[0.01] animate-pulse"
+                className="border border-border rounded-3xl h-52 bg-bg-card animate-pulse"
               />
             ))}
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="text-5xl mb-4">🛑</div>
             <h3 className="text-text-primary font-semibold mb-2">Couldn&apos;t load internships</h3>
             <p className="text-text-muted text-sm mb-5 max-w-sm">
               Something went wrong reaching our servers. Check your connection and try again.
             </p>
             <button
               onClick={() => mutate()}
-              className="inline-flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-4 py-2.5 text-sm font-medium text-text-primary transition-colors hover:bg-white/[0.08] cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-xl border border-border bg-bg-surface px-4 py-2.5 text-sm font-medium text-text-primary transition-colors hover:bg-bg-elevated cursor-pointer"
             >
               <RefreshCw size={15} strokeWidth={1.75} />
               Try again
@@ -170,7 +165,6 @@ export default function InternshipsPage() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="text-5xl mb-4">💼</div>
             <h3 className="text-text-primary font-semibold mb-2">No internships found</h3>
             <p className="text-text-muted text-sm">
               Try adjusting your filters. More listings are added regularly.

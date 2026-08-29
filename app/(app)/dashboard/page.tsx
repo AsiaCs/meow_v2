@@ -32,12 +32,12 @@ function SectionHeader({
   return (
     <div className="flex items-center justify-between mb-5">
       <div className="flex items-center gap-2">
-        <Icon size={18} strokeWidth={1.5} className="text-purple" />
+        <Icon size={18} strokeWidth={1.5} className="text-brand" />
         <h2 className="text-lg font-semibold text-text-primary font-display">{title}</h2>
       </div>
       <Link
         href={href}
-        className="flex items-center gap-1 text-sm text-text-secondary hover:text-purple transition-colors"
+        className="flex items-center gap-1 text-sm text-text-secondary hover:text-brand transition-colors"
       >
         View all
         <ArrowRight size={14} strokeWidth={1.5} />
@@ -48,8 +48,7 @@ function SectionHeader({
 
 function EmptySection({ message }: { message: string }) {
   return (
-    <div className="border border-white/[0.06] rounded-2xl p-8 text-center bg-white/[0.01]">
-      <div className="text-3xl mb-3">🐾</div>
+    <div className="border border-border rounded-2xl p-8 text-center bg-bg-surface">
       <p className="text-text-muted text-sm">{message}</p>
     </div>
   )

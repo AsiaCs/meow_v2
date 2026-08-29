@@ -193,8 +193,8 @@ export default function SubmitEventPage() {
     return (
       <div className="min-h-dvh flex items-center justify-center px-6 py-12">
         <div className="max-w-md w-full text-center">
-          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-green-500/15 border border-green-500/30 mx-auto mb-6">
-            <CheckCircle size={28} strokeWidth={1.5} className="text-green-400" />
+          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-positive/15 border border-positive/30 mx-auto mb-6">
+            <CheckCircle size={28} strokeWidth={1.5} className="text-positive" />
           </div>
           <h2 className="text-2xl font-bold text-text-primary font-display mb-3">
             Event Submitted!
@@ -252,7 +252,7 @@ export default function SubmitEventPage() {
               <textarea
                 placeholder="What's this event about? Who should attend?"
                 rows={4}
-                className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple/20 transition-all resize-none"
+                className="bg-bg-surface border border-border rounded-xl px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand/20 transition-all resize-none"
                 {...register("description")}
               />
             </div>
@@ -283,7 +283,7 @@ export default function SubmitEventPage() {
             </div>
 
             {/* Virtual toggle */}
-            <div className="flex items-center justify-between p-4 rounded-xl glass-2">
+            <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-bg-surface">
               <div>
                 <p className="text-sm font-medium text-text-primary">Virtual Event</p>
                 <p className="text-xs text-text-muted mt-0.5">Toggle on if this event is online</p>
@@ -297,7 +297,7 @@ export default function SubmitEventPage() {
                     onClick={() => field.onChange(!field.value)}
                     className={cn(
                       "relative w-11 h-6 rounded-full transition-colors duration-200",
-                      field.value ? "bg-purple" : "bg-bg-elevated border border-border-strong"
+                      field.value ? "bg-brand" : "bg-bg-elevated border border-border-strong"
                     )}
                   >
                     <span
@@ -343,14 +343,14 @@ export default function SubmitEventPage() {
               <label className="text-sm font-medium text-text-secondary flex items-center justify-between">
                 <span>
                   Interest Areas
-                  <span className="text-red-400 ml-1" aria-hidden="true">*</span>
+                  <span className="text-critical ml-1" aria-hidden="true">*</span>
                 </span>
                 <span className="text-[11px] text-text-muted font-normal">
                   {(selectedTags?.length ?? 0)}/{MAX_TAGS}
                 </span>
               </label>
               {errors.tags && (
-                <p className="text-xs text-red-400">{errors.tags.message}</p>
+                <p className="text-xs text-critical">{errors.tags.message}</p>
               )}
               <div className="flex flex-wrap gap-2">
                 {INTEREST_AREAS.map((area) => {
@@ -363,7 +363,7 @@ export default function SubmitEventPage() {
                       className={cn(
                         "px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-150",
                         active
-                          ? "border-purple bg-purple/15 text-purple-light"
+                          ? "border-brand bg-brand/15 text-brand"
                           : "border-border text-text-muted hover:border-border-strong hover:text-text-secondary"
                       )}
                     >
@@ -375,7 +375,7 @@ export default function SubmitEventPage() {
             </div>
 
             {/* Free toggle */}
-            <div className="flex items-center justify-between p-4 rounded-xl glass-2">
+            <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-bg-surface">
               <div>
                 <p className="text-sm font-medium text-text-primary">Free Event</p>
                 <p className="text-xs text-text-muted mt-0.5">Is this event free to attend?</p>
@@ -389,7 +389,7 @@ export default function SubmitEventPage() {
                     onClick={() => field.onChange(!field.value)}
                     className={cn(
                       "relative w-11 h-6 rounded-full transition-colors duration-200",
-                      field.value ? "bg-purple" : "bg-bg-elevated border border-border-strong"
+                      field.value ? "bg-brand" : "bg-bg-elevated border border-border-strong"
                     )}
                   >
                     <span
@@ -418,7 +418,7 @@ export default function SubmitEventPage() {
             />
 
             {serverError && (
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400">
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-critical/10 border border-critical/20 text-sm text-critical">
                 <X size={14} strokeWidth={1.5} />
                 {serverError}
               </div>

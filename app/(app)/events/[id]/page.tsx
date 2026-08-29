@@ -145,20 +145,14 @@ export default async function EventDetailPage({
           Back to Events
         </Link>
 
-        <div className="border border-white/[0.06] rounded-3xl p-1.5 bg-white/[0.02] mb-6">
+        <div className="border border-border rounded-3xl p-1.5 bg-bg-surface mb-6">
           {event.imageUrl ? (
             <div className="rounded-[calc(1.5rem-0.375rem)] overflow-hidden h-52">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={event.imageUrl} alt={event.title} className="w-full h-full object-cover" />
             </div>
           ) : (
-            <div
-              className="rounded-[calc(1.5rem-0.375rem)] h-36"
-              style={{
-                background:
-                  "linear-gradient(135deg, rgba(124,58,237,0.35) 0%, rgba(236,72,153,0.25) 100%)",
-              }}
-            />
+            <div className="rounded-[calc(1.5rem-0.375rem)] h-36 bg-bg-panel" />
           )}
 
           <div className="bg-bg-card rounded-[calc(1.5rem-0.375rem)] p-6 mt-1.5">
@@ -181,16 +175,16 @@ export default async function EventDetailPage({
 
             <div className="flex flex-col gap-2 mb-4">
               <div className="flex items-center gap-2 text-sm text-text-secondary">
-                <CalendarDays size={15} strokeWidth={1.5} className="text-purple flex-shrink-0" />
+                <CalendarDays size={15} strokeWidth={1.5} className="text-brand flex-shrink-0" />
                 {dateStr}
               </div>
               <div className="flex items-center gap-2 text-sm text-text-secondary">
-                <Clock size={15} strokeWidth={1.5} className="text-purple flex-shrink-0" />
+                <Clock size={15} strokeWidth={1.5} className="text-brand flex-shrink-0" />
                 {timeStr}
               </div>
               {!event.isVirtual && event.location && (
                 <div className="flex items-center gap-2 text-sm text-text-secondary">
-                  <MapPin size={15} strokeWidth={1.5} className="text-purple flex-shrink-0" />
+                  <MapPin size={15} strokeWidth={1.5} className="text-brand flex-shrink-0" />
                   {event.location}
                 </div>
               )}
@@ -214,7 +208,7 @@ export default async function EventDetailPage({
             <h2 className="text-xs font-semibold text-text-muted uppercase tracking-widest mb-3">
               About this event
             </h2>
-            <div className="border border-white/[0.06] rounded-2xl p-1.5 bg-white/[0.02]">
+            <div className="border border-border rounded-2xl p-1.5 bg-bg-surface">
               <div className="bg-bg-card rounded-[calc(1rem-0.375rem)] p-5">
                 <p className="text-text-secondary text-sm leading-relaxed whitespace-pre-line">
                   {event.description}
