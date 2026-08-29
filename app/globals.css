@@ -396,53 +396,11 @@ h1, h2, h3 {
 }
 
 
-/* ─────────────────────────────────────────────────────────────────
-   GLASS surfaces — meow-ds canonical frosted panels. Real
-   backdrop-blur + inset top highlight + soft outer drop.
-   ───────────────────────────────────────────────────────────────── */
-.glass {
-  background: rgba(255, 255, 255, 0.055);
-  backdrop-filter: blur(28px) saturate(150%);
-  -webkit-backdrop-filter: blur(28px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.11);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    0 26px 64px -30px rgba(0, 0, 0, 0.8);
-}
-.glass-2 {
-  background: rgba(255, 255, 255, 0.085);
-  backdrop-filter: blur(22px) saturate(140%);
-  -webkit-backdrop-filter: blur(22px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.11);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
-}
-
-/* Perplexity-style tinted light field — frosted dark-text plate sat
-   inside a dark glass outer panel. Used as the hero search field. */
-.field-light {
-  background: rgba(247, 249, 250, 0.93);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.65);
-  box-shadow:
-    0 14px 36px -16px rgba(0, 0, 0, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  color: #0c1116;
-}
-.field-light ::placeholder,
-.field-light .ph {
-  color: #5d666f;
-}
-
-/* meow-ds room background — subtle radial + vertical wash on the canvas */
-.bg-room {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  background:
-    radial-gradient(120% 80% at 50% 6%, #160d2b 0%, rgba(11, 7, 23, 0) 60%),
-    linear-gradient(180deg, #0a0613 0%, #07050d 55%, #050309 100%);
-}
+/* .glass / .glass-2 / .field-light / .bg-room (meow-ds frosted-panel system)
+   retired — every surface in the rebuild is a flat bordered plate instead
+   (border-border + bg-bg-card/surface/elevated, shadow-card is `none` in
+   the token set). Removed once the last consumer (events/internships
+   pages, the app shell, card.tsx) migrated off them. */
 
 /* Primary CTA — Perplexity pivot. Solid white plate on dark; no gradient,
    no pink, no purple. Soft inset top highlight + 1px contact line keep
