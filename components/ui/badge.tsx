@@ -7,10 +7,10 @@ interface BadgeProps {
 }
 
 const variantStyles: Record<NonNullable<BadgeProps["variant"]>, string> = {
-  purple: "bg-purple/15 text-purple-light border-transparent",
-  pink: "bg-pink/15 text-pink-light border-transparent",
-  green: "bg-emerald-500/15 text-emerald-400 border-transparent",
-  gray: "bg-white/[0.06] text-text-secondary border-transparent",
+  purple: "bg-brand/15 text-brand border-transparent",
+  pink: "bg-brand-hi/15 text-brand-hi border-transparent",
+  green: "bg-positive/15 text-positive border-transparent",
+  gray: "bg-bg-surface text-text-secondary border-transparent",
   outline: "bg-transparent text-text-secondary border-border-strong",
 }
 

@@ -12,12 +12,12 @@ interface CardSectionProps {
 }
 
 // Single source of truth for every form / panel container in the app.
-// Switched from a doubled border+bg-bg-card plate to a real .glass surface
-// so the aurora behind bleeds through every form (submit, profile, etc).
-// No more dark rectangle behind the liquid-glass UI.
+// Flat bordered plate on the base surface — the same register as every other
+// panel in the rebuild (see card.tsx sibling: shadow-card is `none` in the
+// token set, no blur, no glow).
 export function Card({ children, className, innerClassName }: CardProps) {
   return (
-    <div className={cn("glass rounded-3xl", className)}>
+    <div className={cn("rounded-3xl border border-border bg-bg-card", className)}>
       <div className={cn("rounded-3xl overflow-hidden", innerClassName)}>
         {children}
       </div>
@@ -27,7 +27,7 @@ export function Card({ children, className, innerClassName }: CardProps) {
 
 export function CardHeader({ children, className }: CardSectionProps) {
   return (
-    <div className={cn("px-6 pt-6 pb-4 border-b border-white/[0.06]", className)}>
+    <div className={cn("px-6 pt-6 pb-4 border-b border-border", className)}>
       {children}
     </div>
   )
@@ -45,7 +45,7 @@ export function CardFooter({ children, className }: CardSectionProps) {
   return (
     <div
       className={cn(
-        "px-6 pb-6 pt-4 border-t border-white/[0.06] flex items-center gap-3",
+        "px-6 pb-6 pt-4 border-t border-border flex items-center gap-3",
         className
       )}
     >

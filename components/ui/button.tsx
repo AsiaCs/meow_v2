@@ -30,11 +30,11 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       primary:
         "bg-text-primary text-bg-base hover:bg-text-primary/90",
       ghost:
-        "bg-transparent text-text-secondary hover:text-text-primary hover:bg-white/[0.04]",
+        "bg-transparent text-text-secondary hover:text-text-primary hover:bg-bg-surface",
       outline:
         "border border-border-subtle text-text-primary hover:border-border-strong bg-transparent",
       danger:
-        "bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20",
+        "bg-critical/10 border border-critical/20 text-critical hover:bg-critical/20",
     }
 
     const sizes = {

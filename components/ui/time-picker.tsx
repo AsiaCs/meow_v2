@@ -82,7 +82,7 @@ export function TimePicker({
     <div className={cn("flex flex-col gap-1.5", className)}>
       {label && (
         <label htmlFor={id} className="text-sm font-medium text-text-secondary">
-          {label} {required && <span className="text-red-400">*</span>}
+          {label} {required && <span className="text-critical">*</span>}
         </label>
       )}
       <div
@@ -90,8 +90,8 @@ export function TimePicker({
         className={cn(
           "flex items-stretch rounded-xl overflow-hidden border bg-bg-surface transition-colors",
           error
-            ? "border-red-500/60 focus-within:border-red-500"
-            : "border-border focus-within:border-purple focus-within:ring-1 focus-within:ring-purple/20",
+            ? "border-critical/60 focus-within:border-critical"
+            : "border-border focus-within:border-brand focus-within:ring-1 focus-within:ring-brand/20",
         )}
       >
         <NativeSelect
@@ -138,7 +138,7 @@ export function TimePicker({
           <option value="PM">PM</option>
         </NativeSelect>
       </div>
-      {error && <p className="text-xs text-red-400">{error}</p>}
+      {error && <p className="text-xs text-critical">{error}</p>}
     </div>
   )
 }
@@ -148,10 +148,10 @@ function NativeSelect(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <select
       {...rest}
-      // color-scheme: dark tells the OS / browser to render the popup
-      // dropdown in dark mode (white text on dark surface) instead of the
-      // default light theme that gave us white-on-white invisible numbers.
-      style={{ colorScheme: "dark" }}
+      // Follow the page's mode instead of forcing dark — the design system
+      // now ships a light theme too (light-dark tells the OS to pick the
+      // popup rendering that matches whichever one is active).
+      style={{ colorScheme: "light dark" }}
       className={cn(
         // Closed-state styling. Options inherit color from the select.
         "appearance-none bg-transparent text-text-primary text-sm",

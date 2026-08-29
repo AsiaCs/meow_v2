@@ -23,7 +23,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           >
             {label}
             {requiredMark && (
-              <span className="text-red-400 ml-1" aria-hidden="true">*</span>
+              <span className="text-critical ml-1" aria-hidden="true">*</span>
             )}
           </label>
         )}
@@ -33,16 +33,16 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           className={cn(
             "bg-bg-surface border border-border rounded-xl px-4 py-2.5 text-sm text-text-primary",
             "placeholder:text-text-muted",
-            "focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple/20",
+            "focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand/20",
             "transition-all duration-150",
             "disabled:opacity-50 disabled:cursor-not-allowed",
-            error && "border-red-500/50 focus:border-red-500 focus:ring-red-500/20",
+            error && "border-critical/50 focus:border-critical focus:ring-critical/20",
             className
           )}
           {...props}
         />
         {error && (
-          <p className="text-xs text-red-400">{error}</p>
+          <p className="text-xs text-critical">{error}</p>
         )}
       </div>
     )
