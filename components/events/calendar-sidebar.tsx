@@ -52,7 +52,7 @@ export function CalendarSidebar({
     .slice(0, 5)
 
   return (
-    <aside className="hidden lg:flex flex-col w-[300px] flex-shrink-0 glass rounded-[24px] mr-4 mt-4 mb-4 sticky top-4 max-h-[calc(100dvh-2rem)] overflow-y-auto">
+    <aside className="hidden lg:flex flex-col w-[300px] flex-shrink-0 border border-border bg-bg-card rounded-[24px] mr-4 mt-4 mb-4 sticky top-4 max-h-[calc(100dvh-2rem)] overflow-y-auto">
       <div className="p-5">
         {/* Calendar */}
         <div className="mb-6">
@@ -75,9 +75,9 @@ export function CalendarSidebar({
                 "text-sm font-semibold text-text-primary",
               nav: "flex items-center gap-1",
               button_previous:
-                "p-1 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/[0.06] transition-colors",
+                "p-1 rounded-lg text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-colors",
               button_next:
-                "p-1 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/[0.06] transition-colors",
+                "p-1 rounded-lg text-text-muted hover:text-text-primary hover:bg-bg-elevated transition-colors",
               month_grid: "w-full border-collapse",
               weekdays: "flex w-full mb-1",
               weekday:
@@ -86,18 +86,18 @@ export function CalendarSidebar({
               day: "flex-1 text-center",
               day_button: cn(
                 "w-full aspect-square flex items-center justify-center text-sm rounded-lg transition-all duration-150",
-                "text-text-secondary hover:text-text-primary hover:bg-white/[0.06]",
-                "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-purple/40"
+                "text-text-secondary hover:text-text-primary hover:bg-bg-elevated",
+                "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-brand/40"
               ),
               selected:
                 "pill-on !rounded-lg !text-[14px] !font-bold",
-              today: "text-purple font-semibold",
+              today: "text-brand font-semibold",
               outside: "opacity-30",
               disabled: "opacity-20 cursor-not-allowed",
             }}
             modifiersClassNames={{
               hasEvent:
-                "relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:rounded-full after:bg-pink",
+                "relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:rounded-full after:bg-brand",
             }}
           />
         </div>
@@ -106,7 +106,7 @@ export function CalendarSidebar({
         {selectedDate && (
           <button
             onClick={() => onDateChange(null)}
-            className="text-xs text-purple hover:text-purple-light transition-colors mb-4"
+            className="text-xs text-brand hover:text-brand-hi transition-colors mb-4"
           >
             Clear date filter
           </button>
@@ -119,7 +119,7 @@ export function CalendarSidebar({
               Coming Up
             </h3>
             {cityLabel && (
-              <span className="text-[9.5px] font-semibold text-purple-light uppercase tracking-[0.18em]">
+              <span className="text-[9.5px] font-semibold text-brand uppercase tracking-[0.18em]">
                 in {cityLabel}
               </span>
             )}
@@ -136,20 +136,17 @@ export function CalendarSidebar({
                 <li key={event.id}>
                   <Link
                     href={`/events/${event.id}`}
-                    className="flex items-start gap-3 group rounded-[14px] -mx-1.5 px-2 py-2 hover:bg-white/[0.04] transition-colors"
+                    className="flex items-start gap-3 group rounded-[14px] -mx-1.5 px-2 py-2 hover:bg-bg-surface transition-colors"
                   >
-                    <div
-                      className="flex-shrink-0 w-9 h-9 rounded-[11px] glass-2 flex items-center justify-center"
-                      style={{ boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.06)" }}
-                    >
+                    <div className="flex-shrink-0 w-9 h-9 rounded-[11px] border border-border bg-bg-surface flex items-center justify-center">
                       <CalendarDays
                         size={14}
                         strokeWidth={1.6}
-                        className="text-purple-light"
+                        className="text-brand"
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-text-primary truncate group-hover:text-purple-light transition-colors">
+                      <p className="text-xs font-medium text-text-primary truncate group-hover:text-brand transition-colors">
                         {event.title}
                       </p>
                       <p className="text-[11px] text-text-muted mt-0.5">
@@ -157,7 +154,7 @@ export function CalendarSidebar({
                       </p>
                       <div className="flex items-center gap-1 mt-0.5">
                         {event.isVirtual ? (
-                          <span className="text-[11px] text-purple flex items-center gap-0.5">
+                          <span className="text-[11px] text-brand flex items-center gap-0.5">
                             <Monitor size={10} strokeWidth={1.5} />
                             Virtual
                           </span>

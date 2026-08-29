@@ -67,7 +67,7 @@ function InkCover({
 }) {
   if (imageUrl && !failed) {
     return (
-      <div className="w-[100px] h-[100px] rounded-xl overflow-hidden flex-shrink-0 border border-white/[0.06] relative">
+      <div className="w-[100px] h-[100px] rounded-xl overflow-hidden flex-shrink-0 border border-border relative">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={imageUrl}
@@ -76,25 +76,17 @@ function InkCover({
           onError={onError}
           loading="lazy"
         />
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: "radial-gradient(120% 80% at 80% -10%, rgba(255,255,255,.30), transparent 55%)" }}
-        />
       </div>
     )
   }
 
+  // No source image — flat panel with the date, no gradient (shadow-card
+  // and gradient-brand are both `none` in the token set).
   return (
-    <div
-      className="w-[100px] h-[100px] rounded-xl overflow-hidden flex-shrink-0 flex flex-col items-center justify-center"
-      style={{
-        background:
-          "radial-gradient(120% 90% at 80% 0%, rgba(168,85,247,.28), rgba(26,16,47,0) 60%), #1a102f",
-      }}
-    >
+    <div className="w-[100px] h-[100px] rounded-xl overflow-hidden flex-shrink-0 flex flex-col items-center justify-center border border-border bg-bg-panel">
       <span
-        className="font-bold uppercase"
-        style={{ fontSize: "9px", letterSpacing: "0.32em", color: "rgba(245,242,252,.62)" }}
+        className="font-bold uppercase text-text-muted"
+        style={{ fontSize: "9px", letterSpacing: "0.32em" }}
       >
         {mo}
       </span>
@@ -125,9 +117,9 @@ export function EventCard({
     <Link
       href={`/events/${id}`}
       className="
-        glass group flex items-stretch gap-4 p-3 rounded-[18px]
-        transition-[transform,box-shadow,border-color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
-        hover:-translate-y-0.5
+        group flex items-stretch gap-4 p-3 rounded-[18px] border border-border bg-bg-card
+        transition-[transform,border-color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
+        hover:-translate-y-0.5 hover:border-border-strong
       "
     >
       <InkCover
@@ -149,7 +141,7 @@ export function EventCard({
 
         {/* Title */}
         <h3
-          className="font-display font-bold text-[16px] sm:text-[17px] leading-[1.18] text-text-primary group-hover:text-purple-light transition-colors line-clamp-2"
+          className="font-display font-bold text-[16px] sm:text-[17px] leading-[1.18] text-text-primary group-hover:text-brand transition-colors line-clamp-2"
           style={{ letterSpacing: "-0.015em" }}
         >
           {title}
@@ -170,7 +162,7 @@ export function EventCard({
           ) : null}
 
           {!isVirtual && typeof distanceMi === "number" && (
-            <span className="inline-flex items-center gap-1.5 text-purple-light font-semibold">
+            <span className="inline-flex items-center gap-1.5 text-brand font-semibold">
               <Navigation size={11} strokeWidth={1.9} />
               {formatMiles(distanceMi)} away
             </span>

@@ -118,7 +118,7 @@ export function AddToCalendar(props: AddToCalendarProps) {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className="w-full sm:w-auto flex items-center justify-center gap-2 py-4 sm:px-6 rounded-2xl border border-white/[0.08] bg-white/[0.02] text-text-secondary hover:bg-white/[0.04] hover:text-text-primary font-medium text-sm transition-all"
+        className="w-full sm:w-auto flex items-center justify-center gap-2 py-4 sm:px-6 rounded-2xl border border-border bg-bg-surface text-text-secondary hover:bg-bg-elevated hover:text-text-primary font-medium text-sm transition-all"
       >
         <CalendarPlus size={16} strokeWidth={1.5} />
         Add to Calendar
@@ -132,7 +132,7 @@ export function AddToCalendar(props: AddToCalendarProps) {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-2 w-64 z-30 rounded-2xl border border-white/[0.08] bg-bg-card shadow-xl p-1.5 origin-top-right animate-in fade-in-0 zoom-in-95 duration-150"
+          className="absolute right-0 mt-2 w-64 z-30 rounded-2xl border border-border bg-bg-card shadow-xl p-1.5 origin-top-right animate-in fade-in-0 zoom-in-95 duration-150"
         >
           <ProviderItem
             href={googleUrl}
@@ -155,7 +155,7 @@ export function AddToCalendar(props: AddToCalendarProps) {
             icon={<OutlookIcon />}
             external
           />
-          <div className="h-px bg-white/[0.06] my-1.5 mx-1" />
+          <div className="h-px bg-border my-1.5 mx-1" />
           <ProviderItem
             href={icsUrl}
             label="Download .ics file"
@@ -195,9 +195,9 @@ function ProviderItem({
       rel={external ? "noopener noreferrer" : undefined}
       download={download}
       role="menuitem"
-      className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-white/[0.04] transition-colors"
+      className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-bg-elevated transition-colors"
     >
-      <span className="w-7 h-7 rounded-lg flex items-center justify-center bg-white/[0.04] border border-white/[0.06] flex-shrink-0">
+      <span className="w-7 h-7 rounded-lg flex items-center justify-center bg-bg-elevated border border-border flex-shrink-0">
         {icon}
       </span>
       <span className="flex-1 min-w-0">

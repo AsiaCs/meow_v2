@@ -134,18 +134,18 @@ export function ImageUploader({
         // Drop zone — wrapped <label> so the entire box is the click target
         <label
           htmlFor={id}
-          className={`mt-1.5 group flex items-center justify-center gap-3 rounded-xl border border-dashed border-border hover:border-purple/60 bg-bg-surface/50 hover:bg-bg-surface px-4 py-6 cursor-pointer transition-colors ${
+          className={`mt-1.5 group flex items-center justify-center gap-3 rounded-xl border border-dashed border-border hover:border-brand/60 bg-bg-surface/50 hover:bg-bg-surface px-4 py-6 cursor-pointer transition-colors ${
             uploading ? "opacity-70 cursor-wait" : ""
           }`}
         >
           {uploading ? (
             <>
-              <Loader2 size={18} className="text-purple-light animate-spin" />
+              <Loader2 size={18} className="text-brand animate-spin" />
               <span className="text-sm text-text-secondary">Uploading…</span>
             </>
           ) : (
             <>
-              <Upload size={18} strokeWidth={1.5} className="text-text-muted group-hover:text-purple-light transition-colors" />
+              <Upload size={18} strokeWidth={1.5} className="text-text-muted group-hover:text-brand transition-colors" />
               <div className="text-left">
                 <p className="text-sm text-text-primary font-medium">Drop an image or click to upload</p>
                 <p className="text-[11px] text-text-muted">PNG, JPG, or WEBP · up to {maxSizeMB} MB</p>
@@ -176,7 +176,7 @@ export function ImageUploader({
       )}
 
       {error && (
-        <p className="text-xs text-red-400 mt-1.5 flex items-center gap-1">
+        <p className="text-xs text-critical mt-1.5 flex items-center gap-1">
           <AlertCircle size={11} strokeWidth={1.75} />
           {error}
         </p>

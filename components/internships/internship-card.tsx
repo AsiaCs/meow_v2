@@ -67,7 +67,7 @@ export function InternshipCard({
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -4 }}
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
-      className="glass rounded-3xl h-full"
+      className="rounded-3xl h-full border border-border bg-bg-card"
     >
       <div className="rounded-[24px] overflow-hidden flex flex-col h-full p-5 gap-4">
         {/* Header */}
@@ -142,10 +142,10 @@ export function InternshipCard({
         <div className="flex-1" />
 
         {/* Deadline + apply */}
-        <div className="flex items-center justify-between pt-3 border-t border-white/[0.06]">
+        <div className="flex items-center justify-between pt-3 border-t border-border">
           <div>
             {deadline && !isPast && (
-              <div className={cn("flex items-center gap-1 text-xs", isUrgent ? "text-red-400" : "text-text-muted")}>
+              <div className={cn("flex items-center gap-1 text-xs", isUrgent ? "text-critical" : "text-text-muted")}>
                 <Clock size={12} strokeWidth={1.5} />
                 {isUrgent ? (
                   <span className="font-semibold">
