@@ -1,12 +1,11 @@
-﻿"use client"
+"use client"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
-import { MapPin, CheckCircle, ArrowRight, Wifi } from "lucide-react"
-import { MeowLockup } from "@/components/brand/meow-lockup"
+import { MapPin, CheckCircle, ArrowRight, Wifi, Briefcase, Calendar, Sparkles } from "lucide-react"
+import { MeowWordmark } from "@/components/brand/meow-wordmark"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { INTEREST_AREAS, cn } from "@/lib/utils"
 
 type LookingFor = "internships" | "events" | "all"
@@ -14,25 +13,25 @@ type LookingFor = "internships" | "events" | "all"
 const LOOKING_FOR_OPTIONS: {
   value: LookingFor
   label: string
-  emoji: string
+  icon: typeof Briefcase
   description: string
 }[] = [
   {
     value: "internships",
     label: "Internships",
-    emoji: "💼",
+    icon: Briefcase,
     description: "Find opportunities to gain experience",
   },
   {
     value: "events",
     label: "Events",
-    emoji: "📅",
+    icon: Calendar,
     description: "Discover networking events and workshops",
   },
   {
     value: "all",
     label: "Everything",
-    emoji: "✨",
+    icon: Sparkles,
     description: "Show me all opportunities",
   },
 ]
@@ -108,25 +107,26 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-bg-base flex flex-col items-center justify-center px-6 py-12">
-      {/* Logo */}
+    <div className="flex min-h-dvh flex-col items-center justify-center bg-bg-base px-6 py-12">
+      {/* Wordmark — no icon lockup here; meow-logo.tsx is still the old
+          rainbow glyph and hasn't been carried over to the brass system. */}
       <div className="mb-10 flex flex-col items-center text-center">
-        <MeowLockup iconSize={56} wordmarkSize={36} gap={14} stacked />
-        <p className="text-text-muted text-sm mt-4">Let&apos;s personalize your experience</p>
+        <MeowWordmark size={30} />
+        <p className="mt-4 text-body-m text-text-muted">Let&apos;s personalize your experience</p>
       </div>
 
       {/* Progress */}
-      <div className="w-full max-w-lg mb-8">
-        <div className="flex items-center justify-between mb-2">
+      <div className="mb-8 w-full max-w-lg">
+        <div className="mb-2 flex items-center justify-between">
           {STEPS.map((s, i) => (
             <div key={s} className="flex items-center gap-1.5">
               <div
                 className={cn(
-                  "w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold transition-all duration-300",
+                  "flex h-6 w-6 items-center justify-center rounded-full text-xs font-semibold transition-all duration-300",
                   i < step
-                    ? "bg-purple text-white"
+                    ? "bg-brand text-on-brand"
                     : i === step
-                    ? "border-2 border-purple text-purple"
+                    ? "border-2 border-brand text-brand"
                     : "border border-border text-text-muted"
                 )}
               >
@@ -134,7 +134,7 @@ export default function OnboardingPage() {
               </div>
               <span
                 className={cn(
-                  "text-xs font-medium hidden sm:block",
+                  "hidden text-xs font-medium sm:block",
                   i <= step ? "text-text-secondary" : "text-text-muted"
                 )}
               >
@@ -143,7 +143,7 @@ export default function OnboardingPage() {
             </div>
           ))}
         </div>
-        <div className="h-1.5 rounded-full bg-bg-elevated overflow-hidden">
+        <div className="h-1.5 overflow-hidden rounded-full bg-bg-elevated">
           <motion.div
             className="h-full rounded-full bg-text-primary"
             animate={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
@@ -165,10 +165,10 @@ export default function OnboardingPage() {
               className="space-y-6"
             >
               <div>
-                <h2 className="text-2xl font-bold text-text-primary font-display">
+                <h2 className="font-display text-heading-l text-text-primary">
                   What are you interested in?
                 </h2>
-                <p className="text-text-secondary text-sm mt-1.5">
+                <p className="mt-1.5 text-body-m text-text-secondary">
                   Select all that apply. You can update these later.
                 </p>
               </div>
@@ -180,9 +180,9 @@ export default function OnboardingPage() {
                       key={area}
                       onClick={() => toggleInterest(area)}
                       className={cn(
-                        "px-3 py-1.5 rounded-full text-[13px] font-medium border transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                        "rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]",
                         active
-                          ? "bg-text-primary text-bg-base border-transparent"
+                          ? "border-transparent bg-text-primary text-bg-base"
                           : "border-border-subtle text-text-secondary hover:border-border-strong hover:text-text-primary",
                       )}
                     >
@@ -192,7 +192,7 @@ export default function OnboardingPage() {
                 })}
               </div>
               {selectedInterests.length > 0 && (
-                <p className="text-xs text-text-muted">
+                <p className="text-body-m text-text-muted">
                   {selectedInterests.length} selected
                 </p>
               )}
@@ -209,10 +209,10 @@ export default function OnboardingPage() {
               className="space-y-6"
             >
               <div>
-                <h2 className="text-2xl font-bold text-text-primary font-display">
+                <h2 className="font-display text-heading-l text-text-primary">
                   Where are you based?
                 </h2>
-                <p className="text-text-secondary text-sm mt-1.5">
+                <p className="mt-1.5 text-body-m text-text-secondary">
                   We&apos;ll use this to surface local events and opportunities.
                 </p>
               </div>
@@ -221,7 +221,7 @@ export default function OnboardingPage() {
                 <MapPin
                   size={16}
                   strokeWidth={1.5}
-                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none"
+                  className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted"
                 />
                 <input
                   type="text"
@@ -229,37 +229,37 @@ export default function OnboardingPage() {
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
                   disabled={remoteFirst}
-                  className="w-full bg-bg-surface border border-border rounded-xl pl-9 pr-4 py-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple/20 transition-all disabled:opacity-40"
+                  className="w-full rounded-xl border border-border bg-bg-surface py-3 pl-9 pr-4 text-body-m text-text-primary placeholder:text-text-muted transition-all focus:border-border-accent disabled:opacity-40"
                 />
               </div>
 
               <button
                 onClick={() => setRemoteFirst(!remoteFirst)}
                 className={cn(
-                  "flex items-center gap-3 w-full p-4 rounded-xl border transition-all duration-150 text-left",
+                  "flex w-full items-center gap-3 rounded-xl border p-4 text-left transition-all duration-150",
                   remoteFirst
-                    ? "border-purple bg-purple/10"
+                    ? "border-brand bg-brand/10"
                     : "border-border hover:border-border-strong"
                 )}
               >
                 <div
                   className={cn(
-                    "w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors",
-                    remoteFirst ? "border-purple" : "border-border-strong"
+                    "flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+                    remoteFirst ? "border-brand" : "border-border-strong"
                   )}
                 >
                   {remoteFirst && (
-                    <div className="w-2.5 h-2.5 rounded-full bg-purple" />
+                    <div className="h-2.5 w-2.5 rounded-full bg-brand" />
                   )}
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <Wifi size={14} strokeWidth={1.5} className="text-purple" />
-                    <p className="text-sm font-medium text-text-primary">
+                    <Wifi size={14} strokeWidth={1.5} className="text-brand" />
+                    <p className="text-body-m font-medium text-text-primary">
                       I&apos;m remote-first
                     </p>
                   </div>
-                  <p className="text-xs text-text-muted mt-0.5">
+                  <p className="mt-0.5 text-meta text-text-muted">
                     Prioritize remote and virtual opportunities
                   </p>
                 </div>
@@ -278,41 +278,41 @@ export default function OnboardingPage() {
               className="space-y-6"
             >
               <div>
-                <h2 className="text-2xl font-bold text-text-primary font-display">
+                <h2 className="font-display text-heading-l text-text-primary">
                   What are you looking for?
                 </h2>
-                <p className="text-text-secondary text-sm mt-1.5">
+                <p className="mt-1.5 text-body-m text-text-secondary">
                   We&apos;ll customize your feed based on your goals.
                 </p>
               </div>
 
               <div className="space-y-3">
-                {LOOKING_FOR_OPTIONS.map(({ value, label, emoji, description }) => {
+                {LOOKING_FOR_OPTIONS.map(({ value, label, icon: Icon, description }) => {
                   const active = lookingFor.includes(value)
                   return (
                     <button
                       key={value}
                       onClick={() => toggleLookingFor(value)}
                       className={cn(
-                        "flex items-center gap-4 w-full p-4 rounded-xl border transition-all duration-150 text-left",
+                        "flex w-full items-center gap-4 rounded-xl border p-4 text-left transition-all duration-150",
                         active
-                          ? "border-purple bg-purple/10"
+                          ? "border-brand bg-brand/10"
                           : "border-border hover:border-border-strong"
                       )}
                     >
-                      <span className="text-2xl">{emoji}</span>
+                      <Icon size={20} strokeWidth={1.5} className="flex-shrink-0 text-text-muted" />
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-text-primary">{label}</p>
-                        <p className="text-xs text-text-muted mt-0.5">{description}</p>
+                        <p className="text-body-m font-medium text-text-primary">{label}</p>
+                        <p className="mt-0.5 text-meta text-text-muted">{description}</p>
                       </div>
                       <div
                         className={cn(
-                          "w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors",
-                          active ? "border-purple" : "border-border-strong"
+                          "flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full border-2 transition-colors",
+                          active ? "border-brand" : "border-border-strong"
                         )}
                       >
                         {active && (
-                          <div className="w-2.5 h-2.5 rounded-full bg-purple" />
+                          <div className="h-2.5 w-2.5 rounded-full bg-brand" />
                         )}
                       </div>
                     </button>
@@ -324,11 +324,11 @@ export default function OnboardingPage() {
         </AnimatePresence>
 
         {/* Navigation */}
-        <div className="flex items-center justify-between mt-8">
+        <div className="mt-8 flex items-center justify-between">
           {step > 0 ? (
             <button
               onClick={() => setStep(step - 1)}
-              className="text-sm text-text-muted hover:text-text-secondary transition-colors"
+              className="text-body-m text-text-muted transition-colors hover:text-text-secondary"
             >
               Back
             </button>
@@ -336,7 +336,7 @@ export default function OnboardingPage() {
             <div />
           )}
 
-          {error && <p className="text-xs text-red-400 flex-1 mx-4">{error}</p>}
+          {error && <p className="mx-4 flex-1 text-meta text-critical">{error}</p>}
 
           {step < STEPS.length - 1 ? (
             <Button

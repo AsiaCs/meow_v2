@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
-import { MeowLockup } from "@/components/brand/meow-lockup"
+import { MeowWordmark } from "@/components/brand/meow-wordmark"
 
 export const metadata: Metadata = {
   title: "Privacy Policy — Meow",
@@ -17,7 +17,7 @@ export default function PrivacyPage() {
       <div className="mx-auto max-w-2xl px-5 py-16 sm:py-20">
         <div className="mb-12 flex items-center justify-between">
           <Link href="/" className="inline-flex items-center">
-            <MeowLockup iconSize={28} wordmarkSize={20} gap={9} />
+            <MeowWordmark size={20} />
           </Link>
           <Link
             href="/"
@@ -33,7 +33,7 @@ export default function PrivacyPage() {
         </h1>
         <p className="mt-3 text-sm text-text-muted">Last updated: {UPDATED}</p>
 
-        <div className="mt-10 space-y-9 text-[15px] leading-relaxed text-text-secondary [&_h2]:font-display [&_h2]:text-text-primary [&_h2]:font-bold [&_h2]:text-xl [&_h2]:tracking-tight [&_h2]:mb-3 [&_h2]:mt-0 [&_a]:text-purple-light [&_a]:underline [&_a]:underline-offset-2 [&_strong]:text-text-primary [&_strong]:font-semibold">
+        <div className="mt-10 space-y-9 text-[15px] leading-relaxed text-text-secondary [&_h2]:font-display [&_h2]:text-text-primary [&_h2]:font-bold [&_h2]:text-xl [&_h2]:tracking-tight [&_h2]:mb-3 [&_h2]:mt-0 [&_a]:text-brand [&_a]:underline [&_a]:underline-offset-2 [&_strong]:text-text-primary [&_strong]:font-semibold">
           <section>
             <p>
               Meow helps students and early-career builders discover events, internships, and

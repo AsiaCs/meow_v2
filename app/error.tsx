@@ -17,24 +17,19 @@ export default function GlobalError({
   return (
     <main className="min-h-screen bg-bg-base flex items-center justify-center p-4">
       <div className="text-center">
-        <div className="text-5xl mb-4">🐾</div>
-        <h1 className="text-2xl font-bold text-text-primary mb-2" style={{ fontFamily: "var(--font-display)" }}>
+        <h1 className="font-display text-2xl font-bold text-text-primary mb-2">
           Something went wrong
         </h1>
         <p className="text-text-secondary text-sm mb-6 max-w-sm">
           {error.message || "An unexpected error occurred. Please try again."}
         </p>
         <div className="flex gap-3 justify-center">
-          <button
-            onClick={reset}
-            className="px-5 py-2.5 rounded-xl text-sm font-medium text-white cursor-pointer transition-all"
-            style={{ background: "linear-gradient(135deg, #7c3aed, #ec4899)" }}
-          >
+          <button onClick={reset} className="btn-brand">
             Try again
           </button>
           <Link
             href="/"
-            className="px-5 py-2.5 rounded-xl text-sm font-medium text-text-secondary border border-white/[0.08] hover:bg-white/[0.04] transition-all"
+            className="px-5 py-2.5 rounded-xl text-sm font-medium text-text-secondary border border-border hover:bg-bg-surface transition-all"
           >
             Go home
           </Link>

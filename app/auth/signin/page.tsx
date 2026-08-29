@@ -1,17 +1,25 @@
 "use client"
 
 import { useState } from "react"
-import { motion } from "framer-motion"
-import { Eye, EyeOff, Loader2 } from "lucide-react"
+import Link from "next/link"
+import { Eye, EyeOff } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
-import { MeowLogo } from "@/components/brand/meow-logo"
 import { MeowWordmark } from "@/components/brand/meow-wordmark"
+import { Button } from "@/components/ui/button"
 import { TurnstileWidget } from "@/components/auth/turnstile-widget"
-import { Aurora, Room } from "@/components/landing/aurora"
+
+// ── Sign in ─────────────────────────────────────────────────────────────────
+//
+// Was a floating glass card over the (retired) Aurora blob background — both
+// gone. Depth here comes the same way it does everywhere else in the rebuild:
+// a flat bordered panel on the base surface, no blur, no glow (shadow-card is
+// literally `none` in the token set). The icon lockup is dropped for the same
+// reason nav.tsx and footer.tsx drop it — meow-logo.tsx is still the old
+// rainbow glyph and hasn't been carried over to the brass system.
 
 function GoogleIcon() {
   return (
-    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none">
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none">
       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
       <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
       <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
@@ -101,128 +109,122 @@ export default function SignInPage() {
   }
 
   return (
-    <main className="relative min-h-dvh flex items-center justify-center p-4 overflow-hidden">
-      {/* Brand background — same aurora + room wash as the landing and dashboards */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <Room />
-        <Aurora />
-      </div>
+    <main className="flex min-h-dvh items-center justify-center bg-bg-base px-4 py-16">
+      <div className="enter w-full max-w-md" style={{ "--i": 0 } as React.CSSProperties}>
+        <div className="rounded-2xl border border-border bg-bg-card p-8 md:p-10">
+          {/* Header */}
+          <div className="mb-8 flex flex-col items-center text-center">
+            <Link href="/" aria-label="meow — home">
+              <MeowWordmark size={26} />
+            </Link>
+            <h1 className="mt-5 font-display text-heading-l text-text-primary">
+              {mode === "signin" ? "Welcome back" : "Create your account"}
+            </h1>
+            <p className="mt-2 text-body-m text-text-secondary">
+              {mode === "signin"
+                ? "Sign in to pick up where you left off."
+                : "Set up your account and start showing up."}
+            </p>
+          </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] }}
-        className="relative z-10 w-full max-w-md"
-      >
-        <div className="glass rounded-[26px] p-8 shadow-[0_28px_80px_-24px_rgba(4,2,10,0.9)]">
-            {/* Logo */}
-            <div className="text-center mb-8 flex flex-col items-center">
-              <MeowLogo size={64} tone="dark" className="mb-4" />
-              <h1 className="text-2xl font-bold text-text-primary mb-2 font-display">
-                Welcome to <MeowWordmark size={26} />
-              </h1>
-              <p className="text-text-secondary text-sm">
-                {mode === "signin"
-                  ? "Sign in to discover opportunities tailored to you"
-                  : "Create your account and get started"}
-              </p>
-            </div>
+          {/* Google */}
+          <button
+            onClick={handleGoogleSignIn}
+            className="flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-bg-surface px-6 py-3.5 font-medium text-text-primary transition-colors hover:bg-bg-elevated"
+          >
+            <GoogleIcon />
+            Continue with Google
+          </button>
 
-            {/* Google */}
-            <button
-              onClick={handleGoogleSignIn}
-              className="w-full flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl border border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] transition-all duration-200 text-text-primary font-medium cursor-pointer"
-            >
-              <GoogleIcon />
-              Continue with Google
-            </button>
+          {/* Divider */}
+          <div className="my-5 flex items-center gap-3">
+            <div className="h-px flex-1 bg-border" />
+            <span className="font-mono text-meta uppercase tracking-[0.14em] text-text-faint">Or</span>
+            <div className="h-px flex-1 bg-border" />
+          </div>
 
-            {/* Divider */}
-            <div className="flex items-center gap-3 my-5">
-              <div className="flex-1 h-px bg-border" />
-              <span className="text-xs text-text-muted">or</span>
-              <div className="flex-1 h-px bg-border" />
-            </div>
+          {/* Email/password form */}
+          <form onSubmit={handleEmailAuth} className="space-y-3">
+            <input
+              type="email"
+              placeholder="Email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full rounded-xl border border-border bg-bg-surface px-4 py-3 text-body-m text-text-primary placeholder:text-text-muted transition-colors focus:border-border-accent"
+            />
 
-            {/* Email/password form */}
-            <form onSubmit={handleEmailAuth} className="space-y-3">
+            <div className="relative">
               <input
-                type="email"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full bg-white/[0.04] border border-white/[0.09] rounded-xl px-4 py-3 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple/20 transition-all"
+                minLength={6}
+                className="w-full rounded-xl border border-border bg-bg-surface px-4 py-3 pr-11 text-body-m text-text-primary placeholder:text-text-muted transition-colors focus:border-border-accent"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted transition-colors hover:text-text-secondary"
+              >
+                {showPassword
+                  ? <EyeOff size={16} strokeWidth={1.5} />
+                  : <Eye size={16} strokeWidth={1.5} />}
+              </button>
+            </div>
 
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  className="w-full bg-white/[0.04] border border-white/[0.09] rounded-xl px-4 py-3 pr-11 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-purple focus:ring-1 focus:ring-purple/20 transition-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary transition-colors"
-                >
-                  {showPassword
-                    ? <EyeOff size={16} strokeWidth={1.5} />
-                    : <Eye size={16} strokeWidth={1.5} />}
-                </button>
+            {error && (
+              <p className="rounded-lg border border-critical/20 bg-critical/10 px-3 py-2.5 text-meta text-critical">
+                {error}
+              </p>
+            )}
+            {successMsg && (
+              <p className="rounded-lg border border-positive/20 bg-positive/10 px-3 py-2.5 text-meta text-positive">
+                {successMsg}
+              </p>
+            )}
+
+            {/* Bot protection on account creation only */}
+            {mode === "signup" && (
+              <div className="pt-1">
+                <TurnstileWidget onToken={setTurnstileToken} />
               </div>
+            )}
 
-              {error && (
-                <p className="text-xs text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg px-3 py-2.5">
-                  {error}
-                </p>
-              )}
-              {successMsg && (
-                <p className="text-xs text-green-400 bg-green-400/10 border border-green-400/20 rounded-lg px-3 py-2.5">
-                  {successMsg}
-                </p>
-              )}
+            <Button
+              type="submit"
+              variant="primary"
+              size="lg"
+              loading={loading}
+              disabled={loading}
+              className="mt-1 w-full"
+            >
+              {mode === "signin" ? "Sign in" : "Create account"}
+            </Button>
+          </form>
 
-              {/* Bot protection on account creation only */}
-              {mode === "signup" && (
-                <div className="pt-1">
-                  <TurnstileWidget onToken={setTurnstileToken} />
-                </div>
-              )}
+          {/* Mode toggle */}
+          <p className="mt-5 text-center text-body-m text-text-muted">
+            {mode === "signin" ? "Don't have an account? " : "Already have an account? "}
+            <button
+              onClick={() => switchMode(mode === "signin" ? "signup" : "signin")}
+              className="link-underline font-medium text-text-secondary transition-colors hover:text-text-primary"
+            >
+              {mode === "signin" ? "Sign up" : "Sign in"}
+            </button>
+          </p>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn-brand w-full !py-3.5 !rounded-xl mt-1 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {loading && <Loader2 size={16} className="animate-spin" />}
-                {mode === "signin" ? "Sign in" : "Create account"}
-              </button>
-            </form>
-
-            {/* Mode toggle */}
-            <p className="text-center text-sm text-text-muted mt-5">
-              {mode === "signin" ? "Don't have an account? " : "Already have an account? "}
-              <button
-                onClick={() => switchMode(mode === "signin" ? "signup" : "signin")}
-                className="text-text-secondary hover:text-text-primary transition-colors font-medium"
-              >
-                {mode === "signin" ? "Sign up" : "Sign in"}
-              </button>
-            </p>
-
-            <p className="text-center text-xs text-text-muted mt-4">
-              By continuing, you agree to our{" "}
-              <a href="/terms" className="text-text-secondary hover:text-text-primary transition-colors">Terms</a>
-              {" "}and{" "}
-              <a href="/privacy" className="text-text-secondary hover:text-text-primary transition-colors">Privacy Policy</a>
-            </p>
+          <p className="mt-4 text-center text-meta text-text-faint">
+            By continuing, you agree to our{" "}
+            <Link href="/terms" className="link-underline text-text-secondary transition-colors hover:text-text-primary">Terms</Link>
+            {" "}and{" "}
+            <Link href="/privacy" className="link-underline text-text-secondary transition-colors hover:text-text-primary">Privacy Policy</Link>
+          </p>
         </div>
-      </motion.div>
+      </div>
     </main>
   )
 }
