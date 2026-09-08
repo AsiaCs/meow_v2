@@ -99,14 +99,18 @@ export default async function LandingPage() {
     .map(([city, count]) => ({ city, slug: slugify(city), count }))
 
   return (
-    <main className="bg-bg-base">
-      <LandingNav />
-      <Hero events={heroEvents} totalCount={relevant.length} />
-      <Week days={days} />
-      <Coverage cities={cities} totalCount={relevant.length} />
-      <HowItWorks />
-      <ClosingCta />
-      <Footer />
-    </main>
+    <>
+      {/* Keyboard users had no way past the nav into the index. */}
+      <a href="#index" className="skip-link">Skip to the event index</a>
+      <main id="index" className="bg-bg-base">
+        <LandingNav />
+        <Hero events={heroEvents} totalCount={relevant.length} cities={cities} />
+        <Week days={days} />
+        <Coverage cities={cities} totalCount={relevant.length} />
+        <HowItWorks />
+        <ClosingCta />
+        <Footer />
+      </main>
+    </>
   )
 }

@@ -83,9 +83,9 @@ export default function Week({ days }: { days: WeekDay[] }) {
   if (days.length === 0) return null
 
   return (
-    <section ref={sectionRef} className="relative overflow-hidden border-b border-border">
+    <section ref={sectionRef} className="relative overflow-hidden border-b border-border-subtle">
       <div className="mx-auto w-full max-w-[1240px] px-6 pt-20 pb-6">
-        <h2 className="font-mono text-meta uppercase tracking-[0.14em] text-text-muted">
+        <h2 className="font-display text-heading-m text-text-primary">
           The week ahead
         </h2>
       </div>
@@ -97,28 +97,28 @@ export default function Week({ days }: { days: WeekDay[] }) {
         {days.map((d) => (
           <div
             key={d.key}
-            className="w-[min(84vw,420px)] shrink-0 border-l border-border px-6 first:ml-6 lg:w-[380px]"
+            className="w-[min(84vw,420px)] shrink-0 border-l border-border-subtle px-6 first:ml-6 lg:w-[380px]"
           >
             <div className="flex items-baseline gap-3">
               {/* The numeral is the anchor — big, display face, tight. */}
-              <span className="font-display text-display-m text-text-primary">{d.dayNum}</span>
-              <span className="font-mono text-meta uppercase text-text-muted">
+              <span className="font-display text-heading-l text-text-primary">{d.dayNum}</span>
+              <span className="text-meta font-medium uppercase tracking-[0.14em] text-text-muted">
                 {d.weekday} {d.month}
               </span>
             </div>
 
-            <p className="mt-1 font-mono text-meta tabular-nums text-text-faint">
+            <p className="mt-1 text-meta tabular-nums text-text-muted">
               {d.events.length} {d.events.length === 1 ? "event" : "events"}
             </p>
 
-            <ul className="mt-6 border-t border-border">
+            <ul className="mt-6 border-t border-border-subtle">
               {d.events.slice(0, 6).map((e) => (
-                <li key={e.id} className="border-b border-border">
+                <li key={e.id} className="border-b border-border-subtle">
                   <Link href={`/events/${e.id}`} className="group block py-3">
-                    <span className="block text-body-m text-text-primary transition-colors duration-200 group-hover:text-brand">
+                    <span className="block text-body text-text-primary transition-colors duration-200 group-hover:text-accent">
                       {e.title}
                     </span>
-                    <span className="mt-1 block font-mono text-meta text-text-faint">
+                    <span className="mt-1 block text-meta tabular-nums text-text-muted">
                       {e.time}
                       {e.city ? ` · ${e.city}` : ""}
                     </span>
@@ -128,7 +128,7 @@ export default function Week({ days }: { days: WeekDay[] }) {
             </ul>
 
             {d.events.length > 6 && (
-              <p className="pt-3 font-mono text-meta text-text-faint">
+              <p className="pt-3 text-meta tabular-nums text-text-muted">
                 +{d.events.length - 6} more
               </p>
             )}

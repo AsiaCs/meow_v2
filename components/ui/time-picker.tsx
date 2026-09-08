@@ -81,17 +81,23 @@ export function TimePicker({
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
       {label && (
-        <label htmlFor={id} className="text-sm font-medium text-text-secondary">
-          {label} {required && <span className="text-critical">*</span>}
+        <label htmlFor={id} className="text-ui font-medium text-text-secondary">
+          {label}
+          {required && (
+            <>
+              <span aria-hidden="true" className="text-critical ml-1">*</span>
+              <span className="sr-only"> (required)</span>
+            </>
+          )}
         </label>
       )}
       <div
         id={id}
         className={cn(
-          "flex items-stretch rounded-xl overflow-hidden border bg-bg-surface transition-colors",
+          "flex items-stretch rounded-panel overflow-hidden border bg-bg-raised transition-colors",
           error
-            ? "border-critical/60 focus-within:border-critical"
-            : "border-border focus-within:border-brand focus-within:ring-1 focus-within:ring-brand/20",
+            ? "border-critical focus-within:border-critical"
+            : "border-border-subtle focus-within:border-accent",
         )}
       >
         <NativeSelect
@@ -100,13 +106,13 @@ export function TimePicker({
           onChange={(e) => setHour(Number(e.target.value))}
           required={required}
         >
-          {isEmpty && <option value="" disabled hidden>—</option>}
+          {isEmpty && <option value="" disabled hidden>--</option>}
           {HOURS_12.map((h) => (
             <option key={h} value={h}>{h}</option>
           ))}
         </NativeSelect>
 
-        <span className="self-center text-text-muted text-lg leading-none select-none">:</span>
+        <span className="self-center text-text-muted text-lead leading-none select-none">:</span>
 
         {/* Free-text minute — user can type any value 0–59 (no preset
             00/15/30/45 lock-in). Clamped + padded on blur. */}
@@ -117,12 +123,12 @@ export function TimePicker({
           pattern="[0-9]*"
           maxLength={2}
           value={minText}
-          placeholder="—"
+          placeholder="--"
           required={required}
           onChange={(e) => setMinText(e.target.value.replace(/[^0-9]/g, ""))}
           onBlur={(e) => commitMin(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur() }}
-          className="appearance-none bg-transparent text-text-primary text-sm text-center px-4 py-2.5 outline-none min-w-[60px] placeholder:text-text-muted"
+          className="appearance-none bg-transparent text-text-primary text-body text-center px-4 py-2.5 min-h-11 outline-none min-w-[60px] placeholder:text-text-muted"
         />
 
         <span className="w-px self-stretch bg-border" />
@@ -133,12 +139,12 @@ export function TimePicker({
           onChange={(e) => setAmPm(e.target.value as "AM" | "PM")}
           required={required}
         >
-          {isEmpty && <option value="" disabled hidden>—</option>}
+          {isEmpty && <option value="" disabled hidden>--</option>}
           <option value="AM">AM</option>
           <option value="PM">PM</option>
         </NativeSelect>
       </div>
-      {error && <p className="text-xs text-critical">{error}</p>}
+      {error && <p role="alert" className="text-meta text-critical">{error}</p>}
     </div>
   )
 }
@@ -154,15 +160,15 @@ function NativeSelect(props: React.SelectHTMLAttributes<HTMLSelectElement>) {
       style={{ colorScheme: "light dark" }}
       className={cn(
         // Closed-state styling. Options inherit color from the select.
-        "appearance-none bg-transparent text-text-primary text-sm",
-        "px-4 py-2.5 cursor-pointer outline-none",
+        "appearance-none bg-transparent text-text-primary text-body",
+        "px-4 py-2.5 min-h-11 cursor-pointer outline-none",
         "pr-7 bg-no-repeat",
-        "[background-image:url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M2 4l3 3 3-3' fill='none' stroke='%239b8fb1' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>\")]",
+        "[background-image:url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M2 4l3 3 3-3' fill='none' stroke='%23B9A8AB' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>\")]",
         "[background-position:right_8px_center]",
         "min-w-[60px] text-center",
         // Open-state options: belt-and-suspenders for browsers that ignore
         // color-scheme on options. Forces visible dark bg + light text.
-        "[&_option]:bg-bg-card [&_option]:text-text-primary",
+        "[&_option]:bg-bg-raised [&_option]:text-text-primary",
         className,
       )}
     >

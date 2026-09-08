@@ -1,10 +1,10 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft } from "@phosphor-icons/react/dist/ssr"
 import { MeowWordmark } from "@/components/brand/meow-wordmark"
 
 export const metadata: Metadata = {
-  title: "Terms of Service — Meow",
+  title: "Terms of Service for Meow",
   description: "The terms that govern your use of Meow.",
 }
 
@@ -20,19 +20,19 @@ export default function TermsPage() {
           </Link>
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
+            className="inline-flex items-center gap-1.5 text-body text-text-secondary hover:text-text-primary transition-colors"
           >
-            <ArrowLeft size={15} strokeWidth={1.75} />
+            <ArrowLeft size={15} />
             Back to home
           </Link>
         </div>
 
-        <h1 className="font-display text-3xl sm:text-4xl font-extrabold tracking-tight">
+        <h1 className="font-display text-heading-l sm:text-heading-l font-semibold tracking-tight">
           Terms of Service
         </h1>
-        <p className="mt-3 text-sm text-text-muted">Last updated: {UPDATED}</p>
+        <p className="mt-3 text-body text-text-muted">Last updated: {UPDATED}</p>
 
-        <div className="mt-10 space-y-9 text-[15px] leading-relaxed text-text-secondary [&_h2]:font-display [&_h2]:text-text-primary [&_h2]:font-bold [&_h2]:text-xl [&_h2]:tracking-tight [&_h2]:mb-3 [&_h2]:mt-0 [&_a]:text-brand [&_a]:underline [&_a]:underline-offset-2 [&_strong]:text-text-primary [&_strong]:font-semibold">
+        <div className="mt-10 space-y-9 text-body leading-relaxed text-text-secondary [&_h2]:font-display [&_h2]:text-text-primary [&_h2]:font-semibold [&_h2]:text-heading-m [&_h2]:tracking-tight [&_h2]:mb-3 [&_h2]:mt-0 [&_a]:text-accent [&_a]:underline [&_a]:underline-offset-2 [&_strong]:text-text-primary [&_strong]:font-semibold">
           <section>
             <p>
               These terms are an agreement between you and Meow. By creating an account or using the
@@ -54,7 +54,7 @@ export default function TermsPage() {
               Meow lets you build a profile and submit events to a shared directory. You keep
               ownership of what you post, and you grant us a license to display it within the service.
               You agree not to submit content that is false, spammy, unlawful, infringing, or that
-              impersonates someone else. We review submissions and may remove listings — or accounts —
+              impersonates someone else. We review submissions and may remove listings, or accounts,
               that break these rules.
             </p>
           </section>
@@ -116,7 +116,7 @@ export default function TermsPage() {
           </section>
         </div>
 
-        <div className="mt-16 border-t border-border-subtle pt-8 text-sm text-text-muted">
+        <div className="mt-16 border-t border-border-subtle pt-8 text-body text-text-muted">
           <Link href="/privacy" className="text-text-secondary hover:text-text-primary transition-colors">
             Privacy Policy
           </Link>

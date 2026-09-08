@@ -1,37 +1,19 @@
 import type { Metadata } from "next"
-import { Bricolage_Grotesque, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google"
+import { Inter } from "next/font/google"
 import "./globals.css"
 
-// ── Display: Bricolage Grotesque ────────────────────────────────────────────
-// Variable grotesque with irregular widths and a slightly off-grid character.
-// Chosen because it does NOT read as the default geometric sans every product
-// in this category ships with, and it holds up under the heavy negative
-// tracking the display scale applies. Also carries the wordmark.
-const bricolage = Bricolage_Grotesque({
+// ── Inter, everywhere ───────────────────────────────────────────────────────
+// An explicit choice, not a fallback, which matters because Inter is the most
+// common default-AI typeface and reads as one when it is used carelessly.
+//
+// What makes it deliberate here is the restraint around it: weights stop at
+// 600 and headings sit at 500, tracking tightens as size grows and opens at
+// body size, and the scale plus the whitespace carry the impression rather
+// than the typeface. See the type scale in globals.css.
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-bricolage",
-  display: "swap",
-})
-
-// ── Text / UI: IBM Plex Sans ────────────────────────────────────────────────
-// Humane grotesque with real character that still survives at 13–15px in dense
-// listing rows. Deliberately a different tonal register from the display face
-// rather than a second geometric sans.
-const plexSans = IBM_Plex_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-plex-sans",
-  display: "swap",
-})
-
-// ── Numerics: IBM Plex Mono ─────────────────────────────────────────────────
-// Same superfamily as the text face, so it is not a third voice. Used only for
-// figures — dates, salary, deadlines, match scores — where tabular alignment
-// between rows actually matters.
-const plexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-plex-mono",
+  weight: ["400", "500", "600"],
+  variable: "--font-inter",
   display: "swap",
 })
 
@@ -39,21 +21,15 @@ const siteUrl = "https://usemeow.co"
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "meow — Find Your Next Opportunity",
+  title: "meow: every AI event and internship, in one index",
   description:
-    "Discover internships and networking events near you. Meow connects ambitious people with the opportunities that matter.",
-  // Auto-uses /app/icon.svg + /app/apple-icon.png. The svg variant scales
-  // to every density without us shipping a dozen sizes.
+    "Talks, hackathons and mixers pulled from Luma and Cerebral Valley, alongside open roles. Filtered to your city, sorted by what happens next.",
   icons: {
-    icon: [
-      { url: "/meow-icon.svg", type: "image/svg+xml" },
-    ],
-    apple: [
-      { url: "/meow-icon.svg", type: "image/svg+xml" },
-    ],
+    icon: [{ url: "/meow-icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/meow-icon.svg", type: "image/svg+xml" }],
   },
   openGraph: {
-    title: "meow — Find Your Next Opportunity",
+    title: "meow: every AI event and internship, in one index",
     description: "Discover internships and networking events near you.",
     type: "website",
     url: siteUrl,
@@ -70,7 +46,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${plexSans.variable} ${bricolage.variable} ${plexMono.variable}`}>
+    <html lang="en" className={inter.variable}>
       <body className="min-h-dvh bg-bg-base text-text-primary antialiased">
         {children}
       </body>

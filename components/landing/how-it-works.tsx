@@ -31,9 +31,9 @@ const STEPS = [
 
 export default function HowItWorks() {
   return (
-    <section className="border-b border-border">
+    <section className="border-b border-border-subtle">
       <div className="mx-auto w-full max-w-[1240px] px-6 py-20 md:py-28">
-        <h2 className="font-mono text-meta uppercase tracking-[0.14em] text-text-muted">
+        <h2 className="font-display text-heading-m text-text-primary">
           How it works
         </h2>
 
@@ -41,15 +41,15 @@ export default function HowItWorks() {
           {STEPS.map((s) => (
             <div
               key={s.n}
-              className="grid grid-cols-1 gap-y-3 border-t border-border py-10 last:border-b md:grid-cols-12 md:gap-10"
+              className="grid grid-cols-1 gap-y-3 border-t border-border-subtle py-10 last:border-b md:grid-cols-12 md:gap-10"
             >
-              <span className="font-mono text-meta tabular-nums text-text-faint md:col-span-2">
+              <span className="text-meta tabular-nums text-text-muted md:col-span-2">
                 {s.n}
               </span>
               <h3 className="font-display text-heading-l text-text-primary md:col-span-4">
                 {s.title}
               </h3>
-              <p className="max-w-[52ch] text-body-l text-text-secondary md:col-span-6">
+              <p className="max-w-[52ch] text-lead text-text-secondary md:col-span-6">
                 {s.body}
               </p>
             </div>
@@ -57,7 +57,7 @@ export default function HowItWorks() {
         </div>
 
         <div className="mt-14">
-          <Link href="/auth/signin" className="link-underline text-body-l font-medium text-brand">
+          <Link href="/auth/signin" className="link-underline text-lead font-medium text-accent">
             Start with your city
           </Link>
         </div>

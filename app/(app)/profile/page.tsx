@@ -1,17 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import {
-  Briefcase,
-  GraduationCap,
-  Code,
-  Award,
-  Users,
-  Plus,
-  X,
-  Save,
-  ExternalLink,
-} from "lucide-react"
+import { Briefcase, GraduationCap, Code, Medal as Award, Users, Plus, X, FloppyDisk as Save, ArrowSquareOut as ExternalLink, Crosshair } from "@phosphor-icons/react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -55,7 +45,7 @@ interface ProfileData {
 const EXPERIENCE_TABS: {
   label: string
   value: ExperienceType
-  icon: React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>
+  icon: React.ComponentType<{ size?: number; className?: string }>
 }[] = [
   { label: "Work", value: "WORK", icon: Briefcase },
   { label: "Education", value: "EDUCATION", icon: GraduationCap },
@@ -92,18 +82,18 @@ function ExperienceItemCard({
   onDelete: (id: string) => void
 }) {
   return (
-    <div className="border border-border rounded-2xl p-4 bg-bg-elevated/50 space-y-2">
+    <div className="border border-border-subtle rounded-panel p-4 bg-bg-raised/50 space-y-2">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-semibold text-text-primary">{item.title}</h4>
+          <h4 className="text-body font-semibold text-text-primary">{item.title}</h4>
           {item.organization && (
-            <p className="text-xs text-text-secondary mt-0.5">{item.organization}</p>
+            <p className="text-meta text-text-secondary mt-0.5">{item.organization}</p>
           )}
           {(item.startDate || item.endDate || item.current) && (
-            <p className="text-[11px] text-text-muted mt-1">
+            <p className="text-meta text-text-muted mt-1">
               {item.startDate ? formatDate(item.startDate) : ""}
               {item.endDate || item.current
-                ? " — " + (item.current ? "Present" : formatDate(item.endDate!))
+                ? " to " + (item.current ? "Present" : formatDate(item.endDate!))
                 : ""}
             </p>
           )}
@@ -112,16 +102,16 @@ function ExperienceItemCard({
           onClick={() => onDelete(item.id)}
           className="text-text-muted hover:text-critical transition-colors p-1"
         >
-          <X size={14} strokeWidth={1.5} />
+          <X size={14} />
         </button>
       </div>
       {item.description && (
-        <p className="text-xs text-text-muted leading-relaxed">{item.description}</p>
+        <p className="text-meta text-text-muted leading-relaxed">{item.description}</p>
       )}
       {item.skills.length > 0 && (
         <div className="flex flex-wrap gap-1">
           {item.skills.map((s) => (
-            <Badge key={s} variant="gray">
+            <Badge key={s} variant="outline">
               {s}
             </Badge>
           ))}
@@ -132,9 +122,9 @@ function ExperienceItemCard({
           href={item.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-[11px] text-brand hover:text-brand-hi transition-colors"
+          className="inline-flex items-center gap-1 text-meta text-accent hover:text-accent transition-colors"
         >
-          <ExternalLink size={11} strokeWidth={1.5} />
+          <ExternalLink size={11} />
           View link
         </a>
       )}
@@ -220,7 +210,7 @@ export default function ProfilePage() {
         try {
           const err = JSON.parse(text) as { error?: string; issues?: unknown }
           if (err.error) detail = err.error
-          if (err.issues) detail += " — " + JSON.stringify(err.issues).slice(0, 200)
+          if (err.issues) detail += ": " + JSON.stringify(err.issues).slice(0, 200)
         } catch {
           if (text) detail = text.slice(0, 200)
         }
@@ -264,7 +254,7 @@ export default function ProfilePage() {
       (err) => {
         setSaveMessage(
           err.code === err.PERMISSION_DENIED
-            ? "Location permission denied — enable it in your browser settings"
+            ? "Location permission denied. Enable it in your browser settings."
             : `Location error: ${err.message}`,
         )
       },
@@ -349,7 +339,7 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <div className="min-h-dvh flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-brand border-t-transparent animate-spin" />
+        <div className="w-8 h-8 rounded-control border-2 border-accent border-t-transparent animate-spin" />
       </div>
     )
   }
@@ -364,7 +354,7 @@ export default function ProfilePage() {
       <Card>
         <CardContent className="space-y-6">
           <div className="flex items-start gap-4">
-            <div className="w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0 border border-border-strong bg-bg-elevated">
+            <div className="w-16 h-16 rounded-panel overflow-hidden flex-shrink-0 border border-border-default bg-bg-raised">
               {profile.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -373,16 +363,16 @@ export default function ProfilePage() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center font-display text-xl font-bold text-text-primary bg-bg-elevated border border-border-subtle">
+                <div className="w-full h-full flex items-center justify-center font-display text-heading-m font-semibold text-text-primary bg-bg-raised border border-border-subtle">
                   {initial}
                 </div>
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-bold text-text-primary font-display">
+              <h1 className="text-heading-m font-semibold text-text-primary font-display">
                 {profile.name ?? "Your Name"}
               </h1>
-              <p className="text-sm text-text-muted">{profile.email}</p>
+              <p className="text-body text-text-muted">{profile.email}</p>
             </div>
           </div>
 
@@ -399,23 +389,16 @@ export default function ProfilePage() {
             <button
               type="button"
               onClick={useMyLocation}
-              className="inline-flex items-center gap-1.5 text-xs text-brand hover:text-brand-hi transition-colors"
+              className="inline-flex items-center gap-1.5 text-meta text-accent hover:text-accent transition-colors"
             >
-              <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="3" />
-                <circle cx="12" cy="12" r="10" />
-                <line x1="12" y1="2" x2="12" y2="4" />
-                <line x1="12" y1="20" x2="12" y2="22" />
-                <line x1="2" y1="12" x2="4" y2="12" />
-                <line x1="20" y1="12" x2="22" y2="12" />
-              </svg>
+              <Crosshair size={12} weight="bold" aria-hidden="true" />
               Use my current location
             </button>
           </div>
 
           {/* Proof of Build */}
           <div className="space-y-2">
-            <p className="text-xs uppercase tracking-wider text-text-muted font-semibold">
+            <p className="text-meta uppercase tracking-wider text-text-muted font-semibold">
               Proof of Build
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -432,7 +415,7 @@ export default function ProfilePage() {
                 onChange={(e) => setEditPortfolio(e.target.value)}
               />
             </div>
-            <p className="text-[11px] text-text-muted">
+            <p className="text-meta text-text-muted">
               A linked GitHub gives you a verified badge on the People grid.
             </p>
           </div>
@@ -440,13 +423,13 @@ export default function ProfilePage() {
           {/* Save */}
           <div className="flex items-center gap-3 flex-wrap">
             <Button onClick={saveProfile} loading={saving} size="md">
-              <Save size={15} strokeWidth={1.5} />
+              <Save size={15} />
               Save Profile
             </Button>
             {saveMessage && (
               <span
                 className={cn(
-                  "text-sm",
+                  "text-body",
                   saveMessage.toLowerCase().startsWith("save failed") ||
                     saveMessage.toLowerCase().startsWith("network") ||
                     saveMessage.toLowerCase().includes("error") ||
@@ -465,8 +448,8 @@ export default function ProfilePage() {
       {/* Weekly digest */}
       <Card>
         <CardHeader>
-          <h2 className="text-base font-semibold text-text-primary">Weekly digest</h2>
-          <p className="text-xs text-text-muted mt-1">
+          <h2 className="text-lead font-semibold text-text-primary">Weekly digest</h2>
+          <p className="text-meta text-text-muted mt-1">
             Monday morning email with the top events for your city and interests.
           </p>
         </CardHeader>
@@ -488,8 +471,8 @@ export default function ProfilePage() {
       {/* Interests */}
       <Card>
         <CardHeader>
-          <h2 className="text-base font-semibold text-text-primary">Interests</h2>
-          <p className="text-xs text-text-muted mt-1">
+          <h2 className="text-lead font-semibold text-text-primary">Interests</h2>
+          <p className="text-meta text-text-muted mt-1">
             Select your areas of interest to get personalized recommendations.
           </p>
         </CardHeader>
@@ -502,10 +485,10 @@ export default function ProfilePage() {
                   key={area}
                   onClick={() => toggleInterest(area)}
                   className={cn(
-                    "px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-150",
+                    "px-3 py-1.5 rounded-control text-meta font-medium border transition-all duration-150",
                     active
-                      ? "border-brand bg-brand/15 text-brand"
-                      : "border-border text-text-muted hover:border-border-strong hover:text-text-secondary"
+                      ? "border-accent bg-bg-inverse/15 text-accent"
+                      : "border-border-subtle text-text-muted hover:border-border-default hover:text-text-secondary"
                   )}
                 >
                   {area}
@@ -519,7 +502,7 @@ export default function ProfilePage() {
       {/* Experience */}
       <Card>
         <CardHeader>
-          <h2 className="text-base font-semibold text-text-primary">Experience</h2>
+          <h2 className="text-lead font-semibold text-text-primary">Experience</h2>
         </CardHeader>
         <CardContent className="space-y-5">
           {/* Tab bar */}
@@ -532,13 +515,13 @@ export default function ProfilePage() {
                   setShowAddForm(false)
                 }}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-control text-body font-medium transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]",
                   activeTab === value
                     ? "bg-text-primary text-bg-base"
-                    : "text-text-secondary hover:text-text-primary hover:bg-bg-surface",
+                    : "text-text-secondary hover:text-text-primary hover:bg-bg-raised",
                 )}
               >
-                <Icon size={14} strokeWidth={1.5} />
+                <Icon size={14} />
                 {label}
               </button>
             ))}
@@ -546,8 +529,8 @@ export default function ProfilePage() {
 
           {/* Experience items */}
           {filteredExp.length === 0 && !showAddForm ? (
-            <div className="text-center py-8 border border-dashed border-border rounded-2xl">
-              <p className="text-text-muted text-sm">
+            <div className="text-center py-8 border border-dashed border-border-subtle rounded-panel">
+              <p className="text-text-muted text-body">
                 No {TYPE_LABELS[activeTab].toLowerCase()} added yet.
               </p>
             </div>
@@ -565,8 +548,8 @@ export default function ProfilePage() {
 
           {/* Add form */}
           {showAddForm && (
-            <div className="rounded-2xl p-4 border border-border bg-bg-surface space-y-4">
-              <h4 className="text-sm font-semibold text-text-primary">
+            <div className="rounded-panel p-4 border border-border-subtle bg-bg-raised space-y-4">
+              <h4 className="text-body font-semibold text-text-primary">
                 Add {TYPE_LABELS[activeTab]}
               </h4>
               <Input
@@ -624,10 +607,10 @@ export default function ProfilePage() {
                   }
                   className="accent-brand"
                 />
-                <span className="text-sm text-text-secondary">Currently here</span>
+                <span className="text-body text-text-secondary">Currently here</span>
               </label>
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-text-secondary">
+                <label className="text-body font-medium text-text-secondary">
                   Description
                 </label>
                 <textarea
@@ -637,7 +620,7 @@ export default function ProfilePage() {
                   onChange={(e) =>
                     setExpForm({ ...expForm, description: e.target.value })
                   }
-                  className="bg-bg-surface border border-border rounded-xl px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand/20 transition-all resize-none"
+                  className="bg-bg-raised border border-border-subtle rounded-panel px-4 py-2.5 text-body text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors resize-none"
                 />
               </div>
               <Input
@@ -673,12 +656,12 @@ export default function ProfilePage() {
           {/* Add button */}
           {!showAddForm && (
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={() => setShowAddForm(true)}
               className="w-full gap-1.5"
             >
-              <Plus size={15} strokeWidth={1.5} />
+              <Plus size={15} />
               Add {TYPE_LABELS[activeTab]}
             </Button>
           )}
@@ -692,10 +675,10 @@ function DigestToggle({ value, onChange }: { value: boolean; onChange: (next: bo
   return (
     <label className="flex items-center justify-between gap-4 cursor-pointer">
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-text-primary">
+        <p className="text-body font-medium text-text-primary">
           {value ? "Subscribed" : "Unsubscribed"}
         </p>
-        <p className="text-xs text-text-muted mt-0.5">
+        <p className="text-meta text-text-muted mt-0.5">
           {value
             ? "We'll send a weekly digest every Monday morning."
             : "You won't receive the weekly digest."}
@@ -707,14 +690,14 @@ function DigestToggle({ value, onChange }: { value: boolean; onChange: (next: bo
         aria-checked={value}
         onClick={() => onChange(!value)}
         className={cn(
-          "relative inline-flex h-6 w-11 flex-shrink-0 rounded-full transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-brand/40",
-          value ? "bg-brand" : "bg-bg-elevated"
+          "relative inline-flex h-6 w-11 flex-shrink-0 rounded-control transition-colors duration-200 ease-in-out focus:outline-none",
+          value ? "bg-bg-inverse" : "bg-bg-raised"
         )}
       >
         <span
           aria-hidden="true"
           className={cn(
-            "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out my-0.5",
+            "pointer-events-none inline-block h-5 w-5 transform rounded-control bg-white shadow ring-0 transition duration-200 ease-in-out my-0.5",
             value ? "translate-x-5" : "translate-x-0.5"
           )}
         />

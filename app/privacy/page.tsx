@@ -1,12 +1,12 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft } from "@phosphor-icons/react/dist/ssr"
 import { MeowWordmark } from "@/components/brand/meow-wordmark"
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — Meow",
+  title: "Privacy Policy for Meow",
   description:
-    "How Meow collects, uses, and protects your data — account info, profile details, and the opportunities you save.",
+    "How Meow collects, uses, and protects your data: account info, profile details, and the opportunities you save.",
 }
 
 const UPDATED = "July 26, 2026"
@@ -21,19 +21,19 @@ export default function PrivacyPage() {
           </Link>
           <Link
             href="/"
-            className="inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
+            className="inline-flex items-center gap-1.5 text-body text-text-secondary hover:text-text-primary transition-colors"
           >
-            <ArrowLeft size={15} strokeWidth={1.75} />
+            <ArrowLeft size={15} />
             Back to home
           </Link>
         </div>
 
-        <h1 className="font-display text-3xl sm:text-4xl font-extrabold tracking-tight">
+        <h1 className="font-display text-heading-l sm:text-heading-l font-semibold tracking-tight">
           Privacy Policy
         </h1>
-        <p className="mt-3 text-sm text-text-muted">Last updated: {UPDATED}</p>
+        <p className="mt-3 text-body text-text-muted">Last updated: {UPDATED}</p>
 
-        <div className="mt-10 space-y-9 text-[15px] leading-relaxed text-text-secondary [&_h2]:font-display [&_h2]:text-text-primary [&_h2]:font-bold [&_h2]:text-xl [&_h2]:tracking-tight [&_h2]:mb-3 [&_h2]:mt-0 [&_a]:text-brand [&_a]:underline [&_a]:underline-offset-2 [&_strong]:text-text-primary [&_strong]:font-semibold">
+        <div className="mt-10 space-y-9 text-body leading-relaxed text-text-secondary [&_h2]:font-display [&_h2]:text-text-primary [&_h2]:font-semibold [&_h2]:text-heading-m [&_h2]:tracking-tight [&_h2]:mb-3 [&_h2]:mt-0 [&_a]:text-accent [&_a]:underline [&_a]:underline-offset-2 [&_strong]:text-text-primary [&_strong]:font-semibold">
           <section>
             <p>
               Meow helps students and early-career builders discover events, internships, and
@@ -44,15 +44,15 @@ export default function PrivacyPage() {
 
           <section>
             <h2>Information you give us</h2>
-            <ul className="list-disc space-y-2 pl-5 marker:text-text-faint">
+            <ul className="list-disc space-y-2 pl-5 marker:text-text-muted">
               <li>
                 <strong>Account details.</strong> When you sign up with email, we store your email
                 address and a securely hashed password (handled by our authentication provider,
-                Supabase — we never see or store your raw password). If you sign in with Google, we
+                Supabase, and we never see or store your raw password). If you sign in with Google, we
                 receive your name, email address, and profile photo from Google.
               </li>
               <li>
-                <strong>Profile.</strong> Anything you add to your profile — display name, location,
+                <strong>Profile.</strong> Anything you add to your profile: display name, location,
                 interests, LinkedIn URL, and the work or project experience you list.
               </li>
               <li>
@@ -70,8 +70,8 @@ export default function PrivacyPage() {
             <h2>Information collected automatically</h2>
             <p>
               Our hosting provider (Vercel) and database provider (Supabase) process standard
-              technical data needed to run the service — IP address, browser type, and request
-              timestamps — for security, abuse prevention, and reliability. We do not use
+              technical data needed to run the service, such as IP address, browser type and request
+              timestamps, for security, abuse prevention and reliability. We do not use
               third-party advertising or cross-site tracking cookies. The only cookies we set are the
               session cookies that keep you signed in.
             </p>
@@ -79,7 +79,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2>How we use your information</h2>
-            <ul className="list-disc space-y-2 pl-5 marker:text-text-faint">
+            <ul className="list-disc space-y-2 pl-5 marker:text-text-muted">
               <li>To create your account and keep you signed in.</li>
               <li>To personalize the opportunities and events we surface for you.</li>
               <li>To send the weekly digest, only if you&apos;ve opted in (you can opt out anytime).</li>
@@ -96,7 +96,7 @@ export default function PrivacyPage() {
               We share data only with the service providers that make Meow work:{" "}
               <strong>Supabase</strong> (authentication and database), <strong>Vercel</strong>{" "}
               (hosting), <strong>Google</strong> (only if you choose Google sign-in), and, if you
-              upgrade to a paid plan, <strong>Stripe</strong> (payment processing — Meow never sees
+              upgrade to a paid plan, <strong>Stripe</strong> (payment processing, and Meow never sees
               your card number). Each processes data on our behalf under their own terms. We may also
               disclose information if required by law.
             </p>
@@ -104,7 +104,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2>Your choices and rights</h2>
-            <ul className="list-disc space-y-2 pl-5 marker:text-text-faint">
+            <ul className="list-disc space-y-2 pl-5 marker:text-text-muted">
               <li>Edit or clear your profile information at any time from your profile page.</li>
               <li>Unsubscribe from the digest using the link in any digest email or your settings.</li>
               <li>
@@ -152,7 +152,7 @@ export default function PrivacyPage() {
           </section>
         </div>
 
-        <div className="mt-16 border-t border-border-subtle pt-8 text-sm text-text-muted">
+        <div className="mt-16 border-t border-border-subtle pt-8 text-body text-text-muted">
           <Link href="/terms" className="text-text-secondary hover:text-text-primary transition-colors">
             Terms of Service
           </Link>

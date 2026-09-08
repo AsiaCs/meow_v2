@@ -5,14 +5,13 @@ import { getAllEvents, stableEventId, type ScrapedEvent } from "@/lib/events/sou
 import { fetchListedEvents } from "@/lib/events/listing"
 import { isSpecificEventUrl } from "@/lib/validators/specific-urls"
 import { safeExternalUrl } from "@/lib/url-helpers"
-import { ArrowLeft, MapPin, Monitor, CalendarDays, ExternalLink, Clock, Tag } from "lucide-react"
+import { ArrowLeft, MapPin, Monitor, CalendarDots as CalendarDays, ArrowSquareOut as ExternalLink, Clock, Tag } from "@phosphor-icons/react/dist/ssr"
 import { Badge } from "@/components/ui/badge"
 import { AddToCalendar } from "@/components/events/add-to-calendar"
 
 export const runtime = "nodejs"
 export const revalidate = 1800
 
-const TAG_VARIANTS: Array<"purple" | "pink" | "green" | "gray"> = ["purple", "pink", "green", "gray"]
 
 const SOURCE_LABELS: Record<string, string> = {
   "cerebral-valley": "Cerebral Valley",
@@ -29,7 +28,7 @@ function getSourceLabel(source: string) {
 }
 
 type EventRow = {
-  id: string                       // real Postgres UUID — primary lookup key for user events
+  id: string                       // real Postgres UUID, the primary lookup key for user events
   title: string
   description: string | null
   startDate: string
@@ -139,52 +138,52 @@ export default async function EventDetailPage({
       <div className="max-w-2xl mx-auto px-6 py-8">
         <Link
           href="/events"
-          className="inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text-secondary transition-colors mb-6"
+          className="inline-flex items-center gap-1.5 text-body text-text-muted hover:text-text-secondary transition-colors mb-6"
         >
-          <ArrowLeft size={14} strokeWidth={1.5} />
+          <ArrowLeft size={14} />
           Back to Events
         </Link>
 
-        <div className="border border-border rounded-3xl p-1.5 bg-bg-surface mb-6">
+        <div className="border border-border-subtle rounded-panel p-1.5 bg-bg-raised mb-6">
           {event.imageUrl ? (
-            <div className="rounded-[calc(1.5rem-0.375rem)] overflow-hidden h-52">
+            <div className="rounded-panel overflow-hidden h-52">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={event.imageUrl} alt={event.title} className="w-full h-full object-cover" />
             </div>
           ) : (
-            <div className="rounded-[calc(1.5rem-0.375rem)] h-36 bg-bg-panel" />
+            <div className="rounded-panel h-36 bg-bg-sunken" />
           )}
 
-          <div className="bg-bg-card rounded-[calc(1.5rem-0.375rem)] p-6 mt-1.5">
+          <div className="bg-bg-raised rounded-panel p-6 mt-1.5">
             <div className="flex items-center gap-2 mb-4">
-              <Badge variant={event.isFree ? "green" : "gray"}>
+              <Badge variant={event.isFree ? "positive" : "neutral"}>
                 {event.isFree ? "Free" : "Paid"}
               </Badge>
-              <Badge variant="gray">{getSourceLabel(event.source)}</Badge>
+              <Badge variant="neutral">{getSourceLabel(event.source)}</Badge>
               {event.isVirtual && (
-                <Badge variant="purple">
-                  <Monitor size={11} className="mr-1" />
+                <Badge variant="accent">
+                  <Monitor size={12} aria-hidden="true" />
                   Virtual
                 </Badge>
               )}
             </div>
 
-            <h1 className="text-2xl font-bold text-text-primary font-display leading-snug mb-4">
+            <h1 className="text-heading-l font-semibold text-text-primary font-display leading-snug mb-4">
               {event.title}
             </h1>
 
             <div className="flex flex-col gap-2 mb-4">
-              <div className="flex items-center gap-2 text-sm text-text-secondary">
-                <CalendarDays size={15} strokeWidth={1.5} className="text-brand flex-shrink-0" />
+              <div className="flex items-center gap-2 text-body text-text-secondary">
+                <CalendarDays size={15} className="text-accent flex-shrink-0" />
                 {dateStr}
               </div>
-              <div className="flex items-center gap-2 text-sm text-text-secondary">
-                <Clock size={15} strokeWidth={1.5} className="text-brand flex-shrink-0" />
+              <div className="flex items-center gap-2 text-body text-text-secondary">
+                <Clock size={15} className="text-accent flex-shrink-0" />
                 {timeStr}
               </div>
               {!event.isVirtual && event.location && (
-                <div className="flex items-center gap-2 text-sm text-text-secondary">
-                  <MapPin size={15} strokeWidth={1.5} className="text-brand flex-shrink-0" />
+                <div className="flex items-center gap-2 text-body text-text-secondary">
+                  <MapPin size={15} className="text-accent flex-shrink-0" />
                   {event.location}
                 </div>
               )}
@@ -192,9 +191,9 @@ export default async function EventDetailPage({
 
             {Array.isArray(event.tags) && event.tags.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mb-4">
-                {event.tags.map((tag: string, i: number) => (
-                  <Badge key={tag} variant={TAG_VARIANTS[i % TAG_VARIANTS.length]}>
-                    <Tag size={10} className="mr-1 opacity-70" />
+                {event.tags.map((tag: string) => (
+                  <Badge key={tag} variant="outline">
+                    <Tag size={11} aria-hidden="true" />
                     {tag}
                   </Badge>
                 ))}
@@ -205,12 +204,12 @@ export default async function EventDetailPage({
 
         {event.description && (
           <section className="mb-6">
-            <h2 className="text-xs font-semibold text-text-muted uppercase tracking-widest mb-3">
+            <h2 className="text-meta font-semibold text-text-muted uppercase tracking-widest mb-3">
               About this event
             </h2>
-            <div className="border border-border rounded-2xl p-1.5 bg-bg-surface">
-              <div className="bg-bg-card rounded-[calc(1rem-0.375rem)] p-5">
-                <p className="text-text-secondary text-sm leading-relaxed whitespace-pre-line">
+            <div className="border border-border-subtle rounded-panel p-1.5 bg-bg-raised">
+              <div className="bg-bg-raised rounded-panel p-5">
+                <p className="text-text-secondary text-body leading-relaxed whitespace-pre-line">
                   {event.description}
                 </p>
               </div>
@@ -224,16 +223,16 @@ export default async function EventDetailPage({
               href={safeRegistrationUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl bg-text-primary text-bg-base font-semibold text-base hover:bg-text-primary/90 active:scale-[0.98] transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]"
+              className="flex-1 flex items-center justify-center gap-2 py-4 rounded-panel bg-text-primary text-bg-base font-semibold text-lead hover:bg-text-primary/90 active:scale-[0.98] transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)]"
             >
               RSVP / Register
-              <ExternalLink size={16} strokeWidth={1.5} />
+              <ExternalLink size={16} />
             </a>
           ) : (
             <button
               type="button"
               disabled
-              className="flex-1 flex items-center justify-center gap-2 py-4 rounded-2xl border border-border-strong text-text-muted font-semibold text-base opacity-70 cursor-not-allowed"
+              className="flex-1 flex items-center justify-center gap-2 py-4 rounded-panel border border-border-default text-text-muted font-semibold text-lead opacity-70 cursor-not-allowed"
             >
               RSVP unavailable
             </button>

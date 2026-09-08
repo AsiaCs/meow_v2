@@ -1,24 +1,33 @@
 import { cn } from "@/lib/utils"
 
+// Variants are named for meaning, never colour. In a grayscale-first system
+// most badges should be neutral: reach for a semantic variant only when the
+// state genuinely matters, and for accent only when it is the single most
+// important thing on the screen.
+type BadgeVariant = "neutral" | "accent" | "positive" | "critical" | "outline"
+
 interface BadgeProps {
   children: React.ReactNode
-  variant?: "purple" | "pink" | "green" | "gray" | "outline"
+  variant?: BadgeVariant
   className?: string
 }
 
-const variantStyles: Record<NonNullable<BadgeProps["variant"]>, string> = {
-  purple: "bg-brand/15 text-brand border-transparent",
-  pink: "bg-brand-hi/15 text-brand-hi border-transparent",
-  green: "bg-positive/15 text-positive border-transparent",
-  gray: "bg-bg-surface text-text-secondary border-transparent",
-  outline: "bg-transparent text-text-secondary border-border-strong",
+const variantStyles: Record<BadgeVariant, string> = {
+  neutral: "bg-bg-raised text-text-secondary border-border-subtle",
+  accent: "bg-accent/8 text-accent border-accent/20",
+  positive: "bg-positive/8 text-positive border-positive/20",
+  critical: "bg-critical/8 text-critical border-critical/20",
+  outline: "bg-transparent text-text-secondary border-border-default",
 }
 
-export function Badge({ children, variant = "gray", className }: BadgeProps) {
+export function Badge({ children, variant = "neutral", className }: BadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium border",
+        // 6px keeps badges inside the tightened shape language rather than
+        // reading as leftover pills from the previous system.
+        "inline-flex items-center gap-1 rounded-[6px] border px-2 py-0.5",
+        "text-meta font-medium",
         variantStyles[variant],
         className
       )}
@@ -27,3 +36,5 @@ export function Badge({ children, variant = "gray", className }: BadgeProps) {
     </span>
   )
 }
+
+export type { BadgeVariant }

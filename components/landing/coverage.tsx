@@ -25,14 +25,14 @@ export default function Coverage({
   if (cities.length === 0) return null
 
   return (
-    <section className="border-b border-border">
+    <section className="border-b border-border-subtle">
       <div className="mx-auto w-full max-w-[1240px] px-6 py-20 md:py-28">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-10">
           <div className="lg:col-span-4">
-            <h2 className="font-mono text-meta uppercase tracking-[0.14em] text-text-muted">
+            <h2 className="font-display text-heading-m text-text-primary">
               Coverage
             </h2>
-            <p className="mt-6 max-w-[34ch] text-body-l text-text-secondary">
+            <p className="mt-6 max-w-[34ch] text-lead text-text-secondary">
               {totalCount} listings across {cities.length}{" "}
               {cities.length === 1 ? "city" : "cities"}, counted live. No city is
               listed here until it has something in it.
@@ -41,15 +41,15 @@ export default function Coverage({
 
           <ul className="lg:col-span-8">
             {cities.map((c) => (
-              <li key={c.slug} className="border-t border-border last:border-b">
+              <li key={c.slug} className="border-t border-border-subtle last:border-b">
                 <Link
                   href={`/events/city/${c.slug}`}
                   className="group flex items-baseline justify-between gap-6 py-5"
                 >
-                  <span className="font-display text-heading-l text-text-primary transition-colors duration-200 group-hover:text-brand">
+                  <span className="font-display text-heading-l text-text-primary transition-colors duration-200 group-hover:text-accent">
                     {c.city}
                   </span>
-                  <span className="font-mono text-meta tabular-nums text-text-muted">
+                  <span className="text-meta tabular-nums text-text-muted">
                     {String(c.count).padStart(2, "0")}
                   </span>
                 </Link>

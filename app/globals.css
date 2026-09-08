@@ -2,279 +2,231 @@
 
 @theme {
   /* ═══════════════════════════════════════════════════════════════
-     meow design tokens.
+     meow design tokens — minimal light system.
 
-     Every colour is SEMANTIC and resolves to a per-mode CSS variable
-     defined in the :root blocks below, so light and dark are one
-     system rather than two hardcoded palettes. Never reference a raw
-     hex in a component — HIG: "Avoid hard-coding colour values."
+     Supersedes the HAUS direction (see DESIGN-haus-archive.md). The
+     token ARCHITECTURE carries over unchanged; only the values do not.
 
-     Contrast is validated, not assumed: every text-on-surface pair
-     clears 4.5:1, and primary/secondary text clear 7:1 in BOTH modes
-     (HIG dark mode asks for 7:1 on custom colours, especially small
-     text).
+     Two anchors are verified real values, not invented:
+       #FAFAF9  the ground. An off-white, never pure #fff.
+       #100F0C  the ink. An off-black, never pure #000.
+
+     Both are warm-tinted, so the neutral ramp between them is warm
+     too. A pure grey ramp would read cold against these anchors and
+     is the tell that separates a considered neutral from a default
+     one.
+
+     Grayscale carries almost the entire UI. There is exactly one
+     accent, and it appears on links, focus rings, and one CTA hover
+     state. Nothing else.
+
+     Contrast is computed, never eyeballed. Every text tier below
+     clears AA on both the ground and the raised surface.
      ═══════════════════════════════════════════════════════════════ */
 
-  /* Surfaces — a base/elevated ladder. Depth comes from surface
-     stepping and hairlines, not ambient drop shadows. */
+  /* ── Neutral ramp ────────────────────────────────────────────────
+     Warm, derived by interpolation between the two anchors. Exposed
+     as primitives so a future theme can realias without touching
+     component code. */
+  --color-neutral-50: #FAFAF9;
+  --color-neutral-100: #F4F4F2;
+  --color-neutral-200: #E7E5E1;
+  --color-neutral-300: #D6D3CE;
+  --color-neutral-400: #A8A29B;
+  --color-neutral-500: #6D665D;
+  --color-neutral-600: #57534E;
+  --color-neutral-700: #44403B;
+  --color-neutral-800: #292522;
+  --color-neutral-900: #1C1917;
+  --color-neutral-950: #100F0C;
+
+  /* ── Surfaces ────────────────────────────────────────────────────
+     A short ladder. This system separates with whitespace first,
+     hairlines second, and fill only when something genuinely sits
+     on top of something else. */
   --color-bg-base: var(--bg-base);
-  --color-bg-surface: var(--bg-surface);
-  --color-bg-card: var(--bg-card);
-  --color-bg-elevated: var(--bg-elevated);
-  --color-bg-panel: var(--bg-panel);
+  --color-bg-raised: var(--bg-raised);
+  --color-bg-sunken: var(--bg-sunken);
+  --color-bg-inverse: var(--bg-inverse);
   --color-bg-veil: var(--bg-veil);
 
-  /* Ink — four tiers. */
+  /* ── Ink ─────────────────────────────────────────────────────────
+     Worst case across ALL THREE surfaces, not just the ground:
+     15.24 / 8.17 / 4.50. The first pass validated only against the
+     base and shipped a muted tier that measured 3.82:1 on the sunken
+     surface, which is a real AA failure for body text. Both tiers were
+     darkened, secondary further than muted, so they clear AA
+     everywhere AND stay 1.82:1 apart from each other. Three tiers that
+     all pass but look identical are not a ramp.
+
+     Disabled sits at 2.01 deliberately; WCAG 1.4.3 exempts inactive
+     controls, and one that meets contrast does not read as disabled. */
   --color-text-primary: var(--fg-primary);
   --color-text-secondary: var(--fg-secondary);
   --color-text-muted: var(--fg-muted);
-  --color-text-faint: var(--fg-faint);
+  --color-text-disabled: var(--fg-disabled);
+  --color-text-inverse: var(--fg-inverse);
 
-  /* Lines are the primary separator device. */
-  --color-border: var(--line);
+  /* ── Lines ───────────────────────────────────────────────────────
+     border-subtle and border-default are DECORATIVE separators; they
+     sit under 3:1 on purpose because they divide rather than define.
+     border-field is different: on an input the border IS the control
+     boundary, so it clears 3:1 per WCAG 1.4.11. Do not swap them. */
   --color-border-subtle: var(--line-subtle);
-  --color-border-strong: var(--line-strong);
-  --color-border-accent: var(--line-accent);
+  --color-border-default: var(--line-default);
+  --color-border-field: var(--line-field);
 
-  /* Brand + status.
-     HARD RULE: brand brass is for identity and primary action ONLY.
-     It is never a status colour — amber reads as "warning" and reusing
-     it would break HIG's "avoid using the same colour to mean different
-     things". Status uses positive/critical, and per HIG must always be
-     paired with a label or glyph, never colour alone. */
-  --color-brand: var(--brand);
-  --color-brand-hi: var(--brand-hi);
-  --color-on-brand: var(--on-brand);
+  /* ── Accent ──────────────────────────────────────────────────────
+     ONE accent, used sparingly. The primary button is near-black, so
+     the accent's actual job is links, focus rings and hover. A deep
+     rose, carrying a thread of meow's identity through three
+     redesigns without raising its voice. 5.97:1 on the ground. */
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-on-accent: var(--on-accent);
+
+  /* Status. Desaturated to sit inside a grayscale-first system rather
+     than shouting out of it. Always paired with a label or glyph. */
   --color-positive: var(--positive);
   --color-critical: var(--critical);
-
-  /* ── Deprecated aliases ──────────────────────────────────────────
-     The old purple/pink identity. Mapped onto brand so screens that
-     have not been rebuilt yet still compile and pick up the new
-     palette instead of rendering the retired one. Delete these once
-     no component references them. */
-  --color-purple: var(--brand);
-  --color-purple-light: var(--brand-hi);
-  --color-purple-dim: var(--bg-panel);
-  --color-purple-ink: var(--bg-base);
-  --color-fuchsia: var(--brand-hi);
-  --color-pink: var(--brand);
-  --color-pink-light: var(--brand-hi);
-  --color-mint: var(--positive);
-  --color-cyan: var(--positive);
-  --color-indigo: var(--brand);
+  --color-warning: var(--warning);
 
   /* ── Typography ──────────────────────────────────────────────────
-     Two voices with real tonal contrast: Bricolage Grotesque carries
-     display, IBM Plex Sans carries UI and body. Plex Mono is the same
-     superfamily as the text face, used only for numerics (dates,
-     salary, deadlines, match scores) so figures align in dense rows. */
-  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-bricolage), var(--font-plex-sans), system-ui, sans-serif;
-  --font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, monospace;
-  --font-wordmark: var(--font-bricolage), system-ui, sans-serif;
+     Inter, everywhere. Inter is the most common default-AI typeface,
+     which is exactly why it has to be used deliberately here: a
+     restrained 400/500/600 ramp with no 700+ headings, tracking that
+     tightens as size grows, and leading that opens as size shrinks.
+     Scale and whitespace do the work, not the typeface. */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
   /* ── Type scale ──────────────────────────────────────────────────
-     Explicit size / leading / tracking at every step. Display sizes
-     carry real negative tracking; body sizes carry none. */
-  --text-display-xl: 4.75rem;
-  --text-display-xl--line-height: 0.95;
-  --text-display-xl--letter-spacing: -0.035em;
-  --text-display-l: 3.5rem;
-  --text-display-l--line-height: 1;
-  --text-display-l--letter-spacing: -0.03em;
-  --text-display-m: 2.5rem;
-  --text-display-m--line-height: 1.05;
-  --text-display-m--letter-spacing: -0.025em;
-  --text-heading-l: 1.75rem;
-  --text-heading-l--line-height: 1.2;
-  --text-heading-l--letter-spacing: -0.015em;
-  --text-heading-m: 1.375rem;
-  --text-heading-m--line-height: 1.25;
-  --text-heading-m--letter-spacing: -0.01em;
-  --text-body-l: 1.0625rem;
-  --text-body-l--line-height: 1.55;
-  --text-body-m: 0.9375rem;
-  --text-body-m--line-height: 1.55;
-  --text-label: 0.8125rem;
-  --text-label--line-height: 1.3;
-  --text-label--letter-spacing: 0.02em;
+     Tracking is expressed in em so it scales with the step. At the
+     hero step that is roughly -2.4px on 48px, matching the reference. */
+  --text-display: 3rem;
+  --text-display--line-height: 1.0;
+  --text-display--letter-spacing: -0.05em;
+  --text-display--font-weight: 500;
+
+  --text-heading-l: 2rem;
+  --text-heading-l--line-height: 1.08;
+  --text-heading-l--letter-spacing: -0.032em;
+  --text-heading-l--font-weight: 500;
+
+  --text-heading-m: 1.5rem;
+  --text-heading-m--line-height: 1.12;
+  --text-heading-m--letter-spacing: -0.025em;
+  --text-heading-m--font-weight: 500;
+
+  --text-lead: 1.25rem;
+  --text-lead--line-height: 1.4;
+  --text-lead--letter-spacing: 0.01em;
+
+  --text-body: 1rem;
+  --text-body--line-height: 1.5;
+  --text-body--letter-spacing: 0.0125em;
+
+  --text-ui: 0.875rem;
+  --text-ui--line-height: 1.35;
+  --text-ui--letter-spacing: 0.005em;
+
   --text-meta: 0.8125rem;
   --text-meta--line-height: 1.4;
   --text-meta--letter-spacing: 0.01em;
+
+  /* ── Radius ──────────────────────────────────────────────────────
+     Tighter than the HAUS scale, which was softer than this direction
+     calls for. Three values, one rule, same as before. */
+  --radius-control: 8px;
+  --radius-panel: 12px;
+  --radius-frame: 16px;
+
+  /* ── Elevation ───────────────────────────────────────────────────
+     Hairlines instead of shadows. The one shadow that exists is
+     deliberately almost invisible: dramatic elevation is a default-AI
+     tell, and in a light minimal system it reads as dirt. */
+  --shadow-subtle: 0 1px 2px 0 rgb(16 15 12 / 0.04);
+  --shadow-panel: 0 1px 3px 0 rgb(16 15 12 / 0.06), 0 1px 2px -1px rgb(16 15 12 / 0.04);
+
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   MODE DEFINITIONS
+   MODE
 
-   Light is the default declaration; dark applies via the system
-   preference. HIG: "Avoid offering an app-specific appearance setting
-   ... people generally expect all apps to respect their preference."
-   The [data-theme] hooks exist so a manual override can be added later
-   without restructuring, and so either mode can be forced in tests.
+   Light-first, and light-only for now. The HAUS system carried a dark
+   mode because that palette was dark by nature. This direction is
+   light by nature, and a dark variant would either reintroduce the
+   HAUS mood or invent a second identity. Adding one is a deliberate
+   decision, not a default. The [data-theme] hook is left in place so
+   that decision does not require restructuring.
    ═══════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* Tells the browser to render native controls, scrollbars and form
-     widgets in the matching appearance. Without this, both-mode support
-     stops at our own components. */
-  color-scheme: light dark;
+  color-scheme: light;
 
-  /* ── LIGHT ── warm off-white. Never pure #fff. */
-  --bg-base: #faf7f2;
-  --bg-surface: #f2eee6;
-  --bg-card: #fdfbf7;
-  --bg-elevated: #fffefc;
-  --bg-panel: #eae5da;
-  --bg-veil: rgba(250, 247, 242, 0.78);
+  --bg-base: #FAFAF9;
+  --bg-raised: #F4F4F2;
+  --bg-sunken: #E7E5E1;
+  --bg-inverse: #100F0C;
+  --bg-veil: rgba(250, 250, 249, 0.85);
 
-  --fg-primary: #17150f;
-  --fg-secondary: #4e4940;
-  --fg-muted: #6e685d;
-  --fg-faint: #8a847a;
+  --fg-primary: #100F0C;
+  --fg-secondary: #44403B;
+  --fg-muted: #6D665D;
+  --fg-disabled: #A8A29B;
+  --fg-inverse: #FAFAF9;
 
-  --line: rgba(23, 21, 15, 0.08);
-  --line-subtle: rgba(23, 21, 15, 0.11);
-  --line-strong: rgba(23, 21, 15, 0.18);
-  --line-accent: rgba(138, 83, 16, 0.34);
+  --line-subtle: #E7E5E1;
+  --line-default: #D6D3CE;
+  --line-field: #95918B;
 
-  --brand: #8a5310;
-  --brand-hi: #a0621a;
-  --on-brand: #faf7f2;
-  --positive: #1f6b5e;
-  --critical: #9b3a24;
+  --accent: #9E4257;
+  --accent-hover: #8C3A4D;
+  --on-accent: #FAFAF9;
 
-  /* Motion — springs are expressed in JS (Motion/React Spring). These
-     curves are only for CSS-only affordances like the link underline. */
+  --positive: #1F5D4C;
+  --critical: #9B3A24;
+  --warning: #7A5A21;
+
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
-
-  /* Elevation is reserved for things that genuinely lift off the page:
-     modals, sheets, popovers. Not cards, not every surface. */
-  --shadow-card: none;
-  --shadow-card-hover: none;
-  --shadow-overlay: 0 24px 60px -24px rgba(23, 21, 15, 0.28);
-
-  /* Gradients are retired as ambient texture. Kept as no-ops so any
-     component still referencing them renders flat rather than breaking. */
-  --gradient-brand: none;
-  --gradient-cta: none;
-  --gradient-pill-on: none;
-  --gradient-glow: none;
-  --gradient-metal: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg-base: #0f0e0c;
-    --bg-surface: #141210;
-    --bg-card: #1a1815;
-    --bg-elevated: #221f1a;
-    --bg-panel: #2a2621;
-    --bg-veil: rgba(15, 14, 12, 0.78);
-
-    --fg-primary: #f7f4ef;
-    --fg-secondary: #a8a29a;
-    --fg-muted: #979186;
-    --fg-faint: #6b665e;
-
-    --line: rgba(247, 244, 239, 0.07);
-    --line-subtle: rgba(247, 244, 239, 0.1);
-    --line-strong: rgba(247, 244, 239, 0.16);
-    --line-accent: rgba(224, 154, 62, 0.34);
-
-    --brand: #c8791a;
-    --brand-hi: #e09a3e;
-    --on-brand: #0f0e0c;
-    --positive: #3fa593;
-    --critical: #db7259;
-
-    --shadow-overlay: 0 24px 60px -24px rgba(0, 0, 0, 0.7);
-  }
-}
-
-:root[data-theme="dark"] {
-  --bg-base: #0f0e0c;
-  --bg-surface: #141210;
-  --bg-card: #1a1815;
-  --bg-elevated: #221f1a;
-  --bg-panel: #2a2621;
-  --bg-veil: rgba(15, 14, 12, 0.78);
-
-  --fg-primary: #f7f4ef;
-  --fg-secondary: #a8a29a;
-  --fg-muted: #979186;
-  --fg-faint: #6b665e;
-
-  --line: rgba(247, 244, 239, 0.07);
-  --line-subtle: rgba(247, 244, 239, 0.1);
-  --line-strong: rgba(247, 244, 239, 0.16);
-  --line-accent: rgba(224, 154, 62, 0.34);
-
-  --brand: #c8791a;
-  --brand-hi: #e09a3e;
-  --on-brand: #0f0e0c;
-  --positive: #3fa593;
-  --critical: #db7259;
-
-  --shadow-overlay: 0 24px 60px -24px rgba(0, 0, 0, 0.7);
 }
 
 /* ═══════════════════════════════════════════════════════════════════
    ENTRANCE REVEALS
 
-   These are CSS, not JS, on purpose. A JS-driven entrance has to render
-   the content at opacity:0 and rely on requestAnimationFrame to reveal
-   it — so anything that never fires rAF (a background tab, an OG-image
-   renderer, a crawler, or simply JS failing) leaves the hero blank.
-   Observed directly: in a backgrounded tab the whole hero stayed at
-   opacity 0 indefinitely.
+   Carried over from the previous system unchanged, because the reason
+   for them was structural rather than aesthetic. These are CSS, not
+   JS: with @starting-style the resting state IS the visible state, so
+   a failed animation degrades to "no animation", never to "no
+   content". An earlier revision server-rendered the hero at opacity:0
+   behind requestAnimationFrame and it stayed invisible indefinitely in
+   a backgrounded tab.
 
-   With @starting-style the resting state IS the visible state; the
-   from-state only exists for the first transition. If the transition
-   never runs, the content is simply there. Failure degrades to "no
-   animation", never to "no content".
-
-   The easing is a real spring encoded as linear(), including its
-   overshoot, rather than an ease-out curve — springs are the standard
-   this rebuild holds motion to. CSS transitions are also interruptible
-   and animate from the current value by definition, which is the rest
-   of that standard.
-
-   Stagger is opt-in per element via style={{ '--i': n }}.
-   Reduce Motion is handled by the global backstop below.
+   Motion is quieter here than under HAUS. A minimal system earns its
+   calm by not moving much.
    ═══════════════════════════════════════════════════════════════════ */
-
-:root {
-  --spring-entrance: linear(
-    0, 0.006, 0.025 2.8%, 0.101 6.1%, 0.539 18.9%, 0.721 25.3%, 0.85 31.5%,
-    0.937 38.1%, 0.968 41.8%, 0.991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001 100%
-  );
-}
 
 .enter {
   opacity: 1;
   transform: none;
   transition:
-    opacity 620ms var(--spring-entrance),
-    transform 620ms var(--spring-entrance);
-  transition-delay: calc(var(--i, 0) * 55ms);
+    opacity 520ms var(--ease-out-expo),
+    transform 520ms var(--ease-out-expo);
+  transition-delay: calc(var(--i, 0) * 50ms);
 }
 
 @starting-style {
   .enter {
     opacity: 0;
-    transform: translateY(18px);
+    transform: translateY(12px);
   }
 }
 
-/* Rows in the live index get a distinct treatment — quicker, tighter
-   stagger, no vertical travel — so the page is not one uniform fade-up
-   applied to every element regardless of what it is. */
 .enter-row {
   opacity: 1;
-  transition: opacity 420ms var(--spring-entrance);
-  transition-delay: calc(180ms + var(--i, 0) * 42ms);
+  transition: opacity 380ms var(--ease-out-expo);
+  transition-delay: calc(150ms + var(--i, 0) * 38ms);
 }
 
 @starting-style {
@@ -283,10 +235,15 @@
   }
 }
 
-/* HIG accessibility: when Reduce Motion is on, "reduce automatic and
-   repetitive animations, including zooming, scaling, and peripheral
-   motion." This is the global backstop — JS-driven motion must ALSO
-   branch on the same query, it is not covered by this rule. */
+/* Skeleton shimmer. A transform on a composited layer, so it costs no
+   layout. Hidden outright under Reduce Motion via the component's
+   motion-reduce: variant; the plate alone still reads as loading. */
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
+}
+
+/* Global backstop. JS-driven motion must ALSO branch on this query;
+   it is not covered by this rule. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -304,7 +261,6 @@
 
 html {
   scroll-behavior: smooth;
-  /* Prevent iOS Safari rubber-band from showing the wrong color behind safe areas */
   background-color: var(--color-bg-base);
 }
 
@@ -315,176 +271,140 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  font-feature-settings: "ss01", "cv11", "ss02", "calt";
-  font-variant-ligatures: common-ligatures;
+  /* Inter's contextual alternates and tabular figures. cv11 gives the
+     single-storey a, which reads slightly less generic at large sizes. */
+  font-feature-settings: "cv11", "ss01", "calt";
 }
 
-/* Numbers everywhere align to the grid — no jitter between rows. */
+/* Numbers align down a column without a second font family. */
 :where(time, .tabular-nums, [data-numeric]) {
   font-variant-numeric: tabular-nums lining-nums;
 }
 
-/* ─────────────────────────────────────────────────────────────────
-   Fixed micro-grain overlay — gives the entire UI a textured, filmic
-   surface so flat dark rectangles never look like flat dark rectangles.
-   Critical: `position: fixed` keeps this on the GPU compositor layer,
-   not the scrolling content (per the perf rules in our skills).
-   ───────────────────────────────────────────────────────────────── */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  background-size: 128px 128px;
-  opacity: 0.38;
-  mix-blend-mode: overlay;
-}
-
-/* Scrollbar — narrow, low-contrast, matches surface depth */
+/* Scrollbar — token-driven so it is visible on the light ground. */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 10px;
+  height: 10px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 3px;
+  background: var(--color-border-default);
+  border-radius: 999px;
+  border: 3px solid var(--color-bg-base);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.16);
+  background: var(--color-text-disabled);
 }
 
 ::selection {
-  background: rgba(168, 132, 255, 0.32);
-  color: white;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
 }
 
-/* Headings always pick up display font without per-element typing */
 h1, h2, h3 {
   font-family: var(--font-display);
-  letter-spacing: -0.02em;
+  font-weight: 500;
 }
 
-/* Perplexity pivot — gradient text is retired.
-   The H1 accent line ('.u-cool') is now plain Instrument Serif italic in
-   muted ink, carrying emphasis through type contrast instead of color. */
-.gradient-text,
-.u-cool {
-  font-family: var(--font-display);
-  font-style: italic;
-  font-weight: 400;
-  color: var(--color-text-secondary);
-  background: none;
-  -webkit-background-clip: border-box;
-  background-clip: border-box;
-}
+/* ─────────────────────────────────────────────────────────────────
+   Buttons
 
-/* Wordmark — clean Urbanist bold in primary ink. No gradient. */
-.u-wm {
-  font-family: var(--font-wordmark);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--color-text-primary);
-  background: none;
-  -webkit-background-clip: border-box;
-  background-clip: border-box;
-}
-
-
-/* .glass / .glass-2 / .field-light / .bg-room (meow-ds frosted-panel system)
-   retired — every surface in the rebuild is a flat bordered plate instead
-   (border-border + bg-bg-card/surface/elevated, shadow-card is `none` in
-   the token set). Removed once the last consumer (events/internships
-   pages, the app shell, card.tsx) migrated off them. */
-
-/* Primary CTA — Perplexity pivot. Solid white plate on dark; no gradient,
-   no pink, no purple. Soft inset top highlight + 1px contact line keep
-   the button feeling physical without ever flashing color. */
-.btn-brand {
+   One solid style and one ghost, per the shape language. The primary
+   is near-black rather than the accent: keeping the accent off the
+   main CTA is what makes it read as an accent at all.
+   ───────────────────────────────────────────────────────────────── */
+.btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
-  font-family: var(--font-sans);
-  font-weight: 700;
-  font-size: 15px;
-  border-radius: 14px;
-  padding: 13px 22px;
-  color: var(--color-bg-base);
+  gap: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: -0.006em;
+  border-radius: var(--radius-control);
+  padding: 9px 16px;
+  min-height: 38px;
   border: 1px solid transparent;
-  background: var(--color-text-primary);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.5),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
-    0 1px 0 rgba(0, 0, 0, 0.25),
-    0 8px 24px -10px rgba(0, 0, 0, 0.4);
-  transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1),
-              background-color 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition:
+    background-color 160ms var(--ease-standard),
+    border-color 160ms var(--ease-standard),
+    color 160ms var(--ease-standard);
 }
-.btn-brand:hover { background: rgba(245, 242, 252, 0.92); }
-.btn-brand:active { transform: scale(0.98); }
 
-/* Active pill — Perplexity pivot. Solid white plate, dark ink. Used for
-   active filter pills, tabs, and the 'Near me' state. */
-.pill-on {
-  background: var(--color-text-primary);
-  color: var(--color-bg-base);
-  border: 1px solid transparent;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.45),
-    0 6px 18px -8px rgba(0, 0, 0, 0.4);
+.btn-primary {
+  background: var(--color-bg-inverse);
+  color: var(--color-text-inverse);
+}
+.btn-primary:hover {
+  background: var(--color-neutral-800);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-text-primary);
+}
+.btn-ghost:hover {
+  background: var(--color-bg-raised);
 }
 
 /* ─────────────────────────────────────────────────────────────────
-   Editorial hairline grid — vertical rules every 88px at 2.5% alpha.
-   Sits fixed behind the content like printed-page guides. Costs zero
-   layout, GPU-composited, and almost invisible — you feel structure
-   without seeing decoration. The hero opts in via .hero-grid.
+   Links
+
+   The accent's main home. Underline is present by default rather than
+   on hover: in a grayscale system, colour alone is a weak affordance.
    ───────────────────────────────────────────────────────────────── */
-.hero-grid {
-  position: relative;
-  isolation: isolate;
+.link {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, var(--color-accent) 35%, transparent);
+  transition: text-decoration-color 160ms var(--ease-standard),
+              color 160ms var(--ease-standard);
 }
-.hero-grid::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image:
-    linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-  background-size: 88px 100%;
-  mask-image: radial-gradient(ellipse 70% 80% at 50% 40%, #000 40%, transparent 100%);
-  -webkit-mask-image: radial-gradient(ellipse 70% 80% at 50% 40%, #000 40%, transparent 100%);
+.link:hover {
+  color: var(--color-accent-hover);
+  text-decoration-color: currentColor;
 }
 
 /* ─────────────────────────────────────────────────────────────────
-   Section divider — Mobbin signature: a hairline rule with a single
-   centered dot. Reads as editorial typesetting, not a CSS shape.
+   Focus
+
+   Global and token-driven. Do NOT override this per component: four
+   components in the previous system did exactly that with a
+   low-alpha ring utility that could not clear 3:1, and the bug was
+   invisible until it was measured.
    ───────────────────────────────────────────────────────────────── */
-.rule-dot {
-  position: relative;
-  height: 1px;
-  background: var(--color-border-subtle);
-}
-.rule-dot::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 4px;
-  height: 4px;
-  border-radius: 999px;
-  background: var(--color-text-faint);
-  transform: translate(-50%, -50%);
+:where(button, a, [role="button"], input, select, textarea):focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-control);
 }
 
-/* Subtle text-link underline that draws in on hover */
+/* Skip link into the main landmark. */
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -100%;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: var(--radius-control);
+  background: var(--color-bg-inverse);
+  color: var(--color-text-inverse);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: top 180ms var(--ease-out-expo);
+}
+.skip-link:focus-visible {
+  top: 1rem;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   Text link with an underline that draws in on hover. Used across the
+   landing surface where a full .link treatment would be too loud.
+   ───────────────────────────────────────────────────────────────── */
 .link-underline {
   position: relative;
 }
@@ -498,17 +418,24 @@ h1, h2, h3 {
   background: currentColor;
   transform-origin: left center;
   transform: scaleX(0);
-  transition: transform 360ms var(--ease-out-expo);
+  transition: transform 280ms var(--ease-out-expo);
 }
 .link-underline:hover::after {
   transform: scaleX(1);
 }
 
-/* Focus rings — accent border + diffuse glow, never the OS default */
-:where(button, a, [role="button"], input, select, textarea):focus-visible {
-  outline: none;
-  box-shadow:
-    0 0 0 1px var(--color-bg-base),
-    0 0 0 3px var(--color-border-accent);
-  border-radius: 8px;
+/* ─────────────────────────────────────────────────────────────────
+   Hero visual backdrop
+
+   The single place a soft gradient is correct in this system. It is
+   decorative backdrop art sitting behind a product shot, not a UI
+   surface, which is why it does not contradict the no-gradients rule.
+   Kept low-saturation so it reads as light rather than as colour.
+   ───────────────────────────────────────────────────────────────── */
+.hero-backdrop {
+  background-image:
+    radial-gradient(70% 90% at 8% 10%, #F3D9E4 0%, transparent 60%),
+    radial-gradient(60% 80% at 45% 0%, #E2DAF0 0%, transparent 65%),
+    radial-gradient(80% 100% at 95% 25%, #D5E3F2 0%, transparent 60%),
+    linear-gradient(150deg, #EFE6EE 0%, #E4E7F1 55%, #DFE9F2 100%);
 }

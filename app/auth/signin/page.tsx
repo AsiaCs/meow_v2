@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Eye, EyeOff } from "lucide-react"
+import { Eye, EyeSlash as EyeOff } from "@phosphor-icons/react"
 import { createClient } from "@/lib/supabase/client"
 import { MeowWordmark } from "@/components/brand/meow-wordmark"
 import { Button } from "@/components/ui/button"
@@ -12,7 +12,7 @@ import { TurnstileWidget } from "@/components/auth/turnstile-widget"
 //
 // Was a floating glass card over the (retired) Aurora blob background — both
 // gone. Depth here comes the same way it does everywhere else in the rebuild:
-// a flat bordered panel on the base surface, no blur, no glow (shadow-card is
+// a flat bordered panel on the base surface, no blur, no glow (card shadow is
 // literally `none` in the token set). The icon lockup is dropped for the same
 // reason nav.tsx and footer.tsx drop it — meow-logo.tsx is still the old
 // rainbow glyph and hasn't been carried over to the brass system.
@@ -78,7 +78,7 @@ export default function SignInPage() {
       try {
         json = await res.json()
       } catch {
-        setError("Server error — please try again.")
+        setError("Server error. Please try again.")
         setLoading(false)
         return
       }
@@ -111,16 +111,16 @@ export default function SignInPage() {
   return (
     <main className="flex min-h-dvh items-center justify-center bg-bg-base px-4 py-16">
       <div className="enter w-full max-w-md" style={{ "--i": 0 } as React.CSSProperties}>
-        <div className="rounded-2xl border border-border bg-bg-card p-8 md:p-10">
+        <div className="rounded-panel border border-border-subtle bg-bg-raised p-8 md:p-10">
           {/* Header */}
           <div className="mb-8 flex flex-col items-center text-center">
-            <Link href="/" aria-label="meow — home">
+            <Link href="/" aria-label="meow, home">
               <MeowWordmark size={26} />
             </Link>
             <h1 className="mt-5 font-display text-heading-l text-text-primary">
               {mode === "signin" ? "Welcome back" : "Create your account"}
             </h1>
-            <p className="mt-2 text-body-m text-text-secondary">
+            <p className="mt-2 text-body text-text-secondary">
               {mode === "signin"
                 ? "Sign in to pick up where you left off."
                 : "Set up your account and start showing up."}
@@ -130,7 +130,7 @@ export default function SignInPage() {
           {/* Google */}
           <button
             onClick={handleGoogleSignIn}
-            className="flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-bg-surface px-6 py-3.5 font-medium text-text-primary transition-colors hover:bg-bg-elevated"
+            className="flex w-full items-center justify-center gap-3 rounded-panel border border-border-subtle bg-bg-raised px-6 py-3.5 font-medium text-text-primary transition-colors hover:bg-bg-raised"
           >
             <GoogleIcon />
             Continue with Google
@@ -139,7 +139,7 @@ export default function SignInPage() {
           {/* Divider */}
           <div className="my-5 flex items-center gap-3">
             <div className="h-px flex-1 bg-border" />
-            <span className="font-mono text-meta uppercase tracking-[0.14em] text-text-faint">Or</span>
+            <span className="text-meta font-medium uppercase tracking-[0.14em] text-text-muted">Or</span>
             <div className="h-px flex-1 bg-border" />
           </div>
 
@@ -151,7 +151,7 @@ export default function SignInPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full rounded-xl border border-border bg-bg-surface px-4 py-3 text-body-m text-text-primary placeholder:text-text-muted transition-colors focus:border-border-accent"
+              className="w-full rounded-panel border border-border-subtle bg-bg-raised px-4 py-3 text-body text-text-primary placeholder:text-text-muted transition-colors focus:border-accent"
             />
 
             <div className="relative">
@@ -162,7 +162,7 @@ export default function SignInPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="w-full rounded-xl border border-border bg-bg-surface px-4 py-3 pr-11 text-body-m text-text-primary placeholder:text-text-muted transition-colors focus:border-border-accent"
+                className="w-full rounded-panel border border-border-subtle bg-bg-raised px-4 py-3 pr-11 text-body text-text-primary placeholder:text-text-muted transition-colors focus:border-accent"
               />
               <button
                 type="button"
@@ -171,18 +171,18 @@ export default function SignInPage() {
                 className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted transition-colors hover:text-text-secondary"
               >
                 {showPassword
-                  ? <EyeOff size={16} strokeWidth={1.5} />
-                  : <Eye size={16} strokeWidth={1.5} />}
+                  ? <EyeOff size={16} />
+                  : <Eye size={16} />}
               </button>
             </div>
 
             {error && (
-              <p className="rounded-lg border border-critical/20 bg-critical/10 px-3 py-2.5 text-meta text-critical">
+              <p className="rounded-control border border-critical/20 bg-critical/10 px-3 py-2.5 text-meta text-critical">
                 {error}
               </p>
             )}
             {successMsg && (
-              <p className="rounded-lg border border-positive/20 bg-positive/10 px-3 py-2.5 text-meta text-positive">
+              <p className="rounded-control border border-positive/20 bg-positive/10 px-3 py-2.5 text-meta text-positive">
                 {successMsg}
               </p>
             )}
@@ -207,7 +207,7 @@ export default function SignInPage() {
           </form>
 
           {/* Mode toggle */}
-          <p className="mt-5 text-center text-body-m text-text-muted">
+          <p className="mt-5 text-center text-body text-text-muted">
             {mode === "signin" ? "Don't have an account? " : "Already have an account? "}
             <button
               onClick={() => switchMode(mode === "signin" ? "signup" : "signin")}
@@ -217,7 +217,7 @@ export default function SignInPage() {
             </button>
           </p>
 
-          <p className="mt-4 text-center text-meta text-text-faint">
+          <p className="mt-4 text-center text-meta text-text-muted">
             By continuing, you agree to our{" "}
             <Link href="/terms" className="link-underline text-text-secondary transition-colors hover:text-text-primary">Terms</Link>
             {" "}and{" "}

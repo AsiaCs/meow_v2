@@ -17,6 +17,8 @@ export default async function AppLayout({
 
   return (
     <div className="flex min-h-dvh bg-bg-base">
+      {/* Keyboard users had to tab the whole sidebar on every route. */}
+      <a href="#content" className="skip-link">Skip to content</a>
       <Sidebar
         user={{
           id: user.id,
@@ -25,7 +27,7 @@ export default async function AppLayout({
           image: user.user_metadata?.avatar_url ?? null,
         }}
       />
-      <main className="flex-1 min-w-0 ml-0 md:ml-[284px] min-h-dvh pb-20 md:pb-4 md:pr-4 md:pt-4">
+      <main id="content" className="flex-1 min-w-0 ml-0 md:ml-[284px] min-h-dvh pb-20 md:pb-4 md:pr-4 md:pt-4">
         {children}
       </main>
     </div>

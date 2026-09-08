@@ -16,7 +16,7 @@
 
 import { useId, useState } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { Loader2, Upload, X, ImageIcon, AlertCircle } from "lucide-react"
+import { CircleNotch as Loader2, UploadSimple as Upload, X, ImageSquare as ImageIcon, WarningCircle as AlertCircle } from "@phosphor-icons/react"
 
 interface ImageUploaderProps {
   value: string                          // current public URL
@@ -64,7 +64,7 @@ export function ImageUploader({
       const { error: upErr } = await supabase.storage
         .from(BUCKET)
         .upload(path, file, {
-          cacheControl: "31536000",   // 1y — public URLs include the random path so collisions are impossible
+          cacheControl: "31536000",   // 1y. Public URLs include the random path so collisions are impossible
           upsert: false,
           contentType: file.type,
         })
@@ -99,16 +99,16 @@ export function ImageUploader({
       {label && (
         <label
           htmlFor={id}
-          className="text-sm font-medium text-text-secondary flex items-center justify-between"
+          className="text-body font-medium text-text-secondary flex items-center justify-between"
         >
           <span>{label} <span className="text-text-muted">(optional)</span></span>
           {value && (
             <button
               type="button"
               onClick={clear}
-              className="text-[11px] text-text-muted hover:text-text-primary inline-flex items-center gap-1 transition-colors"
+              className="text-meta text-text-muted hover:text-text-primary inline-flex items-center gap-1 transition-colors"
             >
-              <X size={11} strokeWidth={1.75} />
+              <X size={11} />
               Remove
             </button>
           )}
@@ -117,38 +117,38 @@ export function ImageUploader({
 
       {value ? (
         // Preview pill — shows the uploaded image as a 96x96 thumb
-        <div className="mt-1.5 flex items-center gap-3 rounded-xl border border-border bg-bg-surface p-3">
+        <div className="mt-1.5 flex items-center gap-3 rounded-panel border border-border-subtle bg-bg-raised p-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={value}
             alt="Cover preview"
-            className="w-16 h-16 rounded-lg object-cover border border-border"
-            onError={() => setError("Preview failed to load — the upload URL may be invalid.")}
+            className="w-16 h-16 rounded-control object-cover border border-border-subtle"
+            onError={() => setError("Preview failed to load. The upload URL may be invalid.")}
           />
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-text-primary font-medium">Uploaded</p>
-            <p className="text-[11px] text-text-muted truncate">{value}</p>
+            <p className="text-meta text-text-primary font-medium">Uploaded</p>
+            <p className="text-meta text-text-muted truncate">{value}</p>
           </div>
         </div>
       ) : (
         // Drop zone — wrapped <label> so the entire box is the click target
         <label
           htmlFor={id}
-          className={`mt-1.5 group flex items-center justify-center gap-3 rounded-xl border border-dashed border-border hover:border-brand/60 bg-bg-surface/50 hover:bg-bg-surface px-4 py-6 cursor-pointer transition-colors ${
+          className={`mt-1.5 group flex items-center justify-center gap-3 rounded-panel border border-dashed border-border-subtle hover:border-accent/60 bg-bg-raised/50 hover:bg-bg-raised px-4 py-6 cursor-pointer transition-colors ${
             uploading ? "opacity-70 cursor-wait" : ""
           }`}
         >
           {uploading ? (
             <>
-              <Loader2 size={18} className="text-brand animate-spin" />
-              <span className="text-sm text-text-secondary">Uploading…</span>
+              <Loader2 size={18} className="text-accent animate-spin" />
+              <span className="text-body text-text-secondary">Uploading…</span>
             </>
           ) : (
             <>
-              <Upload size={18} strokeWidth={1.5} className="text-text-muted group-hover:text-brand transition-colors" />
+              <Upload size={18} className="text-text-muted group-hover:text-accent transition-colors" />
               <div className="text-left">
-                <p className="text-sm text-text-primary font-medium">Drop an image or click to upload</p>
-                <p className="text-[11px] text-text-muted">PNG, JPG, or WEBP · up to {maxSizeMB} MB</p>
+                <p className="text-body text-text-primary font-medium">Drop an image or click to upload</p>
+                <p className="text-meta text-text-muted">PNG, JPG, or WEBP · up to {maxSizeMB} MB</p>
               </div>
             </>
           )}
@@ -169,15 +169,15 @@ export function ImageUploader({
       )}
 
       {!value && (
-        <p className="text-[11px] text-text-muted mt-1.5 flex items-center gap-1">
-          <ImageIcon size={10} strokeWidth={1.5} />
+        <p className="text-meta text-text-muted mt-1.5 flex items-center gap-1">
+          <ImageIcon size={10} />
           Skip this and we'll show a neon date thumbnail on the feed card.
         </p>
       )}
 
       {error && (
-        <p className="text-xs text-critical mt-1.5 flex items-center gap-1">
-          <AlertCircle size={11} strokeWidth={1.75} />
+        <p className="text-meta text-critical mt-1.5 flex items-center gap-1">
+          <AlertCircle size={11} />
           {error}
         </p>
       )}

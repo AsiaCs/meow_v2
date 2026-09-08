@@ -1,5 +1,32 @@
 import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { extendTailwindMerge } from "tailwind-merge"
+
+// tailwind-merge has to be told about our custom font-size scale.
+//
+// Out of the box it recognises Tailwind's own size names (xs, sm, base, lg...)
+// as font sizes and treats every OTHER text-* class as a text COLOUR. Our scale
+// uses names it has never heard of, so it classified `text-ui` as a colour,
+// found it conflicting with `text-text-inverse`, and silently dropped the one
+// that came first.
+//
+// The visible symptom was a primary button rendering near-black text on a
+// near-black fill: an invisible label. It is worth knowing that the previous
+// design system had the identical collision (`text-on-brand` vs
+// `text-body-m`), so this bug shipped there too and went unnoticed because
+// nobody had viewed the running app.
+//
+// Registering the scale under font-size makes the two groups distinct, so a
+// size and a colour can coexist while size-vs-size and colour-vs-colour still
+// resolve last-wins as they should.
+const twMerge = extendTailwindMerge({
+  extend: {
+    classGroups: {
+      "font-size": [
+        { text: ["display", "heading-l", "heading-m", "lead", "body", "ui", "meta"] },
+      ],
+    },
+  },
+})
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))

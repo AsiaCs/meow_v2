@@ -1,7 +1,7 @@
-// meow — wordmark in Poppins ExtraBold with the pink → fuchsia → purple
-// gradient specified in the v2 logo handoff.
-//
-// Spec: linear-gradient(95deg, #f472b6, #d946ef 45%, #a855f7)
+// meow wordmark. Plain text in the display face at 800, primary ink, no
+// gradient. Two earlier identities left their fonts hardcoded here after the
+// faces themselves stopped being loaded, and the mark silently fell back to
+// system-ui both times, so it now reads the family from the token only.
 
 import type { CSSProperties, ElementType } from "react"
 
@@ -12,8 +12,6 @@ interface MeowWordmarkProps {
   style?: CSSProperties
 }
 
-// Perplexity pivot — wordmark is now plain text. No gradient,
-// no Poppins; uses the sans face (Urbanist) at bold weight in primary ink.
 export function MeowWordmark({
   size = 24,
   className,
@@ -25,9 +23,6 @@ export function MeowWordmark({
     <Tag
       className={className}
       style={{
-        // Bricolage Grotesque via the wordmark token. Urbanist is no longer
-        // loaded, so the old hardcoded var resolved to nothing and the mark
-        // silently fell back to system-ui.
         fontFamily: "var(--font-wordmark)",
         fontWeight: 800,
         letterSpacing: "-0.03em",

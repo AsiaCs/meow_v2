@@ -5,7 +5,7 @@ import useSWR from "swr"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { fetcher, swrDefaults } from "@/lib/swr"
-import { Search, Navigation, MapPin, Globe, PlusCircle } from "lucide-react"
+import { MagnifyingGlass as Search, NavigationArrow as Navigation, MapPin, Globe, PlusCircle, Bell, Check } from "@phosphor-icons/react"
 import { EventCard } from "@/components/events/event-card"
 import { CalendarSidebar } from "@/components/events/calendar-sidebar"
 import { cn, isOnLocalDay } from "@/lib/utils"
@@ -379,68 +379,50 @@ export default function EventsPage() {
       <div className="flex-1 min-w-0">
         {/* Header — flat bordered top bar, opaque so it covers the list
             scrolling beneath it. Sticky, same register as nav.tsx. */}
-        <div className="px-6 pt-4 pb-5 sticky top-0 z-30 bg-bg-base border-b border-border">
+        <div className="px-6 pt-4 pb-5 sticky top-0 z-30 bg-bg-base border-b border-border-subtle">
           <div className="flex flex-col gap-5">
             {/* Top row: search + Near me + Submit shortcut */}
             <div className="flex items-center gap-3.5">
-              <label className="flex-1 rounded-[15px] px-4 py-[13px] flex items-center gap-3 cursor-text border border-border bg-bg-surface">
-                <Search size={20} strokeWidth={1.8} className="text-text-muted flex-shrink-0" />
+              <label className="flex-1 rounded-panel px-4 py-[13px] flex items-center gap-3 cursor-text border border-border-subtle bg-bg-raised">
+                <Search size={20} className="text-text-muted flex-shrink-0" />
                 <input
                   type="text"
                   placeholder="Search events, hosts, topics…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="flex-1 bg-transparent text-[15px] font-medium text-text-primary placeholder:text-text-muted focus:outline-none"
+                  className="flex-1 bg-transparent text-body font-medium text-text-primary placeholder:text-text-muted focus:outline-none"
                 />
               </label>
               <button
                 onClick={() => { setSortByDistance(true); userLoc.request() }}
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full px-4 py-[11px] text-[14px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
+                  "inline-flex items-center gap-1.5 rounded-control px-4 py-[11px] text-body font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
                   sortByDistance
-                    ? "pill-on"
-                    : "text-text-secondary bg-bg-surface border border-border hover:text-text-primary"
+                    ? "bg-bg-inverse text-text-inverse border-transparent"
+                    : "text-text-secondary bg-bg-raised border border-border-subtle hover:text-text-primary"
                 )}
               >
-                <Navigation size={15} strokeWidth={1.9} className={sortByDistance ? "text-brand" : ""} />
+                <Navigation size={15} className={sortByDistance ? "text-accent" : ""} />
                 Near me
               </button>
               <Link
                 href="/submit"
-                className="rounded-[14px] w-12 h-12 grid place-items-center border border-border bg-bg-card text-text-primary hover:text-brand transition-colors"
+                className="rounded-panel w-12 h-12 grid place-items-center border border-border-subtle bg-bg-raised text-text-primary hover:text-accent transition-colors"
                 aria-label="Notifications"
               >
-                {/* Bell — matches the design dashboard top bar. */}
-                <svg
-                  width="21"
-                  height="21"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.7"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-                  <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-                </svg>
+                <Bell size={21} weight="regular" aria-hidden="true" />
               </Link>
             </div>
 
             {/* H1 + sorted-by-distance meta — design's 'Closest to me' pattern */}
             <div className="flex items-end justify-between gap-4 flex-wrap">
               <div>
-                <h1
-                  className="font-display font-extrabold text-text-primary"
-                  style={{ fontSize: "44px", letterSpacing: "-0.03em", lineHeight: 1.0 }}
-                >
+                <h1 className="font-display text-heading-l text-text-primary">
                   {sortByDistance ? "Closest to me" : "Discover events"}
                 </h1>
                 {sortByDistance && userLoc.position && (
-                  <div className="flex items-center gap-2 mt-2 text-text-secondary text-[15px] font-semibold">
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--color-positive)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M5 12.5l4.5 4.5L19 7" />
-                    </svg>
+                  <div className="flex items-center gap-2 mt-2 text-text-secondary text-body font-semibold">
+                    <Check size={17} weight="bold" className="text-positive" aria-hidden="true" />
                     Sorted by distance · {sorted.filter((e) => !e.isVirtual && typeof e.distanceMi === "number").length} within {effectiveRadiusMi ?? 50} mi · global events hidden
                   </div>
                 )}
@@ -453,10 +435,10 @@ export default function EventsPage() {
                     key={t.value}
                     onClick={() => setTab((v) => (v === t.value ? null : t.value))}
                     className={cn(
-                      "rounded-full px-4 py-2 text-[13.5px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
+                      "rounded-control px-4 py-2 text-meta font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
                       tab === t.value
-                        ? "pill-on"
-                        : "text-text-secondary bg-bg-surface border border-border hover:text-text-primary",
+                        ? "bg-bg-inverse text-text-inverse border-transparent"
+                        : "text-text-secondary bg-bg-raised border border-border-subtle hover:text-text-primary",
                     )}
                   >
                     {t.label}
@@ -469,26 +451,26 @@ export default function EventsPage() {
                 as well. why did you remove it.' Same monochrome pill system. */}
             {cities.length > 0 && (
               <div className="flex items-center gap-2 flex-wrap">
-                <MapPin size={14} strokeWidth={1.5} className="text-text-muted flex-shrink-0" />
+                <MapPin size={14} className="text-text-muted flex-shrink-0" />
                 <button
                   onClick={() => { setSelectedCity("all"); setAutoWidened(false) }}
                   className={cn(
-                    "inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
+                    "inline-flex items-center gap-1.5 rounded-control px-3.5 py-1.5 text-meta font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
                     selectedCity === "all"
-                      ? "pill-on"
-                      : "text-text-secondary bg-bg-surface border border-border hover:text-text-primary",
+                      ? "bg-bg-inverse text-text-inverse border-transparent"
+                      : "text-text-secondary bg-bg-raised border border-border-subtle hover:text-text-primary",
                   )}
                 >
-                  <Globe size={12} strokeWidth={1.5} />
+                  <Globe size={12} />
                   Everywhere
                 </button>
                 <button
                   onClick={() => { setSelectedCity("virtual"); setAutoWidened(false) }}
                   className={cn(
-                    "rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
+                    "rounded-control px-3.5 py-1.5 text-meta font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
                     selectedCity === "virtual"
-                      ? "pill-on"
-                      : "text-text-secondary bg-bg-surface border border-border hover:text-text-primary",
+                      ? "bg-bg-inverse text-text-inverse border-transparent"
+                      : "text-text-secondary bg-bg-raised border border-border-subtle hover:text-text-primary",
                   )}
                 >
                   Online
@@ -498,10 +480,10 @@ export default function EventsPage() {
                     key={city}
                     onClick={() => { setSelectedCity(city); setAutoWidened(false) }}
                     className={cn(
-                      "rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
+                      "rounded-control px-3.5 py-1.5 text-meta font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
                       selectedCity === city
-                        ? "pill-on"
-                        : "text-text-secondary bg-bg-surface border border-border hover:text-text-primary",
+                        ? "bg-bg-inverse text-text-inverse border-transparent"
+                        : "text-text-secondary bg-bg-raised border border-border-subtle hover:text-text-primary",
                     )}
                   >
                     {city}
@@ -512,7 +494,7 @@ export default function EventsPage() {
 
             {/* CATEGORIES — restored. Monochrome pill system. */}
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-text-muted flex-shrink-0 mr-1">
+              <span className="text-meta uppercase tracking-[0.18em] font-semibold text-text-muted flex-shrink-0 mr-1">
                 Categories
               </span>
               {CATEGORY_CHIPS.map((cat) => {
@@ -522,10 +504,10 @@ export default function EventsPage() {
                     key={cat}
                     onClick={() => toggleCategory(cat)}
                     className={cn(
-                      "rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
+                      "rounded-control px-3.5 py-1.5 text-meta font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
                       active
-                        ? "pill-on"
-                        : "text-text-secondary bg-bg-surface border border-border hover:text-text-primary",
+                        ? "bg-bg-inverse text-text-inverse border-transparent"
+                        : "text-text-secondary bg-bg-raised border border-border-subtle hover:text-text-primary",
                     )}
                   >
                     {cat}
@@ -535,7 +517,7 @@ export default function EventsPage() {
               {selectedCategories.length > 0 && (
                 <button
                   onClick={() => setSelectedCategories([])}
-                  className="text-[11px] font-semibold text-text-muted hover:text-text-secondary transition-colors ml-1"
+                  className="text-meta font-semibold text-text-muted hover:text-text-secondary transition-colors ml-1"
                 >
                   Clear
                 </button>
@@ -545,7 +527,7 @@ export default function EventsPage() {
             {/* RADIUS — only when Near me is on. */}
             {userLoc.position && sortByDistance && (
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-text-muted flex-shrink-0 mr-1">
+                <span className="text-meta uppercase tracking-[0.18em] font-semibold text-text-muted flex-shrink-0 mr-1">
                   Radius
                 </span>
                 {RADIUS_OPTIONS.map((mi) => (
@@ -553,10 +535,10 @@ export default function EventsPage() {
                     key={mi}
                     onClick={() => setRadiusMiles((v) => (v === mi ? null : mi))}
                     className={cn(
-                      "rounded-full px-3.5 py-1.5 text-[12.5px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
+                      "rounded-control px-3.5 py-1.5 text-meta font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
                       radiusMiles === mi
-                        ? "pill-on"
-                        : "text-text-secondary bg-bg-surface border border-border hover:text-text-primary",
+                        ? "bg-bg-inverse text-text-inverse border-transparent"
+                        : "text-text-secondary bg-bg-raised border border-border-subtle hover:text-text-primary",
                     )}
                   >
                     {mi} mi
@@ -564,7 +546,7 @@ export default function EventsPage() {
                 ))}
                 <button
                   onClick={userLoc.clear}
-                  className="text-[11px] font-semibold text-text-muted hover:text-text-secondary transition-colors ml-1"
+                  className="text-meta font-semibold text-text-muted hover:text-text-secondary transition-colors ml-1"
                   title="Forget my location"
                 >
                   Clear
@@ -573,8 +555,8 @@ export default function EventsPage() {
             )}
 
             {userLoc.status === "denied" && (
-              <span className="text-[11px] text-critical">
-                Permission denied — enable Location in your browser settings.
+              <span className="text-meta text-critical">
+                Permission denied. Enable Location in your browser settings.
               </span>
             )}
           </div>
@@ -588,36 +570,36 @@ export default function EventsPage() {
               {Array.from({ length: 6 }).map((_, i) => (
                 <div
                   key={i}
-                  className="rounded-[20px] p-3 flex items-stretch gap-4 border border-border bg-bg-card animate-pulse"
+                  className="rounded-panel p-3 flex items-stretch gap-4 border border-border-subtle bg-bg-raised animate-pulse"
                 >
-                  <div className="w-[100px] h-[100px] rounded-xl bg-bg-elevated flex-shrink-0" />
+                  <div className="w-[100px] h-[100px] rounded-panel bg-bg-raised flex-shrink-0" />
                   <div className="flex-1 flex flex-col justify-center gap-2">
-                    <div className="h-3 w-20 bg-bg-elevated rounded" />
-                    <div className="h-4 w-3/4 bg-bg-elevated rounded" />
-                    <div className="h-3 w-1/2 bg-bg-elevated rounded" />
+                    <div className="h-3 w-20 bg-bg-raised rounded" />
+                    <div className="h-4 w-3/4 bg-bg-raised rounded" />
+                    <div className="h-3 w-1/2 bg-bg-raised rounded" />
                   </div>
                 </div>
               ))}
             </div>
           ) : error ? (
             <div className="flex flex-col items-center justify-center py-24 text-center">
-              <h3 className="font-display font-bold text-[22px] text-text-primary mb-2">Couldn&apos;t load events</h3>
-              <p className="text-text-muted text-sm mb-6 max-w-sm">
+              <h3 className="font-display font-semibold text-heading-m text-text-primary mb-2">Couldn&apos;t load events</h3>
+              <p className="text-text-muted text-body mb-6 max-w-sm">
                 Something went wrong reaching our servers. Check your connection and try again.
               </p>
-              <button onClick={() => mutate()} className="btn-brand !rounded-full">
+              <button onClick={() => mutate()} className="btn btn-primary !rounded-control">
                 Try again
               </button>
             </div>
           ) : sorted.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-center">
-              <h3 className="font-display font-bold text-[22px] text-text-primary mb-2">No events found</h3>
-              <p className="text-text-muted text-sm mb-6">
+              <h3 className="font-display font-semibold text-heading-m text-text-primary mb-2">No events found</h3>
+              <p className="text-text-muted text-body mb-6">
                 Try adjusting your filters, or be the first to submit one.
               </p>
               <Link
                 href="/submit"
-                className="btn-brand !rounded-full"
+                className="btn btn-primary !rounded-control"
               >
                 Submit one
               </Link>

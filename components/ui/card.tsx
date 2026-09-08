@@ -11,14 +11,15 @@ interface CardSectionProps {
   className?: string
 }
 
-// Single source of truth for every form / panel container in the app.
-// Flat bordered plate on the base surface — the same register as every other
-// panel in the rebuild (see card.tsx sibling: shadow-card is `none` in the
-// token set, no blur, no glow).
+// Single source of truth for every form and panel container.
+//
+// A hairline plate at 12px radius, no shadow. Dramatic elevation is a
+// default-AI tell and in a light minimal system it reads as dirt on the page.
+// Depth, where it is genuinely needed, comes from the surface ladder.
 export function Card({ children, className, innerClassName }: CardProps) {
   return (
-    <div className={cn("rounded-3xl border border-border bg-bg-card", className)}>
-      <div className={cn("rounded-3xl overflow-hidden", innerClassName)}>
+    <div className={cn("rounded-panel border border-border-subtle bg-bg-base", className)}>
+      <div className={cn("rounded-panel overflow-hidden", innerClassName)}>
         {children}
       </div>
     </div>
@@ -27,25 +28,21 @@ export function Card({ children, className, innerClassName }: CardProps) {
 
 export function CardHeader({ children, className }: CardSectionProps) {
   return (
-    <div className={cn("px-6 pt-6 pb-4 border-b border-border", className)}>
+    <div className={cn("px-6 pt-5 pb-4 border-b border-border-subtle", className)}>
       {children}
     </div>
   )
 }
 
 export function CardContent({ children, className }: CardSectionProps) {
-  return (
-    <div className={cn("px-6 py-5", className)}>
-      {children}
-    </div>
-  )
+  return <div className={cn("px-6 py-5", className)}>{children}</div>
 }
 
 export function CardFooter({ children, className }: CardSectionProps) {
   return (
     <div
       className={cn(
-        "px-6 pb-6 pt-4 border-t border-border flex items-center gap-3",
+        "px-6 pb-5 pt-4 border-t border-border-subtle flex items-center gap-3",
         className
       )}
     >

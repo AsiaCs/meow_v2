@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
-import { ArrowRight, CalendarDays, Briefcase } from "lucide-react"
+import { ArrowRight, CalendarDots as CalendarDays, Briefcase } from "@phosphor-icons/react/dist/ssr"
 import { EventCard } from "@/components/events/event-card"
 import { InternshipCard } from "@/components/internships/internship-card"
 import { stableEventId } from "@/lib/events/source"
@@ -26,21 +26,21 @@ function SectionHeader({
   href,
 }: {
   title: string
-  icon: React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>
+  icon: React.ComponentType<{ size?: number; className?: string }>
   href: string
 }) {
   return (
     <div className="flex items-center justify-between mb-5">
       <div className="flex items-center gap-2">
-        <Icon size={18} strokeWidth={1.5} className="text-brand" />
-        <h2 className="text-lg font-semibold text-text-primary font-display">{title}</h2>
+        <Icon size={18} className="text-text-muted" aria-hidden="true" />
+        <h2 className="font-display text-heading-m text-text-primary">{title}</h2>
       </div>
       <Link
         href={href}
-        className="flex items-center gap-1 text-sm text-text-secondary hover:text-brand transition-colors"
+        className="link-underline flex items-center gap-1 text-body text-text-secondary transition-colors hover:text-text-primary"
       >
         View all
-        <ArrowRight size={14} strokeWidth={1.5} />
+        <ArrowRight size={14} aria-hidden="true" />
       </Link>
     </div>
   )
@@ -48,8 +48,8 @@ function SectionHeader({
 
 function EmptySection({ message }: { message: string }) {
   return (
-    <div className="border border-border rounded-2xl p-8 text-center bg-bg-surface">
-      <p className="text-text-muted text-sm">{message}</p>
+    <div className="border border-border-subtle rounded-panel p-8 text-center bg-bg-raised">
+      <p className="text-text-muted text-body">{message}</p>
     </div>
   )
 }
@@ -121,23 +121,20 @@ export default async function DashboardPage() {
     <div className="min-h-dvh">
       <div className="px-6 pt-8 pb-6">
         <div className="max-w-5xl mx-auto">
-          <h1
-            className="font-display font-extrabold text-text-primary"
-            style={{ fontSize: "44px", letterSpacing: "-0.03em", lineHeight: 1.0 }}
-          >
+          <h1 className="font-display text-heading-l text-text-primary">
             {getGreeting()}, {firstName}
           </h1>
-          <p className="text-text-secondary mt-3 text-[15px] leading-relaxed">
-            Here&apos;s what&apos;s happening in your network. Discover opportunities tailored to you.
+          <p className="mt-3 max-w-[52ch] text-lead text-text-secondary">
+            What is coming up near you, and which roles are still open.
           </p>
         </div>
       </div>
 
       <div className="max-w-5xl mx-auto px-6 pt-2 pb-8 space-y-12">
         <section>
-          <SectionHeader title="Upcoming Events" icon={CalendarDays} href="/events" />
+          <SectionHeader title="Upcoming events" icon={CalendarDays} href="/events" />
           {events.length === 0 ? (
-            <EmptySection message="No verified events at the moment — try again later as we re-scrape every 30 minutes." />
+            <EmptySection message="No verified events right now. We re-scrape every 30 minutes, so try again shortly." />
           ) : (
             <div className="flex flex-col gap-3">
               {events.slice(0, 5).map((event) => (
@@ -161,9 +158,9 @@ export default async function DashboardPage() {
         </section>
 
         <section>
-          <SectionHeader title="Internship Listings" icon={Briefcase} href="/internships" />
+          <SectionHeader title="Open internships" icon={Briefcase} href="/internships" />
           {internships.length === 0 ? (
-            <EmptySection message="No internships available right now — we only show listings with verified application links." />
+            <EmptySection message="No internships right now. We only list roles whose application link we could verify." />
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {internships.map((internship: DashboardInternship) => (

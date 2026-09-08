@@ -25,15 +25,15 @@ const LEGAL_LINKS = [
 
 export default function Footer() {
   return (
-    <footer className="border-t border-border">
+    <footer className="border-t border-border-subtle">
       <div className="mx-auto w-full max-w-[1240px] px-6 py-16 md:py-20">
         <div className="grid grid-cols-1 gap-12 md:grid-cols-12 md:gap-10">
           <div className="enter md:col-span-6" style={{ "--i": 0 } as React.CSSProperties}>
-            <Link href="/" aria-label="meow — home" className="inline-flex">
+            <Link href="/" aria-label="meow, home" className="inline-flex">
               <MeowWordmark size={22} />
             </Link>
-            <p className="mt-4 max-w-[38ch] text-body-m text-text-secondary">
-              Every AI event and internship, indexed and kept current — so you
+            <p className="mt-4 max-w-[38ch] text-body text-text-secondary">
+              Every AI event and internship, indexed and kept current, so you
               stop checking five feeds and start showing up.
             </p>
           </div>
@@ -43,7 +43,7 @@ export default function Footer() {
             style={{ "--i": 1 } as React.CSSProperties}
             aria-label="Index"
           >
-            <h2 className="font-mono text-meta uppercase tracking-[0.14em] text-text-muted">
+            <h2 className="text-ui font-semibold text-text-primary">
               Index
             </h2>
             <ul className="mt-5 flex flex-col gap-3">
@@ -51,7 +51,7 @@ export default function Footer() {
                 <li key={l.href}>
                   <Link
                     href={l.href}
-                    className="link-underline text-body-m text-text-secondary transition-colors hover:text-text-primary"
+                    className="link-underline text-body text-text-secondary transition-colors hover:text-text-primary"
                   >
                     {l.label}
                   </Link>
@@ -65,7 +65,7 @@ export default function Footer() {
             style={{ "--i": 2 } as React.CSSProperties}
             aria-label="Legal"
           >
-            <h2 className="font-mono text-meta uppercase tracking-[0.14em] text-text-muted">
+            <h2 className="text-ui font-semibold text-text-primary">
               Legal
             </h2>
             <ul className="mt-5 flex flex-col gap-3">
@@ -73,7 +73,7 @@ export default function Footer() {
                 <li key={l.href}>
                   <Link
                     href={l.href}
-                    className="link-underline text-body-m text-text-secondary transition-colors hover:text-text-primary"
+                    className="link-underline text-body text-text-secondary transition-colors hover:text-text-primary"
                   >
                     {l.label}
                   </Link>
@@ -84,13 +84,13 @@ export default function Footer() {
         </div>
 
         <div
-          className="enter mt-14 flex flex-col gap-3 border-t border-border pt-8 sm:flex-row sm:items-center sm:justify-between"
+          className="enter mt-14 flex flex-col gap-3 border-t border-border-subtle pt-8 sm:flex-row sm:items-center sm:justify-between"
           style={{ "--i": 3 } as React.CSSProperties}
         >
-          <p className="font-mono text-meta tabular-nums text-text-faint">
+          <p className="text-meta tabular-nums text-text-muted">
             © {new Date().getFullYear()} meow
           </p>
-          <p className="text-body-m text-text-faint">
+          <p className="text-body text-text-muted">
             Built for the people who show up.
           </p>
         </div>

@@ -4,46 +4,59 @@ import { forwardRef } from "react"
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string
   error?: string
-  /** Render a red asterisk next to the label. Does NOT add HTML5 `required`
-   *  on its own — set the prop separately on the input via `required` if you
-   *  want browser-native validation. */
+  hint?: string
   requiredMark?: boolean
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, className, id, requiredMark, ...props }, ref) => {
+  ({ label, error, hint, className, id, requiredMark, ...props }, ref) => {
     const inputId = id ?? label?.toLowerCase().replace(/\s+/g, "-")
+    const errorId = error && inputId ? `${inputId}-error` : undefined
+    const hintId = hint && inputId ? `${inputId}-hint` : undefined
 
     return (
       <div className="flex flex-col gap-1.5">
         {label && (
-          <label
-            htmlFor={inputId}
-            className="text-sm font-medium text-text-secondary"
-          >
+          <label htmlFor={inputId} className="text-ui font-medium text-text-secondary">
             {label}
             {requiredMark && (
-              <span className="text-critical ml-1" aria-hidden="true">*</span>
+              <>
+                <span aria-hidden="true" className="text-critical ml-1">*</span>
+                <span className="sr-only"> (required)</span>
+              </>
             )}
           </label>
         )}
         <input
           ref={ref}
           id={inputId}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={errorId ?? hintId}
           className={cn(
-            "bg-bg-surface border border-border rounded-xl px-4 py-2.5 text-sm text-text-primary",
-            "placeholder:text-text-muted",
-            "focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand/20",
-            "transition-all duration-150",
+            // border-field, not border-subtle. On an input the border IS the
+            // control boundary, so it has to clear 3:1 per WCAG 1.4.11.
+            // border-subtle is a decorative separator and measures 1.20:1.
+            "bg-bg-base border border-border-field rounded-control",
+            "px-3 py-2 min-h-[38px] text-body text-text-primary",
+            "placeholder:text-text-disabled",
+            // The focus ring is global and token-driven. Do not add one here.
+            "focus:outline-none focus:border-text-primary",
+            "transition-colors duration-150",
             "disabled:opacity-50 disabled:cursor-not-allowed",
-            error && "border-critical/50 focus:border-critical focus:ring-critical/20",
+            error && "border-critical focus:border-critical",
             className
           )}
           {...props}
         />
-        {error && (
-          <p className="text-xs text-critical">{error}</p>
-        )}
+        {error ? (
+          <p id={errorId} role="alert" className="text-meta text-critical">
+            {error}
+          </p>
+        ) : hint ? (
+          <p id={hintId} className="text-meta text-text-muted">
+            {hint}
+          </p>
+        ) : null}
       </div>
     )
   }

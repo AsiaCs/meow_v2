@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { CheckCircle, X } from "lucide-react"
+import { CheckCircle, X } from "@phosphor-icons/react"
 import { Card, CardContent, CardHeader, CardFooter } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -168,7 +168,7 @@ export default function SubmitEventPage() {
             })
             .slice(0, 4)
             .join("  •  ")
-          setServerError(`${topError} — ${formatted}`)
+          setServerError(`${topError}: ${formatted}`)
         } else if (dbCode || dbMessage || dbHint) {
           // 500 from the DB layer — surface the actual Postgres code + message
           // so we can fix the schema/RLS without guessing.
@@ -193,13 +193,13 @@ export default function SubmitEventPage() {
     return (
       <div className="min-h-dvh flex items-center justify-center px-6 py-12">
         <div className="max-w-md w-full text-center">
-          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-positive/15 border border-positive/30 mx-auto mb-6">
-            <CheckCircle size={28} strokeWidth={1.5} className="text-positive" />
+          <div className="flex items-center justify-center w-16 h-16 rounded-control bg-positive/15 border border-positive/30 mx-auto mb-6">
+            <CheckCircle size={28} className="text-positive" />
           </div>
-          <h2 className="text-2xl font-bold text-text-primary font-display mb-3">
+          <h2 className="text-heading-l font-semibold text-text-primary font-display mb-3">
             Event Submitted!
           </h2>
-          <p className="text-text-secondary text-sm leading-relaxed mb-8">
+          <p className="text-text-secondary text-body leading-relaxed mb-8">
             Your event is live on the Events page right now. Tap below to see it.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -226,8 +226,8 @@ export default function SubmitEventPage() {
   return (
     <div className="min-h-dvh px-6 py-8 max-w-2xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-text-primary font-display">Submit an Event</h1>
-        <p className="text-text-secondary text-sm mt-1.5">
+        <h1 className="text-heading-l font-semibold text-text-primary font-display">Submit an Event</h1>
+        <p className="text-text-secondary text-body mt-1.5">
           Share an event with the community. All submissions are reviewed before publishing.
         </p>
       </div>
@@ -246,13 +246,13 @@ export default function SubmitEventPage() {
 
             {/* Description */}
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-text-secondary">
+              <label className="text-body font-medium text-text-secondary">
                 Description
               </label>
               <textarea
                 placeholder="What's this event about? Who should attend?"
                 rows={4}
-                className="bg-bg-surface border border-border rounded-xl px-4 py-2.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-brand focus:ring-1 focus:ring-brand/20 transition-all resize-none"
+                className="bg-bg-raised border border-border-subtle rounded-panel px-4 py-2.5 text-body text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent transition-colors resize-none"
                 {...register("description")}
               />
             </div>
@@ -283,10 +283,10 @@ export default function SubmitEventPage() {
             </div>
 
             {/* Virtual toggle */}
-            <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-bg-surface">
+            <div className="flex items-center justify-between p-4 rounded-panel border border-border-subtle bg-bg-raised">
               <div>
-                <p className="text-sm font-medium text-text-primary">Virtual Event</p>
-                <p className="text-xs text-text-muted mt-0.5">Toggle on if this event is online</p>
+                <p className="text-body font-medium text-text-primary">Virtual Event</p>
+                <p className="text-meta text-text-muted mt-0.5">Toggle on if this event is online</p>
               </div>
               <Controller
                 name="isVirtual"
@@ -296,13 +296,13 @@ export default function SubmitEventPage() {
                     type="button"
                     onClick={() => field.onChange(!field.value)}
                     className={cn(
-                      "relative w-11 h-6 rounded-full transition-colors duration-200",
-                      field.value ? "bg-brand" : "bg-bg-elevated border border-border-strong"
+                      "relative w-11 h-6 rounded-control transition-colors duration-200",
+                      field.value ? "bg-bg-inverse" : "bg-bg-raised border border-border-default"
                     )}
                   >
                     <span
                       className={cn(
-                        "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200",
+                        "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-control shadow transition-transform duration-200",
                         field.value ? "translate-x-5" : "translate-x-0"
                       )}
                     />
@@ -340,17 +340,17 @@ export default function SubmitEventPage() {
 
             {/* Tags */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-text-secondary flex items-center justify-between">
+              <label className="text-body font-medium text-text-secondary flex items-center justify-between">
                 <span>
                   Interest Areas
                   <span className="text-critical ml-1" aria-hidden="true">*</span>
                 </span>
-                <span className="text-[11px] text-text-muted font-normal">
+                <span className="text-meta text-text-muted font-normal">
                   {(selectedTags?.length ?? 0)}/{MAX_TAGS}
                 </span>
               </label>
               {errors.tags && (
-                <p className="text-xs text-critical">{errors.tags.message}</p>
+                <p className="text-meta text-critical">{errors.tags.message}</p>
               )}
               <div className="flex flex-wrap gap-2">
                 {INTEREST_AREAS.map((area) => {
@@ -361,10 +361,10 @@ export default function SubmitEventPage() {
                       key={area}
                       onClick={() => toggleTag(area)}
                       className={cn(
-                        "px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-150",
+                        "px-3 py-1.5 rounded-control text-meta font-medium border transition-all duration-150",
                         active
-                          ? "border-brand bg-brand/15 text-brand"
-                          : "border-border text-text-muted hover:border-border-strong hover:text-text-secondary"
+                          ? "border-accent bg-bg-inverse/15 text-accent"
+                          : "border-border-subtle text-text-muted hover:border-border-default hover:text-text-secondary"
                       )}
                     >
                       {area}
@@ -375,10 +375,10 @@ export default function SubmitEventPage() {
             </div>
 
             {/* Free toggle */}
-            <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-bg-surface">
+            <div className="flex items-center justify-between p-4 rounded-panel border border-border-subtle bg-bg-raised">
               <div>
-                <p className="text-sm font-medium text-text-primary">Free Event</p>
-                <p className="text-xs text-text-muted mt-0.5">Is this event free to attend?</p>
+                <p className="text-body font-medium text-text-primary">Free Event</p>
+                <p className="text-meta text-text-muted mt-0.5">Is this event free to attend?</p>
               </div>
               <Controller
                 name="isFree"
@@ -388,13 +388,13 @@ export default function SubmitEventPage() {
                     type="button"
                     onClick={() => field.onChange(!field.value)}
                     className={cn(
-                      "relative w-11 h-6 rounded-full transition-colors duration-200",
-                      field.value ? "bg-brand" : "bg-bg-elevated border border-border-strong"
+                      "relative w-11 h-6 rounded-control transition-colors duration-200",
+                      field.value ? "bg-bg-inverse" : "bg-bg-raised border border-border-default"
                     )}
                   >
                     <span
                       className={cn(
-                        "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200",
+                        "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-control shadow transition-transform duration-200",
                         field.value ? "translate-x-5" : "translate-x-0"
                       )}
                     />
@@ -418,8 +418,8 @@ export default function SubmitEventPage() {
             />
 
             {serverError && (
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-critical/10 border border-critical/20 text-sm text-critical">
-                <X size={14} strokeWidth={1.5} />
+              <div className="flex items-center gap-2 p-3 rounded-panel bg-critical/10 border border-critical/20 text-body text-critical">
+                <X size={14} />
                 {serverError}
               </div>
             )}

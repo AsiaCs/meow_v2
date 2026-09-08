@@ -14,7 +14,7 @@
 // .ics download is the universal fallback — works on every desktop client.
 
 import { useEffect, useRef, useState } from "react"
-import { CalendarPlus, ChevronDown, Download } from "lucide-react"
+import { CalendarPlus, CaretDown as ChevronDown, DownloadSimple as Download } from "@phosphor-icons/react"
 
 interface AddToCalendarProps {
   eventId: string                       // for the /api/events/:id/ics download
@@ -118,13 +118,12 @@ export function AddToCalendar(props: AddToCalendarProps) {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className="w-full sm:w-auto flex items-center justify-center gap-2 py-4 sm:px-6 rounded-2xl border border-border bg-bg-surface text-text-secondary hover:bg-bg-elevated hover:text-text-primary font-medium text-sm transition-all"
+        className="w-full sm:w-auto flex items-center justify-center gap-2 py-4 sm:px-6 rounded-panel border border-border-subtle bg-bg-raised text-text-secondary hover:bg-bg-raised hover:text-text-primary font-medium text-body transition-all"
       >
-        <CalendarPlus size={16} strokeWidth={1.5} />
+        <CalendarPlus size={16} />
         Add to Calendar
         <ChevronDown
           size={14}
-          strokeWidth={1.75}
           className={`opacity-70 transition-transform duration-150 ${open ? "rotate-180" : ""}`}
         />
       </button>
@@ -132,7 +131,7 @@ export function AddToCalendar(props: AddToCalendarProps) {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-2 w-64 z-30 rounded-2xl border border-border bg-bg-card shadow-xl p-1.5 origin-top-right animate-in fade-in-0 zoom-in-95 duration-150"
+          className="absolute right-0 mt-2 w-64 z-30 rounded-panel border border-border-subtle bg-bg-raised shadow-xl p-1.5 origin-top-right animate-in fade-in-0 zoom-in-95 duration-150"
         >
           <ProviderItem
             href={googleUrl}
@@ -159,8 +158,8 @@ export function AddToCalendar(props: AddToCalendarProps) {
           <ProviderItem
             href={icsUrl}
             label="Download .ics file"
-            sub="Universal — works in any calendar app"
-            icon={<Download size={14} strokeWidth={1.75} className="text-text-secondary" />}
+            sub="Universal, works in any calendar app"
+            icon={<Download size={14} className="text-text-secondary" />}
             download={`${slug(props.title)}.ics`}
           />
         </div>
@@ -195,14 +194,14 @@ function ProviderItem({
       rel={external ? "noopener noreferrer" : undefined}
       download={download}
       role="menuitem"
-      className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-bg-elevated transition-colors"
+      className="flex items-center gap-3 px-3 py-2.5 rounded-panel hover:bg-bg-raised transition-colors"
     >
-      <span className="w-7 h-7 rounded-lg flex items-center justify-center bg-bg-elevated border border-border flex-shrink-0">
+      <span className="w-7 h-7 rounded-control flex items-center justify-center bg-bg-raised border border-border-subtle flex-shrink-0">
         {icon}
       </span>
       <span className="flex-1 min-w-0">
-        <span className="block text-sm font-medium text-text-primary">{label}</span>
-        <span className="block text-[11px] text-text-muted truncate">{sub}</span>
+        <span className="block text-body font-medium text-text-primary">{label}</span>
+        <span className="block text-meta text-text-muted truncate">{sub}</span>
       </span>
     </a>
   )

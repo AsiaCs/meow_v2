@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Clock, Users, MapPin, Monitor, Navigation } from "lucide-react"
+import { Clock, MapPin, Monitor, NavigationArrow } from "@phosphor-icons/react"
 import { formatMiles } from "@/lib/geo/haversine"
 
 interface EventCardProps {
@@ -50,9 +50,11 @@ function formatMonthDay(date: Date | string): { mo: string; day: string } {
   }
 }
 
-// Compact 100x100 ink cover for the horizontal list row. Image when available,
-// otherwise the #1A102F ink plate with spaced MONTH over a smaller day numeral.
-function InkCover({
+// Compact cover for the list row: the source image when there is one,
+// otherwise a flat panel carrying the date. The date plate is not decoration
+// standing in for a missing image, it is the single most useful thing about
+// an event listing, so a row without an image loses nothing.
+function DateCover({
   imageUrl,
   failed,
   onError,
@@ -67,7 +69,7 @@ function InkCover({
 }) {
   if (imageUrl && !failed) {
     return (
-      <div className="w-[100px] h-[100px] rounded-xl overflow-hidden flex-shrink-0 border border-border relative">
+      <div className="w-[100px] h-[100px] rounded-panel overflow-hidden flex-shrink-0 border border-border-subtle relative">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={imageUrl}
@@ -80,20 +82,12 @@ function InkCover({
     )
   }
 
-  // No source image — flat panel with the date, no gradient (shadow-card
-  // and gradient-brand are both `none` in the token set).
   return (
-    <div className="w-[100px] h-[100px] rounded-xl overflow-hidden flex-shrink-0 flex flex-col items-center justify-center border border-border bg-bg-panel">
-      <span
-        className="font-bold uppercase text-text-muted"
-        style={{ fontSize: "9px", letterSpacing: "0.32em" }}
-      >
+    <div className="w-[100px] h-[100px] rounded-panel overflow-hidden flex-shrink-0 flex flex-col items-center justify-center border border-border-subtle bg-bg-sunken">
+      <span className="text-meta font-semibold uppercase tracking-[0.28em] text-text-muted">
         {mo}
       </span>
-      <span
-        className="font-display font-extrabold text-text-primary leading-none mt-0.5"
-        style={{ fontSize: "32px", letterSpacing: "-0.04em" }}
-      >
+      <span className="font-display text-heading-l font-semibold tabular-nums text-text-primary leading-none mt-0.5">
         {day}
       </span>
     </div>
@@ -117,12 +111,12 @@ export function EventCard({
     <Link
       href={`/events/${id}`}
       className="
-        group flex items-stretch gap-4 p-3 rounded-[18px] border border-border bg-bg-card
+        group flex items-stretch gap-4 p-3 rounded-panel border border-border-subtle bg-bg-raised
         transition-[transform,border-color] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]
-        hover:-translate-y-0.5 hover:border-border-strong
+        hover:-translate-y-0.5 hover:border-border-default
       "
     >
-      <InkCover
+      <DateCover
         imageUrl={imageUrl}
         failed={imgFailed}
         onError={() => setImgFailed(true)}
@@ -131,48 +125,38 @@ export function EventCard({
       />
 
       <div className="flex-1 min-w-0 flex flex-col justify-center gap-1.5">
-        {/* Time eyebrow + source */}
-        <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-text-muted font-semibold">
-          <Clock size={12} strokeWidth={1.8} />
-          {formatTimeRow(startDate)}
-          <span className="text-text-faint">·</span>
-          <span className="text-text-secondary tracking-[0.16em]">{getSourceLabel(source)}</span>
+        {/* Time and source. One middot per line: the separator is rationed,
+            so the source sits after a single divider rather than a chain. */}
+        <div className="flex items-center gap-2 text-meta font-medium text-text-muted">
+          <Clock size={13} weight="regular" aria-hidden="true" />
+          <span className="tabular-nums">{formatTimeRow(startDate)}</span>
+          <span className="text-text-secondary">{getSourceLabel(source)}</span>
         </div>
 
-        {/* Title */}
-        <h3
-          className="font-display font-bold text-[16px] sm:text-[17px] leading-[1.18] text-text-primary group-hover:text-brand transition-colors line-clamp-2"
-          style={{ letterSpacing: "-0.015em" }}
-        >
+        <h3 className="font-display text-heading-m font-semibold text-text-primary transition-colors group-hover:text-accent line-clamp-2">
           {title}
         </h3>
 
-        {/* Location + distance */}
-        <div className="flex items-center gap-3 text-[12.5px] text-text-secondary font-medium flex-wrap">
+        <div className="flex items-center gap-3 text-body text-text-secondary flex-wrap">
           {isVirtual ? (
             <span className="inline-flex items-center gap-1.5">
-              <Monitor size={12} strokeWidth={1.8} />
+              <Monitor size={13} weight="regular" aria-hidden="true" />
               Virtual
             </span>
           ) : location ? (
             <span className="inline-flex items-center gap-1.5 truncate max-w-[260px]">
-              <MapPin size={12} strokeWidth={1.8} className="flex-shrink-0" />
+              <MapPin size={13} weight="regular" className="flex-shrink-0" aria-hidden="true" />
               <span className="truncate">{location}</span>
             </span>
           ) : null}
 
           {!isVirtual && typeof distanceMi === "number" && (
-            <span className="inline-flex items-center gap-1.5 text-brand font-semibold">
-              <Navigation size={11} strokeWidth={1.9} />
+            <span className="inline-flex items-center gap-1.5 font-semibold text-accent">
+              <NavigationArrow size={12} weight="fill" aria-hidden="true" />
               {formatMiles(distanceMi)} away
             </span>
           )}
         </div>
-      </div>
-
-      {/* Going-count column on wider rows */}
-      <div className="hidden sm:flex flex-col items-end justify-center pr-2 text-text-muted">
-        <Users size={14} strokeWidth={1.7} />
       </div>
     </Link>
   )

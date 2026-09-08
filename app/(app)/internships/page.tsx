@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react"
 import useSWR from "swr"
-import { Search, ChevronDown, RefreshCw } from "lucide-react"
+import { MagnifyingGlass as Search, CaretDown as ChevronDown, ArrowsClockwise as RefreshCw } from "@phosphor-icons/react"
 import { InternshipCard } from "@/components/internships/internship-card"
 import { INTEREST_AREAS, cn } from "@/lib/utils"
 import { fetcher, swrDefaults } from "@/lib/swr"
@@ -69,19 +69,19 @@ export default function InternshipsPage() {
   return (
     <div className="min-h-dvh">
       {/* Header — same dashboard pattern as /events: flat bordered search,
-          monochrome pill-on for active filter, big Urbanist H1. */}
-      <div className="px-6 pt-4 pb-5 sticky top-0 z-30 bg-bg-base border-b border-border">
+          near-black active filter chip. */}
+      <div className="px-6 pt-4 pb-5 sticky top-0 z-30 bg-bg-base border-b border-border-subtle">
         <div className="flex flex-col gap-5">
           {/* Top row — search + category dropdown */}
           <div className="flex items-center gap-3.5 flex-col sm:flex-row">
-            <label className="flex-1 w-full rounded-[15px] px-4 py-[13px] flex items-center gap-3 cursor-text border border-border bg-bg-surface">
-              <Search size={20} strokeWidth={1.8} className="text-text-muted flex-shrink-0" />
+            <label className="flex-1 w-full rounded-panel px-4 py-[13px] flex items-center gap-3 cursor-text border border-border-subtle bg-bg-raised">
+              <Search size={20} className="text-text-muted flex-shrink-0" />
               <input
                 type="text"
                 placeholder="Search roles, companies, skills…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="flex-1 bg-transparent text-[15px] font-medium text-text-primary placeholder:text-text-muted focus:outline-none"
+                className="flex-1 bg-transparent text-body font-medium text-text-primary placeholder:text-text-muted focus:outline-none"
               />
             </label>
 
@@ -92,7 +92,7 @@ export default function InternshipsPage() {
                 // Follow the page's mode — see time-picker.tsx's NativeSelect
                 // for the same call (the design system ships both now).
                 style={{ colorScheme: "light dark" }}
-                className="appearance-none rounded-[15px] pl-4 pr-10 py-[13px] text-[14px] font-semibold text-text-primary focus:outline-none cursor-pointer min-w-[180px] border border-border bg-bg-card"
+                className="appearance-none rounded-panel pl-4 pr-10 py-[13px] text-body font-semibold text-text-primary focus:outline-none cursor-pointer min-w-[180px] border border-border-subtle bg-bg-raised"
               >
                 <option value="All Categories">All Categories</option>
                 {INTEREST_AREAS.map((area) => (
@@ -103,7 +103,6 @@ export default function InternshipsPage() {
               </select>
               <ChevronDown
                 size={16}
-                strokeWidth={1.8}
                 className="absolute right-3.5 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none"
               />
             </div>
@@ -111,10 +110,7 @@ export default function InternshipsPage() {
 
           {/* H1 + right-aligned tabs */}
           <div className="flex items-end justify-between gap-4 flex-wrap">
-            <h1
-              className="font-display font-extrabold text-text-primary"
-              style={{ fontSize: "44px", letterSpacing: "-0.03em", lineHeight: 1.0 }}
-            >
+            <h1 className="font-display text-heading-l text-text-primary">
               Internships
             </h1>
 
@@ -124,10 +120,10 @@ export default function InternshipsPage() {
                   key={t.value}
                   onClick={() => setTab(t.value)}
                   className={cn(
-                    "rounded-full px-4 py-2 text-[13.5px] font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
+                    "rounded-control px-4 py-2 text-meta font-semibold transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.97]",
                     tab === t.value
-                      ? "pill-on"
-                      : "text-text-secondary bg-bg-surface border border-border hover:text-text-primary",
+                      ? "bg-bg-inverse text-text-inverse border-transparent"
+                      : "text-text-secondary bg-bg-raised border border-border-subtle hover:text-text-primary",
                   )}
                 >
                   {t.label}
@@ -145,28 +141,28 @@ export default function InternshipsPage() {
             {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
-                className="border border-border rounded-3xl h-52 bg-bg-card animate-pulse"
+                className="border border-border-subtle rounded-panel h-52 bg-bg-raised animate-pulse"
               />
             ))}
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <h3 className="text-text-primary font-semibold mb-2">Couldn&apos;t load internships</h3>
-            <p className="text-text-muted text-sm mb-5 max-w-sm">
+            <p className="text-text-muted text-body mb-5 max-w-sm">
               Something went wrong reaching our servers. Check your connection and try again.
             </p>
             <button
               onClick={() => mutate()}
-              className="inline-flex items-center gap-2 rounded-xl border border-border bg-bg-surface px-4 py-2.5 text-sm font-medium text-text-primary transition-colors hover:bg-bg-elevated cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-panel border border-border-subtle bg-bg-raised px-4 py-2.5 text-body font-medium text-text-primary transition-colors hover:bg-bg-raised cursor-pointer"
             >
-              <RefreshCw size={15} strokeWidth={1.75} />
+              <RefreshCw size={15} />
               Try again
             </button>
           </div>
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <h3 className="text-text-primary font-semibold mb-2">No internships found</h3>
-            <p className="text-text-muted text-sm">
+            <p className="text-text-muted text-body">
               Try adjusting your filters. More listings are added regularly.
             </p>
           </div>
