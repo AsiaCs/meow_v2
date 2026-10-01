@@ -30,10 +30,12 @@ function make(limiter: ReturnType<typeof Ratelimit.slidingWindow>): Ratelimit | 
 //  - write: form/record creation — generous enough for real use, blocks floods.
 //  - proxy: third-party API proxies (adzuna/eventbrite/geocoding) — protects
 //           our upstream quota/cost from being drained.
+//  - sat:   new SAT explanations, each a paid Claude call; cached ones are free.
 export const limiters = {
   auth: make(Ratelimit.slidingWindow(8, "15 m")),    // 8 attempts / 15 min
   write: make(Ratelimit.slidingWindow(20, "10 m")),  // 20 writes / 10 min
   proxy: make(Ratelimit.slidingWindow(60, "1 m")),   // 60 calls / min
+  sat: make(Ratelimit.slidingWindow(40, "1 h")),     // 40 new SAT explanations / hour (each is a paid Claude call)
 }
 
 /** Best-effort client IP from proxy headers (Vercel sets x-forwarded-for). */

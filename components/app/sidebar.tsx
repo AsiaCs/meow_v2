@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import { Home, Calendar, Briefcase, Plus, LogOut, User, Bookmark } from "lucide-react"
+import { Home, Calendar, Briefcase, Plus, LogOut, User, Bookmark, GraduationCap } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { MeowWordmark } from "@/components/brand/meow-wordmark"
 
@@ -26,6 +26,7 @@ const navItems = [
   { href: "/dashboard", label: "Discover", icon: Home },
   { href: "/events", label: "Events", icon: Calendar },
   { href: "/internships", label: "Internships", icon: Briefcase },
+  { href: "/sat", label: "SAT Prep", icon: GraduationCap },
   { href: "/profile", label: "Saved", icon: Bookmark },
   { href: "/submit", label: "Host an event", icon: Plus },
 ]
@@ -142,7 +143,7 @@ export default function Sidebar({ user }: SidebarProps) {
 }
 
 function MobileNav({ pathname }: { pathname: string }) {
-  const mobileItems = navItems.slice(0, 4)
+  const mobileItems = navItems.slice(0, 5)
   return (
     <nav className="md:hidden fixed bottom-3 left-3 right-3 z-40 rounded-[26px] border border-border bg-bg-card px-2 py-2.5 flex items-center justify-around">
       {mobileItems.map((item) => {
